@@ -29,7 +29,6 @@
 #include <uploadfilesspec.h>
 
 #include <logging.h>
-#include <gavcconstants.h>
 
 #include <algorithm>
 #include <boost/format.hpp>
@@ -58,8 +57,7 @@ namespace ufs {
         static const char vector_delimiter = ',';
     }
 
-    // req         :req         :opt              :opt           @opt
-    // [[classifier][.][extension]]:<file_name>
+    // [[classifier].[extension]]:<file_name>
     template<typename Iterator>
     struct ufs_grammar: qi::grammar<Iterator, UFSVector(), ascii::space_type> {
         ufs_grammar(): ufs_grammar::base_type(_fsdv)
@@ -80,11 +78,11 @@ namespace ufs {
             _fsdv = _fsd % UFSConstants::vector_delimiter;
         }
     private:
-        qi::rule<Iterator, std::string()>                   _file_name;         //!< Consumer is gavc_data.name .
-        qi::rule<Iterator, std::string()>                   _classifier;        //!< Consumer is gavc_data.classifier .
-        qi::rule<Iterator, std::string()>                   _extension;         //!< Consumer is gavc_data.extension .
-        qi::rule<Iterator, files_spec_data(), ascii::space_type>  _fsd;         //!< Consumer is gavc_data.
-        qi::rule<Iterator, UFSVector(), ascii::space_type>  _fsdv;    //!< Consumer is gavc_data.
+        qi::rule<Iterator, std::string()>                   _file_name;         //!< Consumer is files_spec_data.classifier .
+        qi::rule<Iterator, std::string()>                   _classifier;        //!< Consumer is files_spec_data.extension .
+        qi::rule<Iterator, std::string()>                   _extension;         //!< Consumer is files_spec_data.file_name .
+        qi::rule<Iterator, files_spec_data(), ascii::space_type>  _fsd;         //!< Consumer is files_spec_data .
+        qi::rule<Iterator, UFSVector(), ascii::space_type>  _fsdv;              //!< Consumer is UFSVector() .
     };
 
     std::string to_string(const files_spec_data& it)
@@ -138,7 +136,7 @@ namespace ufs {
 
         return  result.str();
     }
-} // namespace gavc
+} // namespace ufs
 
 UploadFileSpec::UploadFileSpec()
     : data_()
@@ -149,10 +147,9 @@ UploadFileSpec::~UploadFileSpec()
 {
 }
 
-boost::optional<UploadFileSpec> UploadFileSpec::parse(const std::string& gavc_str)
+boost::optional<UploadFileSpec> UploadFileSpec::parse(const std::string& files_spec_str)
 {
-    LOGT << __LINE__ << ELOG;
-    if (gavc_str.empty())
+    if (files_spec_str.empty())
         return boost::none;
 
     namespace qi = boost::spirit::qi;
@@ -161,13 +158,9 @@ boost::optional<UploadFileSpec> UploadFileSpec::parse(const std::string& gavc_st
     UploadFileSpec               result;
     ufs::ufs_grammar<std::string::const_iterator>   grammar;
 
-    LOGT << __LINE__ << ELOG;
     try {
-        LOGT << __LINE__ << ELOG;
-        qi::phrase_parse( gavc_str.begin(), gavc_str.end(), grammar, ascii::space, result.data_ );
-        LOGT << __LINE__ << ELOG;
+        qi::phrase_parse( files_spec_str.begin(), files_spec_str.end(), grammar, ascii::space, result.data_ );
     } catch (...) {
-        LOGT << __LINE__ << ELOG;
         return boost::none;
     }
 

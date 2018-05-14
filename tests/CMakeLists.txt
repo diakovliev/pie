@@ -84,3 +84,9 @@ add_test (NAME LoggingTests COMMAND logging_tests)
 add_executable(push_test push_tests.cpp)
 target_link_libraries(push_test ${Piel_LIBRARIES})
 #add_test (NAME PushTest COMMAND push_test)
+
+#############################################################
+add_executable(conf_tests conf_tests.cpp)
+target_link_libraries(conf_tests ${Piel_LIBRARIES})
+add_test (NAME ConfTests COMMAND conf_tests)
+

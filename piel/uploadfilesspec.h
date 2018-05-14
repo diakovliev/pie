@@ -30,7 +30,6 @@
 #define UPLOADFILESSPEC_H
 
 #include <application.h>
-#include <gavcquery.h>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/program_options.hpp>
 #include <map>
@@ -59,7 +58,7 @@ public:
     UploadFileSpec();
     ~UploadFileSpec();
 
-    static boost::optional<UploadFileSpec> parse(const std::string& gavc_str);
+    static boost::optional<UploadFileSpec> parse(const std::string& files_spec_str);
     std::string to_string() const;
 
     ufs::UFSVector get_data() { return  data_; }

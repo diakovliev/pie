@@ -59,7 +59,7 @@ namespace da = depman::app;
 //
 // git: {
 //   id: test;
-//   remote: ssh://git.test.org:repository.git;
+//   remote: ssh://$ldap_user$@git.test.org:repository.git;
 //   local: test;
 //   branch: master;
 //   revision: 123456;
@@ -70,7 +70,7 @@ namespace da = depman::app;
 //
 // git: {
 //   id: test;
-//   remote: ssh://git.test.org:repository.git;
+//   remote: ssh://$ldap_user$@git.test.org:repository.git;
 //   local: test;
 //   branch: master;
 //   revision: 123456;
