@@ -28,6 +28,10 @@
 
 #include <string>
 #include <map>
+#include <list>
+#include <iostream>
+
+#include "sgsengine.h"
 
 namespace depman { namespace app {
 
@@ -53,17 +57,45 @@ namespace depman { namespace app {
 
 namespace da = depman::app;
 
+// Basic action type
+struct Action {
+
+    typedef boost::shared_ptr<Action> Ptr;
+
+    enum State {
+        NotInitialized,
+        Ready,
+        Done,
+    };
+
+    enum Result {
+        NotPerformed,
+        Error,
+        Ok,
+    };
+
+    State state_;
+    Result result_;
+    std::list<Ptr> dependencies_;
+};
+
+// Execute shell command
+struct ShellAction: public Action {};
+
+
+
+
 //
 // >> depman add test   git+ssh://git.test.org:repository.git;refspec=;mergebase=;logbase=;branch=master;revison=123456
 // depman.conf:
 //
-// git: {
-//   id: test;
-//   remote: ssh://$ldap_user$@git.test.org:repository.git;
-//   local: test;
-//   branch: master;
-//   revision: 123456;
-// };
+// git({
+//   id = "test",
+//   remote = "ssh://" + ldap_user + "@git.test.org:repository.git",
+//   local = "test",
+//   branch = "master",
+//   revision = "123456",
+// });
 //
 // >> depman add test2  art+https:://artifactory.server/artifactory;repo=bin-release;qavc=test:test2:+;version=123
 // depman.conf:
@@ -94,7 +126,74 @@ namespace da = depman::app;
 //
 //
 
+
+int sample_func(sgs_Context* context)
+{
+    sgs::lib::Engine::Ptr engine = sgs::lib::Engine::attach(context, "sample_func");
+
+    char* str;
+    float q = 1;
+
+    SGSBOOL have_args = engine->load_args("s|f", &str, &q);
+    if( !have_args )
+    {
+        std::cout << "[sample_func] no args" << std::endl;
+        return 0; // < number of return values or a negative number on failure
+    }
+
+    std::cout << "[sample_func] arg 1: " << str   << std::endl;
+    std::cout << "[sample_func] arg 2: " << q     << std::endl;
+
+    engine->push_bool(1);
+    return 1; // < number of return values or a negative number on failure
+}
+
+int sample_func2(sgs_Context* context)
+{
+    sgs::lib::Engine::Ptr engine = sgs::lib::Engine::attach(context, "sample_func2");
+
+    sgs_Variable dict_var, v1, v2;
+
+    SGSBOOL have_args = engine->load_args("t", &dict_var);
+    if( !have_args )
+    {
+        return 0; // < number of return values or a negative number on failure
+    }
+
+    if (!sgs_PushProperty( engine->c_context(), dict_var, "v1"))
+    {
+        std::cout << "Error!";
+    }
+    sgs_StoreVariable( engine->c_context(), &v1 );
+    std::cout << "[sample_func2] v1: " << sgs_ToStringP( engine->c_context(), &v1 ) << std::endl;
+
+    sgs_PushProperty( engine->c_context(), dict_var, "v2");
+    sgs_StoreVariable( engine->c_context(), &v2 );
+    std::cout << "[sample_func2] v2: " << sgs_ToStringP( engine->c_context(), &v2 ) << std::endl;
+
+    engine->push_bool(1);
+    return 1; // < number of return values or a negative number on failure
+}
+
 int main(int argc, char **argv)
 {
+    // create the context
+    sgs::lib::Engine::Ptr engine(new sgs::lib::Engine());
+
+    // load the built-in OS, Math libraries
+    engine->load_lib(sgs::lib::Engine::Libs::OS);
+    engine->load_lib(sgs::lib::Engine::Libs::Math);
+
+    engine->set_global_by_name("sample_func", sample_func);
+    engine->set_global_by_name("sample_func2", sample_func2);
+
+     // load a file
+    engine->exec_file("script.sgs");
+
+    // call a global function with 0 arguments, expecting 0 values returned
+    //sgs_GlobalCall( C, "myFunction", 0, 0 );
+
+    // destroy the context
+
     return 0;
 }
