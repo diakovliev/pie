@@ -12,5 +12,6 @@ add_executable(${Module_name} ${SOURCES})
 # Boost (libboost-all-dev)
 find_package( Boost COMPONENTS ${Boost_libraries_list} REQUIRED)
 include_directories(${Boost_INCLUDE_DIR} ../third-party/sgscript/include)
-target_link_libraries(${Module_name} LINK_PUBLIC ${Boost_LIBRARIES} sgscript dl)
+
+target_link_libraries(${Module_name} LINK_PUBLIC logger ${Boost_LIBRARIES} sgscript pthread dl)
 
