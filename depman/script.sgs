@@ -46,8 +46,7 @@ iA.f2();
 
 sample_func("str", 0.125477);
 
-//sample_func2();
-sample_func2({ v1="str1", v2="str2" });
+sample_func2({ "v1"="str1", "v2"="str2", });
 
 myFunction();
 

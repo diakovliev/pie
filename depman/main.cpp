@@ -152,24 +152,40 @@ int sample_func2(sgs_Context* context)
 {
     sgs::lib::Engine::Ptr engine = sgs::lib::Engine::attach(context, "sample_func2");
 
-    sgs_Variable dict_var, v1, v2;
+    //SGSBOOL have_args = engine->load_args("t", &dict_size);
+    //if( !have_args )
+    //{
+    //    return 0; // < number of return values or a negative number on failure
+    //}
 
-    SGSBOOL have_args = engine->load_args("t", &dict_var);
-    if( !have_args )
+    //std::cout << "retrieved size: " << sgs_DebugDumpVarExt( engine->c_context(), dict_size, -1) << std::endl;
+
+    sgs_Variable dict_var;
+    sgs_StoreVariable( engine->c_context(), &dict_var );
+
+    std::cout << "retrieved dict: " << sgs_DebugDumpVarExt( engine->c_context(), dict_var, -1) << std::endl;
+
+    sgs_Variable iterator, key, value;
+    // .. assuming iterable is initalized here ..
+    sgs_CreateIterator( engine->c_context(), &iterator, dict_var );
+    while( sgs_IterAdvance( engine->c_context(), iterator ) > 0 )
     {
-        return 0; // < number of return values or a negative number on failure
-    }
+        sgs_IterGetData( engine->c_context(), iterator, NULL, &value );
+        // .. use value ..
+        sgs_Release( engine->c_context(), &value );
 
-    if (!sgs_PushProperty( engine->c_context(), dict_var, "v1"))
-    {
-        std::cout << "Error!";
-    }
-    sgs_StoreVariable( engine->c_context(), &v1 );
-    std::cout << "[sample_func2] v1: " << sgs_ToStringP( engine->c_context(), &v1 ) << std::endl;
+        sgs_IterGetData( engine->c_context(), iterator, &key, &value );
+        // .. use key and value ..
+        // 
+        std::cout << "[sample_func2] key: " << sgs_ToStringP( engine->c_context(), &key ) << std::endl;
+        std::cout << "[sample_func2] value: " << sgs_ToStringP( engine->c_context(), &value ) << std::endl;
 
-    sgs_PushProperty( engine->c_context(), dict_var, "v2");
-    sgs_StoreVariable( engine->c_context(), &v2 );
-    std::cout << "[sample_func2] v2: " << sgs_ToStringP( engine->c_context(), &v2 ) << std::endl;
+        sgs_Release( engine->c_context(), &key );
+        sgs_Release( engine->c_context(), &value );
+    }
+    sgs_Release( engine->c_context(), &iterator );
+
+    sgs_Release( engine->c_context(), &dict_var );
 
     engine->push_bool(1);
     return 1; // < number of return values or a negative number on failure
