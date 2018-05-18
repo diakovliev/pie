@@ -35,7 +35,6 @@
 #include <string>
 #include <ostream>
 #include <boost/signals2.hpp>
-#include <queuedthread.hpp>
 
 namespace art { namespace lib {
 
@@ -47,8 +46,6 @@ public:
         std::string id;
         size_t size;
     };
-
-    //typedef piel::lib::QueuedThread<BufferInfo> BufferInfoListener;
 
     ArtBaseDownloadHandlers(const std::string& api_token);
     ArtBaseDownloadHandlers(const std::string& api_token, std::ostream* dest);

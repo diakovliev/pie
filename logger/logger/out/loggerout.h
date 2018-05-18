@@ -6,7 +6,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/thread/thread.hpp>
 
-#include "../../queuedthread.hpp"
+#include "../queuedthread.hpp"
 #include "../singletone.h"
 #include "../log.h"
 #include "../logmessage.h"

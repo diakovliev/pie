@@ -28,7 +28,8 @@ set(CMAKE_BUILD_TYPE Debug)
 
 add_subdirectory(third-party/libzip-1.4.0)
 
-include_directories("piel", "commands", "pie")
+include_directories("logger" "piel", "commands", "pie")
+
 message ("CMAKE_BUILD_DIRECTORY: ${CMAKE_BUILD_DIRECTORY}")
 message ("CMAKE_BINARY_DIR : ${CMAKE_BINARY_DIR}")
 message ("CMAKE_FILES_DIRECTORY : ${CMAKE_FILES_DIRECTORY}")
@@ -41,6 +42,7 @@ add_definitions(-DBOOST_NO_CXX11_SCOPED_ENUMS)
 
 set(Boost_libraries_list program_options system filesystem regex thread)
 
+add_subdirectory(logger)
 add_subdirectory(piel)
 add_subdirectory(commands)
 add_subdirectory(pie)
