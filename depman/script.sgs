@@ -1,52 +1,20 @@
-function myFunction() {
-    print "Text";
-    println( "!" );
-    b = rand();
+var ldap_user = "build";
 
-    foreach( fruit : [ "apple", "orange", "banana" ] )
-        println( fruit );
-
-    obj = {
-        name = "Obj name",
-        desc = "Obj desc",
-
-        show_me = function() {
-            println this.name;
-            println this.desc;
-        },
-    };
-
-    //println obj.name;
-    //println obj.desc;
-
-    obj.show_me();
-
-    os_command("echo Hello shell!");
-    println "TEST_ENV: " + os_getenv("TEST_ENV");
-    printvar("TEST_ENV");
-}
-
-class A
-{
-    function f1() {
-        println "f1";
-    }
-    function f2() {
-        println "f2";
-    }
-}
-
-iA = new A();
-iA. {
-    v1 = 1,
-    v2 = 2,
+var externals = {
+  test = {
+     type = "git",
+     remote = "ssh://" $ ldap_user $ "@git.test.org:repository.git",
+     local = "test",
+     branch = "master",
+     revision = "123456",
+  },
+  test1 = {
+     type = "git",
+     remote = "ssh://" $ ldap_user $ "@git.test.org:repository1.git",
+     local = "test1",
+     branch = "master",
+     revision = "123456",
+  },
 };
-iA.f1();
-iA.f2();
 
-sample_func("str", 0.125477);
-
-sample_func2({ "v1"="str1", "v2"="str2", });
-
-myFunction();
-
+sample_func2(externals);

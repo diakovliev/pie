@@ -89,6 +89,16 @@ struct ShellAction: public Action {};
 // >> depman add test   git+ssh://git.test.org:repository.git;refspec=;mergebase=;logbase=;branch=master;revison=123456
 // depman.conf:
 //
+// var externals = {
+//   test = {
+//      git = "test",
+//      remote = "ssh://" + ldap_user + "@git.test.org:repository.git",
+//      local = "test",
+//      branch = "master",
+//      revision = "123456",
+//   },
+// };
+//
 // git({
 //   id = "test",
 //   remote = "ssh://" + ldap_user + "@git.test.org:repository.git",
