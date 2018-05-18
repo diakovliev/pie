@@ -26,9 +26,9 @@
  *
  */
 
-#include <logging.h>
-
 #include "sgsengine.h"
+
+#include <logging.h>
 
 namespace sgs { namespace lib {
 
@@ -52,12 +52,12 @@ Engine::Engine(sgs_Context* ctx)
 Engine::~Engine()
 {
     LOGT << "SGS: engine: " << ctx_ << " attached: " << attached_ << ELOG;
-    if (!attached_) 
+    if (!attached_)
     {
         sgs_DestroyEngine(ctx_);
         LOGD << "Destroyed SGS engine." << ELOG;
-    } 
-    else 
+    }
+    else
     {
         LOGD << "Skip destroing SGS engine for attached context." << ELOG;
     }
@@ -131,13 +131,6 @@ void Engine::func_name(const std::string& fn)
     return result;
 }
 
-// Stack
-void Engine::push_bool(sgs_Bool value)
-{
-    LOGT << "SGS: Push bool: " << value <<  ELOG;
-    sgs_PushBool(ctx_, value);
-}
-
 sgs_Context* Engine::c_context()
 {
     LOGW << "SGS: !!! Access to raw context: " << ctx_ <<  ELOG;
@@ -170,7 +163,7 @@ void Engine::set_global_by_name(const std::string& var_name, sgs_Variable var)
     sgs_SetGlobalByName(ctx_, var_name.c_str(), var);
 }
 
-void Engine::set_global_by_name(const std::string& var_name, Engine::function func)
+void Engine::set_global_by_name(const std::string& var_name, Engine::CFunction func)
 {
     LOGT << "SGS: set_global_by_name var_name (func): " << var_name << ELOG;
     set_global_by_name(var_name, sgs_MakeCFunc(func));

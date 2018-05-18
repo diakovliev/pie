@@ -32,6 +32,7 @@
 #include <iostream>
 
 #include "sgsengine.h"
+#include "sgsvar.h"
 
 namespace depman { namespace app {
 
@@ -82,11 +83,7 @@ struct Action {
 // Execute shell command
 struct ShellAction: public Action {};
 
-
-
-
 //
-// >> depman add test   git+ssh://git.test.org:repository.git;refspec=;mergebase=;logbase=;branch=master;revison=123456
 // depman.conf:
 //
 // var externals = {
@@ -99,106 +96,66 @@ struct ShellAction: public Action {};
 //   },
 // };
 //
-// git({
-//   id = "test",
-//   remote = "ssh://" + ldap_user + "@git.test.org:repository.git",
-//   local = "test",
-//   branch = "master",
-//   revision = "123456",
-// });
-//
-// >> depman add test2  art+https:://artifactory.server/artifactory;repo=bin-release;qavc=test:test2:+;version=123
-// depman.conf:
-//
-// git: {
-//   id: test;
-//   remote: ssh://$ldap_user$@git.test.org:repository.git;
-//   local: test;
-//   branch: master;
-//   revision: 123456;
-// };
-// art: {
-//   id: test2;
-//   remote: https:://artifactory.server/artifactory;
-//   local: test2;
-//   repo: bin-release-local;
-//   gavc: test:test2:+;
-//   version: 123;
-//   classifiers: {
-//      debug: dbg;
-//      release: prd;
-//   };
-// };
-//
-//
-// >> depman show
-// >> depman export
-//
+// sample_func2(externals)
 //
 
-
-int sample_func(sgs_Context* context)
-{
-    sgs::lib::Engine::Ptr engine = sgs::lib::Engine::attach(context, "sample_func");
-
-    char* str;
-    float q = 1;
-
-    SGSBOOL have_args = engine->load_args("s|f", &str, &q);
-    if( !have_args )
-    {
-        std::cout << "[sample_func] no args" << std::endl;
-        return 0; // < number of return values or a negative number on failure
-    }
-
-    std::cout << "[sample_func] arg 1: " << str   << std::endl;
-    std::cout << "[sample_func] arg 2: " << q     << std::endl;
-
-    engine->push_bool(1);
-    return 1; // < number of return values or a negative number on failure
-}
+//int sample_func(sgs_Context* context)
+//{
+//    sgs::lib::Engine::Ptr engine = sgs::lib::Engine::attach(context, "sample_func");
+//
+//    char* str;
+//    float q = 1;
+//
+//    SGSBOOL have_args = engine->load_args("s|f", &str, &q);
+//    if( !have_args )
+//    {
+//        std::cout << "[sample_func] no args" << std::endl;
+//        return 0; // < number of return values or a negative number on failure
+//    }
+//
+//    std::cout << "[sample_func] arg 1: " << str   << std::endl;
+//    std::cout << "[sample_func] arg 2: " << q     << std::endl;
+//
+//    engine->push_bool(1);
+//    return 1; // < number of return values or a negative number on failure
+//}
 
 int sample_func2(sgs_Context* context)
 {
     sgs::lib::Engine::Ptr engine = sgs::lib::Engine::attach(context, "sample_func2");
 
-    //SGSBOOL have_args = engine->load_args("t", &dict_size);
-    //if( !have_args )
-    //{
-    //    return 0; // < number of return values or a negative number on failure
-    //}
+    sgs::lib::Var::Ptr dict_var = sgs::lib::Var::pop(engine);
+    std::cout << "retrieved dict: " << dict_var->debug_dump() << std::endl;
 
-    //std::cout << "retrieved size: " << sgs_DebugDumpVarExt( engine->c_context(), dict_size, -1) << std::endl;
-
-    sgs_Variable dict_var;
-    sgs_StoreVariable( engine->c_context(), &dict_var );
-
-    std::cout << "retrieved dict: " << sgs_DebugDumpVarExt( engine->c_context(), dict_var, -1) << std::endl;
-
-    sgs_Variable iterator, key, value;
-    // .. assuming iterable is initalized here ..
-    sgs_CreateIterator( engine->c_context(), &iterator, dict_var );
-    while( sgs_IterAdvance( engine->c_context(), iterator ) > 0 )
+    sgs::lib::Var::Ptr iterator = dict_var->iterator();
+    while(iterator->has_next())
     {
-        sgs_IterGetData( engine->c_context(), iterator, NULL, &value );
-        // .. use value ..
-        sgs_Release( engine->c_context(), &value );
+        sgs::lib::Var::PtrPair kv = iterator->key_value();
 
-        sgs_IterGetData( engine->c_context(), iterator, &key, &value );
-        // .. use key and value ..
-        // 
-        std::cout << "[sample_func2] key: " << sgs_ToStringP( engine->c_context(), &key ) << std::endl;
-        std::cout << "[sample_func2] value: " << sgs_ToStringP( engine->c_context(), &value ) << std::endl;
+        std::cout << "[sample_func2] id: "     << kv.first->as<std::string>()  << std::endl;
+        //std::cout << "[sample_func2] value: "   << kv.second->debug_dump()      << std::endl;
 
-        sgs_Release( engine->c_context(), &key );
-        sgs_Release( engine->c_context(), &value );
+        sgs::lib::Var::Ptr second_iterator = kv.second->iterator();
+        while (second_iterator->has_next())
+        {
+            sgs::lib::Var::PtrPair second_kv = second_iterator->key_value();
+
+            std::cout << "[sample_func2]\tkey: "    << second_kv.first->as<std::string>()    << std::endl;
+            std::cout << "[sample_func2]\tvalue: "  << second_kv.second->as<std::string>()   << std::endl;
+        }
     }
-    sgs_Release( engine->c_context(), &iterator );
 
-    sgs_Release( engine->c_context(), &dict_var );
+    boost::optional<sgs::lib::Var::Ptr> otest = dict_var->get("test");
+    if (otest) {
+        std::cout << "Access by id: " << (*otest)->as<std::string>() << std::endl;
+    }
+    boost::optional<sgs::lib::Var::Ptr> otest1 = dict_var->get("test1");
+    if (otest1) {
+        std::cout << "Access by id: " << (*otest1)->as<std::string>() << std::endl;
+    }
 
-    engine->push_bool(1);
-    return 1; // < number of return values or a negative number on failure
+    //engine->push_bool(1);
+    return 0; // < number of return values or a negative number on failure
 }
 
 int main(int argc, char **argv)
@@ -210,16 +167,11 @@ int main(int argc, char **argv)
     engine->load_lib(sgs::lib::Engine::Libs::OS);
     engine->load_lib(sgs::lib::Engine::Libs::Math);
 
-    engine->set_global_by_name("sample_func", sample_func);
+    //engine->set_global_by_name("sample_func", sample_func);
     engine->set_global_by_name("sample_func2", sample_func2);
 
      // load a file
     engine->exec_file("script.sgs");
-
-    // call a global function with 0 arguments, expecting 0 values returned
-    //sgs_GlobalCall( C, "myFunction", 0, 0 );
-
-    // destroy the context
 
     return 0;
 }

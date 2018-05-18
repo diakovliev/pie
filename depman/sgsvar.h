@@ -26,70 +26,63 @@
  *
  */
 
-#ifndef DEPMAN_SGSENGINE_H_
-#define DEPMAN_SGSENGINE_H_
+#ifndef DEPMAN_SGSVAR_H_
+#define DEPMAN_SGSVAR_H_
 
-#include <cstdarg>
-#include <sgscript.h>
+#include "sgsengine.h"
 
-#include <map>
-#include <boost/shared_ptr.hpp>
-#include <boost/noncopyable.hpp>
+#include <boost/optional.hpp>
 
 namespace sgs { namespace lib {
 
-// Forward
-class Var;
-
-class Engine: boost::noncopyable {
+class Var: boost::noncopyable {
 public:
-    typedef boost::shared_ptr<Engine> Ptr;
-    typedef int (*CFunction)(sgs_Context*);
+    typedef boost::shared_ptr<Var> Ptr;
+    typedef std::pair<Ptr,Ptr> PtrPair;
 
-    enum Libs {
-        Fmt,
-        IO,
-        Math,
-        OS,
-        RE,
-        String,
-    };
+    Var(const Engine::Ptr& engine);
+    ~Var();
 
-    Engine();
-    ~Engine();
+    static Ptr pop(const Engine::Ptr& engine);
+    static int push(const Engine::Ptr& engine, Ptr var);
 
-    void load_lib(Libs lib);
+    sgs_Variable& c_var();
 
-    void exec_file(const std::string& filename);
+    std::string debug_dump(int maxdepth = -1);
 
-    void func_name(const std::string& fn);
+    bool is_null();
+    bool is_dict();
+    bool is_map();
+    bool is_array();
 
-    static Ptr attach(sgs_Context* ctx);
+    boost::optional<Ptr> get(const std::string& property_name);
+    bool set(const std::string& property_name, const Ptr& value);
 
-    static Ptr attach(sgs_Context* ctx, const std::string& fn);
+    // Iterator
+    Ptr iterator();
+    bool has_next();
+    Ptr value();
+    PtrPair key_value();
 
-    sgs_Context* c_context();
-
-    SGSBOOL load_args(int start_index, const std::string& commands, ...);
-
-    SGSBOOL load_args(const std::string& commands, ...);
-
-    void set_global_by_name(const std::string& var_name, sgs_Variable var);
-
-    void set_global_by_name(const std::string& var_name, CFunction func);
+    template<typename T> T as();
+    //    template<>
+    //    std::string Var::as<std::string>();
+    //
+    //    template<>
+    //    bool Var::as<bool>();
+    //
+    //    template<>
+    //    int Var::as<int>();
+    //
+    //    template<>
+    //    float Var::as<float>();
 
 private:
-    Engine(sgs_Context* ctx);
-
-    SGSBOOL load_args_va(int start_index, const std::string& commands, va_list *vlp);
-
-private:
-    const bool attached_;
-    sgs_Context* ctx_;
-
-    friend class Var;
+    Engine::Ptr engine_;
+    bool accured_;
+    sgs_Variable var_;
 };
 
 } } // namespace sgs::lib
 
-#endif /* DEPMAN_SGSENGINE_H_ */
+#endif /* DEPMAN_SGSVAR_H_ */
