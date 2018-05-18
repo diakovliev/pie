@@ -150,6 +150,7 @@ SGSBOOL Engine::load_args(int start_index, const std::string& commands, ...)
     va_start(vl, commands);
     SGSBOOL result = load_args_va(start_index, commands.c_str(), &vl);
     va_end(vl);
+    LOGT << "SGS: load_args start_index: " << start_index << " commands: " << commands << " result: " << result << ELOG;
     return result;
 }
 
@@ -159,16 +160,19 @@ SGSBOOL Engine::load_args(const std::string& commands, ...)
     va_start(vl, commands);
     SGSBOOL result = load_args_va(0, commands.c_str(), &vl);
     va_end(vl);
+    LOGT << "SGS: load_args commands: " << commands << " result: " << result << ELOG;
     return result;
 }
 
 void Engine::set_global_by_name(const std::string& var_name, sgs_Variable var)
 {
+    LOGT << "SGS: set_global_by_name var_name: " << var_name << ELOG;
     sgs_SetGlobalByName(ctx_, var_name.c_str(), var);
 }
 
 void Engine::set_global_by_name(const std::string& var_name, Engine::function func)
 {
+    LOGT << "SGS: set_global_by_name var_name (func): " << var_name << ELOG;
     set_global_by_name(var_name, sgs_MakeCFunc(func));
 }
 
