@@ -6,15 +6,22 @@ var externals = {
      remote = "ssh://" $ ldap_user $ "@git.test.org:repository.git",
      local = "test",
      branch = "master",
-     revision = "123456",
+     //revision = "123456",
   },
   test1 = {
      type = "git",
      remote = "ssh://" $ ldap_user $ "@git.test.org:repository1.git",
      local = "test1",
      branch = "master",
-     revision = "123456",
+     //revision = "123456",
   },
 };
 
-sample_func2(externals);
+setup_repositories(externals);
+
+var tree = filestree("/path/to/directory").include("**/*").include().exclude();
+var tree1 = filestree("/path/to/directory1").include("*").include().exclude();
+
+var ltree = tree.left_join(tee1);
+var rtree = tree.right_join(tee1);
+

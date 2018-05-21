@@ -102,6 +102,8 @@ void Engine::load_lib(Engine::Libs lib)
         LOGD << "SGS: Load String lib." << ELOG;
     }
     break;
+    default:
+        LOGE << "SGS: Unknown library id." << ELOG;
     };
 }
 
@@ -157,7 +159,7 @@ SGSBOOL Engine::load_args(const std::string& commands, ...)
     return result;
 }
 
-void Engine::set_global_by_name(const std::string& var_name, sgs_Variable var)
+void Engine::set_global_by_name(const std::string& var_name, const sgs_Variable& var)
 {
     LOGT << "SGS: set_global_by_name var_name: " << var_name << ELOG;
     sgs_SetGlobalByName(ctx_, var_name.c_str(), var);
@@ -172,6 +174,11 @@ void Engine::set_global_by_name(const std::string& var_name, Engine::CFunction f
 SGSBOOL Engine::load_args_va(int start_index, const std::string& commands, va_list *vlp)
 {
     return sgs_LoadArgsExtVA(ctx_, start_index, commands.c_str(), vlp);
+}
+
+void Engine::create_object(sgs_Variable *dest, void *data, sgs_ObjInterface *iface)
+{
+    sgs_CreateObject(ctx_, dest, data, iface);
 }
 
 } } // namespace sgs::lib

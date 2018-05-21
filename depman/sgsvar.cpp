@@ -54,7 +54,7 @@ Var::~Var()
     return result;
 }
 
-/*static*/ int Var::push(const Engine::Ptr& engine, Ptr var)
+/*static*/ int Var::push(const Engine::Ptr& engine, const Ptr& var)
 {
     return sgs_PushVariable(engine->ctx_, var->var_);
 }

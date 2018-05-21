@@ -44,7 +44,7 @@ public:
     ~Var();
 
     static Ptr pop(const Engine::Ptr& engine);
-    static int push(const Engine::Ptr& engine, Ptr var);
+    static int push(const Engine::Ptr& engine, const Ptr& var);
 
     sgs_Variable& c_var();
 

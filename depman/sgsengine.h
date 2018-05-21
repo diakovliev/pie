@@ -46,6 +46,9 @@ public:
     typedef boost::shared_ptr<Engine> Ptr;
     typedef int (*CFunction)(sgs_Context*);
 
+    Engine();
+    ~Engine();
+
     enum Libs {
         Fmt,
         IO,
@@ -55,32 +58,22 @@ public:
         String,
     };
 
-    Engine();
-    ~Engine();
-
     void load_lib(Libs lib);
-
     void exec_file(const std::string& filename);
-
     void func_name(const std::string& fn);
-
     static Ptr attach(sgs_Context* ctx);
-
     static Ptr attach(sgs_Context* ctx, const std::string& fn);
+    SGSBOOL load_args(int start_index, const std::string& commands, ...);
+    SGSBOOL load_args(const std::string& commands, ...);
+    void set_global_by_name(const std::string& var_name, const sgs_Variable& var);
+    void set_global_by_name(const std::string& var_name, CFunction func);
+
+    void create_object(sgs_Variable *dest, void *data, sgs_ObjInterface *iface);
 
     sgs_Context* c_context();
 
-    SGSBOOL load_args(int start_index, const std::string& commands, ...);
-
-    SGSBOOL load_args(const std::string& commands, ...);
-
-    void set_global_by_name(const std::string& var_name, sgs_Variable var);
-
-    void set_global_by_name(const std::string& var_name, CFunction func);
-
 private:
     Engine(sgs_Context* ctx);
-
     SGSBOOL load_args_va(int start_index, const std::string& commands, va_list *vlp);
 
 private:
