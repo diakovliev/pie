@@ -4,6 +4,9 @@ build_tree := ${src_tree}/_build
 export CTEST_OUTPUT_ON_FAILURE=1
 export PIE_VERSION:=$(shell git describe --dirty=*)
 
+export LDFLAGS=-L/usr/local/opt/openssl/lib
+export CPPFLAGS=-I/usr/local/opt/openssl/include
+
 .PHONY: prepare-%
 
 all: build
