@@ -244,7 +244,12 @@ GAVC::paths_list GAVCCache::get_cached_files_list(const std::vector<std::string>
     return results;
 }
 
-/*static*/ void GAVCCache::init(std::string cache_path)
+/*static*/ std::string GAVCCache::cache_properties_file(const std::string& cache_path)
+{
+    return cache_path + fs::path::preferred_separator + GAVCConstants::cache_properties_filename;
+}
+
+/*static*/ void GAVCCache::init(const std::string& cache_path)
 {
     if (!fs::is_directory(cache_path)) {
         if (fs::exists(cache_path)) {
@@ -253,23 +258,21 @@ GAVC::paths_list GAVCCache::get_cached_files_list(const std::vector<std::string>
         fs::create_directories(cache_path);
     }
 
-    std::string cache_properties_file = cache_path + fs::path::preferred_separator + GAVCConstants::cache_properties_filename;
-
     pl::Properties props = pl::Properties();
     props.set(GAVCConstants::cache_version_property, GAVCConstants::cache_version);
 
-    std::ofstream os(cache_properties_file);
+    std::ofstream os(cache_properties_file(cache_path));
     props.store(os);
 }
 
-/*static*/ bool GAVCCache::validate(std::string cache_path)
+/*static*/ bool GAVCCache::validate(const std::string& cache_path)
 {
-    std::string cache_properties_file = cache_path + fs::path::preferred_separator + GAVCConstants::cache_properties_filename;
-    if (!fs::is_regular_file(cache_properties_file)) {
+    std::string properties_file = cache_properties_file(cache_path);
+    if (!fs::is_regular_file(properties_file)) {
         return false;
     }
 
-    std::ifstream is(cache_properties_file);
+    std::ifstream is(properties_file);
     pl::Properties props = pl::Properties::load(is);
     return GAVCConstants::cache_version == props.get(GAVCConstants::cache_version_property, "");
 }

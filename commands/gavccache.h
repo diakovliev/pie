@@ -87,12 +87,13 @@ public:
     static void update_last_access_time(const boost::filesystem::path& cache_object_path);
     static std::tm get_last_access_time(const boost::filesystem::path& cache_object_path);
 
-    static void init(std::string cache_path);
-    static bool validate(std::string cache_path);
+    static void init(const std::string& cache_path);
+    static bool validate(const std::string& cache_path);
 
 private:
     static std::string now_string();
     bool is_force_offline() const;
+    static std::string cache_properties_file(const std::string& cache_path);
 
 private:
     std::string server_url_;

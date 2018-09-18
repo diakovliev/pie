@@ -44,8 +44,6 @@ namespace pie { namespace app {
 namespace pt = boost::property_tree;
 namespace po = boost::program_options;
 
-const int default_age = 180;
-
 GavcCacheInitCommand::GavcCacheInitCommand(Application *app, int argc, char **argv)
     : ICommand(app)
     , argc_(argc)
