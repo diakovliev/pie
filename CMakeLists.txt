@@ -26,15 +26,11 @@ project(pie)
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 set(CMAKE_BUILD_TYPE Debug)
 
-add_subdirectory(third-party/libzip-1.4.0)
-
 include_directories("logger" "piel", "commands", "pie")
 
 message ("CMAKE_BUILD_DIRECTORY: ${CMAKE_BUILD_DIRECTORY}")
 message ("CMAKE_BINARY_DIR : ${CMAKE_BINARY_DIR}")
 message ("CMAKE_FILES_DIRECTORY : ${CMAKE_FILES_DIRECTORY}")
-
-include_directories("third-party/libzip-1.4.0/lib", "${CMAKE_BINARY_DIR}/third-party/libzip-1.4.0")
 
 add_definitions(-DPIE_VERSION="$ENV{PIE_VERSION}")
 message(STATUS "!!! PIE_VERSION: $ENV{PIE_VERSION}")

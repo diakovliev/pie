@@ -32,7 +32,6 @@
 
 #include <upload.h>
 #include <logging.h>
-#include <fsindexer.h>
 #include <mavenpom.h>
 #include <artbaseconstants.h>
 #include <artdeployartifactchecksumhandlers.h>

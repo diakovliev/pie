@@ -34,7 +34,6 @@
 #include <boost/program_options.hpp>
 #include <map>
 #include <vector>
-#include <workingcopy.h>
 
 namespace art { namespace lib {
 
