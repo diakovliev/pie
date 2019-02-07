@@ -32,7 +32,7 @@
 #include <logger/app/logging.h>
 
 struct Logging
-{    
+{
     static piel::lib::logger_app::LogApp *log();
 };
 

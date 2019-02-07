@@ -36,6 +36,22 @@
 
 namespace piel { namespace lib {
 
+template<typename A, template<typename> class B>
+struct HoldS {
+    B<A>& ptr;
+    A& ref;
+    HoldS(B<A>& p) : ptr(p), ref(*p.get()) {}
+    HoldS(const HoldS& src) : ptr(src.ptr), ref(*src.ptr.get()) {}
+    operator A&() {
+        return ref;
+    }
+};
+
+template<typename A, template<typename> class B>
+HoldS<A,B> ref(B<A>& p) {
+    return HoldS<A,B>(p);
+}
+
 class AssetImpl {
 public:
     AssetImpl()
@@ -53,21 +69,14 @@ public:
 
     virtual const AssetId& id()
     {
-        if (id_ == AssetId::empty)
-        {
+        if (id_ == AssetId::empty || id_ != AssetId::not_calculated)
             return id_;
-        }
 
-        if (id_ != AssetId::not_calculated)
-        {
-            return id_;
-        }
-
-        // Calculate id;
+        // Calculate id
         boost::shared_ptr<std::istream> pis = istream();
         if (pis)
         {
-            id_ = AssetId::create_for(*pis.get());
+            id_ = AssetId::create_for(ref(pis));
             LOGT << "Calculated asset id: " << id_.string() << ELOG;
         }
         else

@@ -34,6 +34,8 @@
 
 namespace piel { namespace lib {
 
+/// AssetId is abstract payload identifier.
+/// Physically is string representation of payload content digest.
 class AssetId
 {
 public:
@@ -56,7 +58,10 @@ public:
 
     std::string string() const;
 
+    /// Calculate digest and create AssetId object for the input stream.
     static AssetId create_for(std::istream& is);
+
+    /// Create AssetId from string presentation.
     static AssetId create(const std::string& id);
 
 private:
