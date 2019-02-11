@@ -34,23 +34,9 @@
 #include <fstream>
 #include <sstream>
 
+#include <ptrholder.hpp>
+
 namespace piel { namespace lib {
-
-template<typename A, template<typename> class B>
-struct HoldS {
-    B<A>& ptr;
-    A& ref;
-    HoldS(B<A>& p) : ptr(p), ref(*p.get()) {}
-    HoldS(const HoldS& src) : ptr(src.ptr), ref(*src.ptr.get()) {}
-    operator A&() {
-        return ref;
-    }
-};
-
-template<typename A, template<typename> class B>
-HoldS<A,B> ref(B<A>& p) {
-    return HoldS<A,B>(p);
-}
 
 class AssetImpl {
 public:

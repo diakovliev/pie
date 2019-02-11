@@ -213,7 +213,7 @@ bool UploadCommand::parse_arguments()
     }
     catch (const piel::cmd::errors::uploading_checksum_error& e)
     {
-        std::cerr << "Uploading checksum error:" << e.error << std::endl;
+        std::cerr << "Uploading checksum error: " << e.error << std::endl;
         return -1;
     }
 
