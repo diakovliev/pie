@@ -272,28 +272,35 @@ void GAVC::on_object(const pt::ptree::value_type& obj, const std::string& versio
 
     LOGT << "object id: "       << object_id                    << ELOG;
 
-    std::string object_classifier = query_classifier;
-    if (object_classifier.empty())
+    std::string object_classifier = GAVCConstants::empty_classifier;
+    LOGD << "Extract classifier from the object id." << ELOG;
+
+    std::vector<std::string> query_classifier_parts;
+    boost::split(query_classifier_parts, query_classifier, boost::is_any_of("."));
+
+    std::vector<std::string> object_id_parts;
+    boost::split(object_id_parts, object_id, boost::is_any_of("-"));
+
+    if (object_id_parts.size() > 2)
     {
-        LOGD << "No classifier specified. Extract classifier from the object id." << ELOG;
-
-        std::vector<std::string> object_id_parts;
-        boost::split(object_id_parts, object_id, boost::is_any_of("-"));
-
-        if (object_id_parts.size() > 2)
+        object_classifier = object_id_parts[object_id_parts.size()-1];
+        if (object_classifier.find('.') != std::string::npos)
         {
-            object_classifier = object_id_parts[2];
-            if (object_classifier.find('.') != std::string::npos)
-            {
-                object_classifier = object_classifier.substr(0, object_classifier.find('.'));
-            }
-        }
-        else
-        {
-            object_classifier = GAVCConstants::empty_classifier;
+            object_classifier = object_classifier.substr(0, object_classifier.find('.'));
         }
     }
+
     LOGT << "object classifier: " << object_classifier << ELOG;
+    LOGT << "query classifier: " << query_classifier_parts[0] << ELOG;
+
+    if (object_classifier != GAVCConstants::empty_classifier &&
+        query_classifier  != GAVCConstants::empty_classifier &&
+        !query_classifier_parts[0].empty() &&
+        object_classifier != query_classifier_parts[0]) {
+        LOGD << "Skip object because query classifier: "    << query_classifier_parts[0]
+             << " is not equal to object classifier: "      << object_classifier << ELOG;
+        return;
+    }
 
     std::map<std::string,std::string> server_checksums      = get_server_checksums(obj.second, "checksums");
     //std::map<std::string,std::string> original_checksums    = get_server_checksums(obj.second, "originalChecksums");
@@ -321,11 +328,11 @@ void GAVC::on_object(const pt::ptree::value_type& obj, const std::string& versio
             pl::Properties props = pl::Properties::from_map(server_checksums);
 
             props.set(GAVCConstants::object_id_property, object_id);
-            props.set(GAVCConstants::object_classifier_property, query_classifier);
+            props.set(GAVCConstants::object_classifier_property, object_classifier);
 
             store_object_properties(object_path, props);
 
-            //cout() << "c " << object_id << std::endl;
+            cout() << "c " << object_id << std::endl;
         } else {
             cout() << "+ " << object_id << std::endl;
         }
@@ -335,7 +342,7 @@ void GAVC::on_object(const pt::ptree::value_type& obj, const std::string& versio
         list_of_actual_files_.push_back(object_path);
 
         if (cache_mode_) {
-            //cout() << "c " << object_id << std::endl;
+            cout() << "c " << object_id << std::endl;
         } else {
             cout() << "+ " << object_id << std::endl;
         }

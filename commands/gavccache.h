@@ -83,9 +83,10 @@ public:
     boost::filesystem::path get_path_to_download() const;
 
     std::vector<std::string> get_cached_versions(const std::string &path) const;
-    GAVC::paths_list get_cached_files_list(const std::vector<std::string> &versions_to_process, const std::string &path, bool do_print = true);
+    GAVC::paths_list get_cached_files_list(const std::vector<std::string> &versions_to_process, const std::string &path);
     void copy_file_list(GAVC::paths_list &file_list);
 
+    std::vector<std::string> get_cached_classifiers_list(const std::string& artifacts_cache);
     std::string find_file_for_classifier(const std::string& artifacts_cache, const std::string& classifier);
 
     static void update_last_access_time(const boost::filesystem::path& cache_object_path);

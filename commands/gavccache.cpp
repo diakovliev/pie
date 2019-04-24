@@ -130,6 +130,33 @@ std::vector<std::string> GAVCCache::get_cached_versions(const std::string& path)
     return result;
 }
 
+std::vector<std::string> GAVCCache::get_cached_classifiers_list(const std::string& artifacts_cache) {
+    std::vector<std::string> result;
+
+    for(auto entry : boost::make_iterator_range(fs::directory_iterator(artifacts_cache), {})){
+        LOGT << entry.path().filename().c_str() << ELOG;
+        if(!fs::is_regular_file(entry.path())) {
+            continue;
+        }
+
+        if (!boost::algorithm::ends_with(entry.path().filename().string(), GAVCConstants::properties_ext)) {
+            continue;
+        }
+
+        std::ifstream is(entry.path().string());
+        pl::Properties props = pl::Properties::load(is);
+
+        std::string classifier = props.get(GAVCConstants::object_classifier_property, "");
+        if (classifier.empty())
+            continue;
+
+        LOGT << "Cached classifier: " << classifier << ELOG;
+        result.push_back(classifier);
+    }
+
+    return result;
+}
+
 std::string GAVCCache::find_file_for_classifier(const std::string& artifacts_cache, const std::string& classifier)
 {
     std::string result;
@@ -185,7 +212,7 @@ std::string GAVCCache::find_file_for_classifier(const std::string& artifacts_cac
     return t;
 }
 
-GAVC::paths_list GAVCCache::get_cached_files_list(const std::vector<std::string>& versions_to_process, const std::string& path, bool use_cache)
+GAVC::paths_list GAVCCache::get_cached_files_list(const std::vector<std::string>& versions_to_process, const std::string& path)
 {
     std::string classifier_spec = query_.classifier();
     std::string query_name      = query_.name();
@@ -201,23 +228,33 @@ GAVC::paths_list GAVCCache::get_cached_files_list(const std::vector<std::string>
     {
         LOGT << "Version: " << *ver << ELOG;
 
-        for (auto c = classifiers.begin(), cend = classifiers.end(); c != cend; ++c)
+        std::string artifact_cache_path = path + fs::path::preferred_separator + *ver;
+
+        LOGT << "Version cache: " << artifact_cache_path << ELOG;
+
+        if (classifiers.size() == 1 && classifiers[0].empty()) {
+            classifiers = get_cached_classifiers_list(artifact_cache_path);
+        }
+
+        for (auto it = classifiers.begin(), cend = classifiers.end(); it != cend; ++it)
         {
-            if (c->empty()) {
+            std::vector<std::string> craw_parts;
+            boost::split(craw_parts, *it, boost::is_any_of("."));
+
+            std::string c = craw_parts[0];
+
+            if (c.empty()) {
                 LOGT << "empty classifier " << ELOG;
                 continue;
             }
 
-            std::string artifact_cache_path     = path + fs::path::preferred_separator + *ver;
-            std::string file_path               = find_file_for_classifier(artifact_cache_path, *c);
+            std::string file_path               = find_file_for_classifier(artifact_cache_path, c);
             std::string classifier_file_name    = fs::path(file_path).filename().string();
 
-            LOGT << "Classifier: " << *c << " path: " << file_path << ELOG;
+            LOGT << "Classifier: " << c << " path: " << file_path << ELOG;
 
             if (!fs::is_regular_file(file_path)) {
-                LOGT << "No file: " << file_path << " for classifier: " << *c << ELOG;
-
-                if (use_cache) throw errors::cache_no_file_for_classifier(*c);
+                LOGT << "No file: " << file_path << " for classifier: " << c << ELOG;
 
                 have_errors = true;
                 break;
@@ -227,16 +264,10 @@ GAVC::paths_list GAVCCache::get_cached_files_list(const std::vector<std::string>
             bool is_valid           = GAVC::validate_local_file(file_path, props);
 
             if (!is_valid) {
-                LOGT << "File: " << file_path  << " for classifier: " << *c << " is not valid!" << ELOG;
-
-                if (use_cache) throw errors::cache_not_valid_file(*c);
+                LOGT << "File: " << file_path  << " for classifier: " << c << " is not valid!" << ELOG;
 
                 have_errors = true;
                 break;
-            }
-
-            if (use_cache) {
-                cout() << "c " << classifier_file_name << std::endl;
             }
 
             if (std::find(results.begin(), results.end(), file_path) == results.end()) {
@@ -340,9 +371,13 @@ void GAVCCache::perform()
         }
     }
 
+    GAVC::paths_list list_files;
+
     try {
         versions_to_process_cache   = get_cached_versions(mm_path);
-        have_cached_files           = !get_cached_files_list(versions_to_process_cache, mm_path, false).empty();
+        // Initial cache files list
+        list_files                  = get_cached_files_list(versions_to_process_cache, mm_path);
+        have_cached_files           = !list_files.empty();
     } catch (errors::cache_folder_does_not_exist& e) {
         // Don't see anything in cache.
     }
@@ -370,9 +405,23 @@ void GAVCCache::perform()
 
             gavc.set_path_to_download(path);
             gavc.process_version(*i);
+
+            // Get actial files list
+            list_files = gavc.get_list_of_actual_files();
         }
 
         versions_to_process = versions_to_process_remote;
+    }
+
+    if (offline) {
+        for (GAVC::paths_list::iterator f = list_files.begin(), end = list_files.end(); f != end; ++f) {
+
+            fs::path object_name        = fs::path(*f).filename();
+
+            LOGT << *f << "->" << object_name << ELOG;
+
+            cout() << "c " << object_name.string() << std::endl;
+        }
     }
 
     if (have_to_download_results_) {
@@ -380,8 +429,6 @@ void GAVCCache::perform()
         if (offline && !have_cached_files) {
             throw errors::cache_no_cache_for_query(query_.to_string());
         }
-
-        GAVC::paths_list list_files = get_cached_files_list(versions_to_process, mm_path, true);
 
         for (GAVC::paths_list::iterator f = list_files.begin(), end = list_files.end(); f != end; ++f) {
 
