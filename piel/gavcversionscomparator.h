@@ -41,12 +41,12 @@ public:
     GavcVersionsComparator(const std::vector<gavc::OpType>& query_ops);
     ~GavcVersionsComparator();
 
-    bool is_comparatible(const std::string& lhs, const std::string& rhs) const;
+    bool is_comparable(const std::string& lhs, const std::string& rhs) const;
     CompareNumericType compare(const std::string& lhs, const std::string& rhs) const;
     CompareNumericType compare_part(const std::string& lhs, const std::string& rhs) const;
 
     bool operator()(const std::string& lhs, const std::string& rhs) const {
-        BOOST_ASSERT(is_comparatible(lhs, rhs));
+        BOOST_ASSERT(is_comparable(lhs, rhs));
         return compare(lhs, rhs) > 0;
     }
 

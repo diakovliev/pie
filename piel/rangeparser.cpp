@@ -58,8 +58,6 @@ namespace range_spec {
         grammar(): grammar::base_type(_data)
         {
             using qi::char_;
-            using qi::_1;
-            using qi::_val;
             using qi::as_string;
 
             _first      = as_string[ +( char_ - RangeSpecConstants::sepa) ];

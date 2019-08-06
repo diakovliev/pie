@@ -101,7 +101,7 @@ GavcVersionsComparator::~GavcVersionsComparator()
 
 }
 
-bool GavcVersionsComparator::is_comparatible(const std::string& lhs, const std::string& rhs) const
+bool GavcVersionsComparator::is_comparable(const std::string& lhs, const std::string& rhs) const
 {
     std::vector<std::string> lhs_parts = matcher_.significant_parts(lhs);
     std::vector<std::string> rhs_parts = matcher_.significant_parts(rhs);

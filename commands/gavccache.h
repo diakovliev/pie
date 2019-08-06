@@ -95,6 +95,9 @@ public:
     static void init(const std::string& cache_path);
     static bool validate(const std::string& cache_path);
 
+    GAVC::query_results get_query_results() const;
+    GAVC::paths_list get_list_of_queued_files() const;
+
 protected:
     void perform();
     static std::string now_string();
@@ -114,6 +117,9 @@ private:
     unsigned int retry_timeout_s_;
     std::string notifications_file_;
     bool force_offline_;
+
+    GAVC::query_results query_results_;
+    GAVC::paths_list list_of_queued_files_;
 };
 
 } } // namespace piel::cmd

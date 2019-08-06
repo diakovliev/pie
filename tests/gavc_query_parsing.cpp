@@ -277,3 +277,46 @@ BOOST_AUTO_TEST_CASE(CheckForExactVersion)
     BOOST_CHECK(op->is_single_version_query());
 }
 
+BOOST_AUTO_TEST_CASE(VersionsRange)
+{
+    using namespace art::lib::gavc;
+
+    auto p = GavcQuery::query_version_data("*[123,321]");
+    BOOST_CHECK(p.first);
+    BOOST_CHECK(p.second);
+
+    BOOST_CHECK_EQUAL("123",    p.second->left);
+    BOOST_CHECK_EQUAL("321",    p.second->right);
+
+    BOOST_CHECK(p.second->flags & (RangeFlags_include_left|RangeFlags_include_right));
+
+    p = GavcQuery::query_version_data("*(123,321]");
+    BOOST_CHECK(p.first);
+    BOOST_CHECK(p.second);
+
+    BOOST_CHECK_EQUAL("123",    p.second->left);
+    BOOST_CHECK_EQUAL("321",    p.second->right);
+
+    BOOST_CHECK(!(p.second->flags & (RangeFlags_include_left)));
+    BOOST_CHECK(p.second->flags & RangeFlags_include_right);
+
+    p = GavcQuery::query_version_data("*[123,321)");
+    BOOST_CHECK(p.first);
+    BOOST_CHECK(p.second);
+
+    BOOST_CHECK_EQUAL("123",    p.second->left);
+    BOOST_CHECK_EQUAL("321",    p.second->right);
+
+    BOOST_CHECK(p.second->flags & (RangeFlags_include_left));
+    BOOST_CHECK(!(p.second->flags & RangeFlags_include_right));
+
+    p = GavcQuery::query_version_data("*(123,321)");
+    BOOST_CHECK(p.first);
+    BOOST_CHECK(p.second);
+
+    BOOST_CHECK_EQUAL("123",    p.second->left);
+    BOOST_CHECK_EQUAL("321",    p.second->right);
+
+    BOOST_CHECK(!(p.second->flags & RangeFlags_include_left));
+    BOOST_CHECK(!(p.second->flags & RangeFlags_include_right));
+}

@@ -39,6 +39,7 @@
 #include <gavccache.h>
 #include "gavcconstants.h"
 #include <gavcversionsfilter.h>
+#include <gavcversionsrangefilter.h>
 #include <gavcversionscomparator.h>
 #include <artbaseconstants.h>
 #include <artbasedownloadhandlers.h>
@@ -85,6 +86,8 @@ GAVCCache::GAVCCache(const std::string& server_api_access_token
     , retry_timeout_s_(retry_timeout_s)
     , notifications_file_(notifications_file)
     , force_offline_(force_offline)
+    , query_results_()
+    , list_of_queued_files_()
 {
 }
 
@@ -112,22 +115,7 @@ std::vector<std::string> GAVCCache::get_cached_versions(const std::string& path)
         return result;
     }
 
-    boost::optional<std::vector<al::gavc::OpType> > ops_val = query_.query_version_ops();
-
-    if (!ops_val) {
-        LOGT << "Unable to get query operations list." << ELOG;
-        return result;
-    }
-
-    std::vector<al::gavc::OpType> ops = *ops_val;
-
-    al::GavcVersionsComparator comparator(ops);
-    al::GavcVersionsFilter     filter(ops);
-
-    std::sort(result.begin(), result.end(), comparator);
-    result = filter.filtered(result);
-
-    return result;
+    return query_.filter(result);
 }
 
 std::vector<std::string> GAVCCache::get_cached_classifiers_list(const std::string& artifacts_cache) {
@@ -441,6 +429,14 @@ void GAVCCache::perform()
 
             fs::copy_file(*f, object_path, fs::copy_option::overwrite_if_exists);
             update_last_access_time(*f);
+
+            pl::Properties props    = GAVC::load_object_properties(*f);
+
+            std::string object_classifier = props.get(GAVCConstants::object_classifier_property, "");
+            std::string version = fs::path(*f).parent_path().filename().string();
+
+            query_results_.insert(std::make_pair(object_path, std::make_pair(object_classifier, version)));
+            list_of_queued_files_.push_back(object_path.string());
         }
     }
 }
@@ -477,6 +473,16 @@ void GAVCCache::set_path_to_download(const boost::filesystem::path& path)
 boost::filesystem::path GAVCCache::get_path_to_download() const
 {
     return path_to_download_;
+}
+
+GAVC::query_results GAVCCache::get_query_results() const
+{
+    return query_results_;
+}
+
+GAVC::paths_list GAVCCache::get_list_of_queued_files() const
+{
+    return list_of_queued_files_;
 }
 
 } } // namespace piel::cmd

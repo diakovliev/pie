@@ -29,125 +29,13 @@
 #include <gavcversionsfilter.h>
 #include <gavcversionsmatcher.h>
 #include <gavcversionscomparator.h>
+#include <gavcfilterspredicates.hpp>
 
 #include <logging.h>
 
 #include <algorithm>
-#include <sstream>
 
 namespace art { namespace lib {
-
-template<class Predicate, typename Arg>
-struct Not {
-    Not(Predicate& pred)
-        : pred_(pred)
-    {
-    }
-
-    bool operator()(Arg arg)
-    {
-        bool result = !pred_(arg);
-
-        LOGT << "negated value: " << result << ELOG;
-
-        return result;
-    }
-
-private:
-    Predicate& pred_;
-
-};
-
-struct Match {
-
-    typedef Not<Match, const std::string& > not_;
-
-    Match(GavcVersionsMatcher *matcher)
-        : matcher_(matcher)
-    {
-    }
-
-    bool operator()(const std::string& val)
-    {
-        bool result = matcher_->match(val);
-
-        LOGT << "match value: " << val << " result: " << result << ELOG;
-
-        return result;
-    }
-
-private:
-    GavcVersionsMatcher *matcher_;
-
-};
-
-typedef std::pair< std::string, std::vector<std::string> > SpartsTableElement;
-typedef std::list< SpartsTableElement > SpartsTable;
-
-struct SpartsTableComparator
-{
-    SpartsTableComparator(GavcVersionsComparator *comparator, const gavc::OpType& op, std::vector<std::string>::size_type field_index)
-        : comparator_(comparator), op_(op), field_index_(field_index)
-    {
-    }
-
-    bool operator()(const SpartsTableElement& lhs, const SpartsTableElement& rhs) const
-    {
-        switch (op_.first)
-        {
-        case gavc::Op_const:
-        case gavc::Op_all:
-            return false;
-        case gavc::Op_latest:
-            return comparator_->compare_part(lhs.second[field_index_], rhs.second[field_index_]);
-        case gavc::Op_oldest:
-            return !comparator_->compare_part(lhs.second[field_index_], rhs.second[field_index_]);
-        }
-        return false;
-    }
-
-private:
-    GavcVersionsComparator              *comparator_;
-    gavc::OpType                        op_;
-    std::vector<std::string>::size_type field_index_;
-
-};
-
-struct SpartsTableValuesFilter
-{
-    SpartsTableValuesFilter(std::vector<std::string>::size_type field_index, const std::string& value)
-        : field_index_(field_index)
-        , value_(value)
-    {
-    }
-
-    bool operator()(const SpartsTableElement& val) const
-    {
-        return val.second[field_index_] != value_;
-    }
-
-private:
-    std::vector<std::string>::size_type field_index_;
-    std::string                         value_;
-
-};
-
-struct VectorContains {
-
-    VectorContains(const std::vector<std::string>& collection)
-        : collection_(collection)
-    {
-    }
-
-    bool operator()(const std::string& val) const
-    {
-        return std::find(collection_.begin(), collection_.end(), val) != collection_.end();
-    }
-
-private:
-    std::vector<std::string> collection_;
-
-};
 
 GavcVersionsFilter::GavcVersionsFilter(const std::vector<gavc::OpType>& query_ops)
     : query_ops_(query_ops)

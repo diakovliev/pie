@@ -89,3 +89,8 @@ target_link_libraries(push_test ${Piel_LIBRARIES})
 add_executable(gavc_cache gavc_cache.cpp)
 target_link_libraries(gavc_cache ${Piel_LIBRARIES})
 add_test (NAME GAVCCache COMMAND gavc_cache)
+
+#############################################################
+add_executable(gavc_versions_range_filter gavc_versions_range_filter.cpp)
+target_link_libraries(gavc_versions_range_filter ${Piel_LIBRARIES})
+add_test (NAME GavcVersionsRangeFilterTest COMMAND gavc_versions_range_filter)

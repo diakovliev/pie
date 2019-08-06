@@ -27,6 +27,7 @@
  */
 
 #include <iostream>
+#include <fstream>
 #include <cstdlib>
 #include <gavccommand.h>
 #include <gavccache.h>
@@ -67,6 +68,7 @@ GavcCommand::GavcCommand(Application *app, int argc, char **argv)
     , notifications_file_()
     , max_attempts_(3)
     , retry_timeout_s_(5)
+    , files_list_()
     , force_offline_(false)
 {
 }
@@ -95,6 +97,7 @@ bool GavcCommand::parse_arguments()
         ("notifications,n", po::value<std::string>(&notifications_file_),       "If specified, PIE will generate notifications file with actions details.")
         ("max-attempts",    po::value<unsigned int>(&max_attempts_),            "Max attempts on IO errors.")
         ("retry-timeout",   po::value<unsigned int>(&retry_timeout_s_),         "Retry timeout on IO errors.")
+        ("files-list",      po::value<std::string>(&files_list_),               "Generate queued files list.")
         ("force-offline,f",                                                     "Forcing offline mode.")
         ;
 
@@ -151,6 +154,18 @@ bool GavcCommand::parse_arguments()
     return true;
 }
 
+void GavcCommand::write_files_list(const piel::cmd::GAVC::paths_list& files_list) const {
+    if (!files_list_.empty()) {
+        std::ofstream fs;
+        fs.open(files_list_.c_str(), std::fstream::out|std::fstream::binary);
+        std::for_each(files_list.begin(), files_list.end(), [&](auto i) {
+            //std::cout << " >> " << i << std::endl;
+            fs << i.c_str() << std::endl;
+        });
+        fs.close();
+    }
+}
+
 /*virtual*/ int GavcCommand::perform()
 {
     int result = -1;
@@ -177,6 +192,8 @@ bool GavcCommand::parse_arguments()
             }
 
             gavc();
+
+            write_files_list(gavc.get_list_of_queued_files());
         }
         else {
             piel::cmd::GAVCCache gavccache(server_api_access_token_,
@@ -196,6 +213,8 @@ bool GavcCommand::parse_arguments()
             }
 
             gavccache();
+
+            write_files_list(gavccache.get_list_of_queued_files());
         }
 
     }

@@ -36,6 +36,12 @@ const char          GavcConstants::latest_version               = '+';
 const char          GavcConstants::oldest_version               = '-';
 const char          GavcConstants::all_versions                 = '*';
 
+const char          GavcConstants::left_include_braket          = '[';
+const char          GavcConstants::left_exclude_braket          = '(';
+const char          GavcConstants::right_include_braket         = ']';
+const char          GavcConstants::right_exclude_braket         = ')';
+const char          GavcConstants::range_separator              = ',';
+
 const char          GavcConstants::group_delimiter              = '.';
 const char          GavcConstants::path_delimiter               = '/';
 const std::string   GavcConstants::maven_metadata_filename      = "maven-metadata.xml";

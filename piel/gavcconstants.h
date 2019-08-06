@@ -42,6 +42,13 @@ struct GavcConstants {
     static const char latest_version;
     static const char all_versions;
 
+    // Range query constants
+    static const char left_include_braket;
+    static const char left_exclude_braket;
+    static const char right_include_braket;
+    static const char right_exclude_braket;
+    static const char range_separator;
+
     // Format url to maven metadata.
     static const char group_delimiter;
     static const char path_delimiter;

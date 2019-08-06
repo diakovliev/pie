@@ -88,6 +88,7 @@ public:
     boost::filesystem::path get_path_to_download() const;
     paths_list get_list_of_actual_files() const;
     query_results get_query_results() const;
+    paths_list get_list_of_queued_files() const;
 
     std::vector<std::string> get_versions_to_process() const;
     void process_versions(const std::vector<std::string>&);
@@ -118,8 +119,11 @@ private:
     boost::filesystem::path path_to_download_;
     bool have_to_download_results_;
     bool cache_mode_;
+
     paths_list list_of_actual_files_;
     query_results query_results_;
+    paths_list list_of_queued_files_;
+
     std::string output_file_;
     unsigned int max_attempts_;
     unsigned int retry_timeout_s_;

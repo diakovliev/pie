@@ -30,6 +30,7 @@
 #define GAVCCOMMAND_H
 
 #include <application.h>
+#include <gavc.h>
 #include <gavcquery.h>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/program_options.hpp>
@@ -55,6 +56,8 @@ protected:
     bool parse_arguments();
     void show_command_help_message(const boost::program_options::options_description& desc);
 
+    void write_files_list(const piel::cmd::GAVC::paths_list& paths_list) const;
+
 private:
     int argc_;
     char **argv_;
@@ -75,6 +78,7 @@ private:
     unsigned int max_attempts_;
     unsigned int retry_timeout_s_;
 
+    std::string files_list_;
     bool force_offline_;
 };
 

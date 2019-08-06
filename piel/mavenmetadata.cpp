@@ -32,6 +32,7 @@
 #include <boost_property_tree_ext.hpp>
 
 #include <gavcversionsfilter.h>
+#include <gavcversionsrangefilter.h>
 
 namespace art { namespace lib {
 
@@ -198,25 +199,7 @@ boost::optional<MavenMetadata> MavenMetadata::parse(std::istream& is)
 
 std::vector<std::string> MavenMetadata::versions_for(const GavcQuery& query) const
 {
-    std::vector<std::string> result = versioning_.versions_;
-
-    boost::optional<std::vector<gavc::OpType> > ops_val = query.query_version_ops();
-
-    if (!ops_val) {
-        LOGT << "Unable to get query operations list." << ELOG;
-        return result;
-    }
-
-    std::vector<gavc::OpType> ops = *ops_val;
-//    LOGT << "Query operations list:" << ELOG;
-//    for (std::vector<gavc::OpType>::const_iterator i = ops.begin(), end = ops.end(); i!=end; ++i) {
-//        LOG_T << "   - " << i->second;
-//    }
-
-    // Filter out versions what are not corresponding to query
-    GavcVersionsFilter filter(ops);
-
-    return filter.filtered(result);
+    return query.filter(versioning_.versions_);
 }
 
 } } // namespace art::lib

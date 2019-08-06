@@ -33,6 +33,7 @@
 
 #include <algorithm>
 #include <boost/format.hpp>
+#include <boost/bind.hpp>
 #include <boost/config/warning_disable.hpp>
 #include <boost/spirit/include/phoenix.hpp>
 #include <boost/fusion/include/adapt_struct.hpp>
@@ -40,6 +41,9 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/split.hpp>
+
+#include <gavcversionsfilter.h>
+#include <gavcversionsrangefilter.h>
 
 //! Versions based queries
 //
@@ -72,6 +76,12 @@ BOOST_FUSION_ADAPT_STRUCT(
     (std::string, extension)
 )
 
+BOOST_FUSION_ADAPT_STRUCT(
+    art::lib::gavc::gavc_versions_range_data,
+    (std::string, left)
+    (std::string, right)
+)
+
 namespace art { namespace lib {
 
 namespace gavc {
@@ -87,7 +97,7 @@ namespace gavc {
             using qi::as_string;
 
             _op      = ops;
-            _const   = as_string[ +( char_-_op ) ];
+            _const   = as_string[ +( char_ - _op - GavcConstants::left_include_braket - GavcConstants::left_exclude_braket ) ];
             _ops     = *( (_op >> !_op) | _const );
         }
 
@@ -115,7 +125,7 @@ namespace gavc {
         } ops;
 
         qi::rule<Iterator, OpType()>                                    _op;        //!< Operation.
-        qi::rule<Iterator, OpType()>                                    _const;     //!< Constanst.
+        qi::rule<Iterator, std::string()>                               _const;     //!< Constanst.
         qi::rule<Iterator, std::vector<OpType>(), ascii::space_type>    _ops;
     };
 
@@ -144,6 +154,7 @@ namespace gavc {
                     ;
 
         }
+
     private:
         qi::rule<Iterator, std::string()>                   _body;          //!< Helper.
         qi::rule<Iterator, std::string()>                   _group;         //!< Consumer is gavc_data.group .
@@ -152,6 +163,63 @@ namespace gavc {
         qi::rule<Iterator, std::string()>                   _classifier;    //!< Consumer is gavc_data.classifier .
         qi::rule<Iterator, std::string()>                   _extension;     //!< Consumer is gavc_data.extension .
         qi::rule<Iterator, gavc_data(), ascii::space_type>  _gavc;          //!< Consumer is gavc_data.
+    };
+
+    // <[|(><left>,<right><]|(>
+    template<typename Iterator>
+    struct gavc_versions_range_grammar: qi::grammar<Iterator, gavc_versions_range_data()> {
+        gavc_versions_range_grammar()
+            : gavc_versions_range_grammar::base_type(_data)
+            , _flags(RangeFlags_exclude_all)
+        {
+            using qi::char_;
+            using qi::skip;
+            using qi::lit;
+            using qi::lexeme;
+            using qi::as_string;
+
+            _left_braket    = lexeme[
+                                lit(GavcConstants::left_include_braket)
+                                    [
+                                        boost::bind(&gavc_versions_range_grammar::include_left, this)
+                                    ]
+                                | lit(GavcConstants::left_exclude_braket)
+                              ];
+
+            _right_braket   = lexeme[
+                                lit(GavcConstants::right_include_braket)
+                                    [
+                                        boost::bind(&gavc_versions_range_grammar::include_right, this)
+                                    ]
+                                | lit(GavcConstants::right_exclude_braket)
+                              ];
+
+            _left      = as_string[ +( char_ - GavcConstants::range_separator ) ];
+            _right     = as_string[ +( char_ - _right_braket )];
+            _data      = _left_braket > _left > GavcConstants::range_separator > _right > _right_braket;
+        }
+
+        unsigned char flags() const {
+            return _flags;
+        }
+
+        void include_left() {
+            _flags |= RangeFlags_include_left;
+        }
+
+        void include_right() {
+            _flags |= RangeFlags_include_right;
+        }
+
+    private:
+        qi::rule<Iterator>                              _left_braket;
+        qi::rule<Iterator>                              _right_braket;
+
+        qi::rule<Iterator, std::string()>               _left;
+        qi::rule<Iterator, std::string()>               _right;
+        qi::rule<Iterator, gavc_versions_range_data()>  _data;
+
+        unsigned char _flags;
     };
 
 } // namespace gavc
@@ -199,35 +267,92 @@ boost::optional<GavcQuery> GavcQuery::parse(const std::string& gavc_str)
 
 boost::optional<std::vector<gavc::OpType> > GavcQuery::query_version_ops() const
 {
+    return query_version_ops(data_.version);
+}
+
+std::pair<
+    boost::optional<std::vector<gavc::OpType> >,
+    boost::optional<gavc::gavc_versions_range_data>
+> GavcQuery::query_version_data() const {
+    return query_version_data(data_.version);
+}
+
+boost::optional<gavc::gavc_versions_range_data> GavcQuery::query_versions_range() const
+{
+    return query_versions_range(data_.version);
+}
+
+/* static */
+std::pair<
+    boost::optional<std::vector<gavc::OpType> >,
+    boost::optional<gavc::gavc_versions_range_data>
+> GavcQuery::query_version_data(const std::string& version) {
+
     namespace qi = boost::spirit::qi;
     namespace ascii = boost::spirit::ascii;
 
-    std::vector<gavc::OpType> result;
-    if (data_.version.empty()) {
-        result.push_back(gavc::OpType(gavc::Op_all, GavcConstants::all_versions));
-        return result;
+    std::vector<gavc::OpType> ops;
+    gavc::gavc_versions_range_data range;
+
+    if (version.empty()) {
+        ops.push_back(gavc::OpType(gavc::Op_all, GavcConstants::all_versions));
+        return std::make_pair(ops, boost::none);
     }
 
     gavc::gavc_version_ops_grammar<std::string::const_iterator> version_ops_grammar;
+    gavc::gavc_versions_range_grammar<std::string::const_iterator> version_range_grammar;
+
+    bool range_found = false;
+    auto range_callback = [&]() { range_found = true; };
 
     try {
-        qi::phrase_parse( data_.version.begin(), data_.version.end(), version_ops_grammar, ascii::space, result );
+        bool matched = qi::phrase_parse(
+                version.begin(),
+                version.end(),
+                version_ops_grammar > -version_range_grammar[ range_callback ],
+                ascii::space,
+                ops, range);
+
+        if (!matched)
+            return std::make_pair(boost::none, boost::none);
+
+        if (range_found)
+            range.flags = version_range_grammar.flags();
+
     } catch (...) {
-        return boost::none;
+        return std::make_pair(boost::none, boost::none);
     }
 
-    for (std::vector<gavc::OpType>::iterator i = result.begin(), end = result.end(); i != end; ++i )
+    if (!version.empty() & ops.empty())
     {
-        LOGT << "version query op: " << i->second << ELOG;
+        LOGE << "version query: " << version << " has wrong syntax!" << ELOG;
+        return std::make_pair(boost::none, boost::none);
     }
 
-    if (!data_.version.empty() & result.empty())
-    {
-        LOGE << "version query: " << data_.version << " has wrong syntax!" << ELOG;
-        return boost::none;
-    }
+    std::for_each(ops.begin(), ops.end(), [&](auto i) {
+        {
+            LOGT << "version query op: " << i.second << ELOG;
+        }
+    });
 
-    return result;
+    if (!range_found)
+        return std::make_pair(ops, boost::none);
+
+    LOGT << "versions range left: " << range.left << ELOG;
+    LOGT << "versions range right: " << range.right << ELOG;
+    LOGT << "versions range flags: " << int(range.flags) << ELOG;
+
+    return std::make_pair(ops, range);
+}
+
+/* static */ boost::optional<std::vector<gavc::OpType> > GavcQuery::query_version_ops(const std::string& version)
+{
+    return query_version_data(version).first;
+}
+
+/* static */ boost::optional<gavc::gavc_versions_range_data> GavcQuery::query_versions_range(const std::string& version)
+{
+    return query_version_data(version).second;
 }
 
 struct QueryOpsFinder_exact_version_query {
@@ -238,7 +363,10 @@ struct QueryOpsFinder_exact_version_query {
 
 bool GavcQuery::is_exact_version_query() const
 {
-    boost::optional<std::vector<gavc::OpType> > pops = query_version_ops();
+    auto range = query_versions_range();
+    if (range) return false;
+
+    auto pops = query_version_ops();
     if (!pops) return false;
 
     return std::find_if(pops->begin(), pops->end(), QueryOpsFinder_exact_version_query()) == pops->end();
@@ -246,15 +374,18 @@ bool GavcQuery::is_exact_version_query() const
 
 bool GavcQuery::is_single_version_query() const
 {
-    boost::optional<std::vector<gavc::OpType> > pops = query_version_ops();
+    auto range = query_versions_range();
+    if (range) return false;
+
+    auto pops = query_version_ops();
     if (!pops) return false;
 
     bool is_last_op_all = false;
-    for(std::vector<gavc::OpType>::const_iterator i = pops->begin(), end = pops->end(); i != end; ++i)
+    std::for_each(pops->begin(), pops->end(), [&](auto i)
     {
-        if (i->first != gavc::Op_const)
-            is_last_op_all = i->first == gavc::Op_all;
-    }
+        if (i.first != gavc::Op_const)
+           is_last_op_all = i.first == gavc::Op_all;
+    });
 
     return !is_last_op_all;
 }
@@ -324,6 +455,35 @@ std::string GavcQuery::format_maven_metadata_path(const std::string& repository)
         % GavcConstants::path_delimiter % repository % group_path % name());
 
     LOGT << "Cache path to metadata url: " << result << ELOG;
+    return result;
+}
+
+std::vector<std::string> GavcQuery::filter(const std::vector<std::string>& versions) const {
+    std::vector<std::string> result = versions;
+
+    auto data = query_version_data();
+    if (data.first && data.second) {
+        auto ops = data.first;
+        auto range = data.second;
+
+        auto left_ops = query_version_ops(range->left);
+        auto right_ops = query_version_ops(range->right);
+
+        GavcVersionsRangeFilter filter(*ops, *left_ops, *right_ops, range->flags);
+
+        return filter.filtered(result);
+    } else if (data.first) {
+        auto ops = data.first;
+
+        if (!ops) {
+            LOGT << "Unable to get query operations list." << ELOG;
+            return result;
+        }
+
+        GavcVersionsFilter filter(*ops);
+        return filter.filtered(result);
+    }
+
     return result;
 }
 

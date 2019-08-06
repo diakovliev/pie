@@ -30,6 +30,7 @@
 #define GAVCQUERY_H
 
 #include <vector>
+#include <map>
 #include <string>
 #include <boost/optional.hpp>
 #include <boost/shared_ptr.hpp>
@@ -65,6 +66,18 @@ namespace gavc {
         std::string extension;      // empty by default
     };
 
+    enum RangeFlags {
+        RangeFlags_exclude_all      = 0x0,
+        RangeFlags_include_left     = 0x01,
+        RangeFlags_include_right    = 0x02,
+    };
+
+    struct gavc_versions_range_data {
+        std::string left;
+        std::string right;
+        unsigned char flags;
+    };
+
 } // namespace gavc
 
 class GavcQuery
@@ -91,6 +104,21 @@ public:
     std::string group_path() const;
 
     boost::optional<std::vector<gavc::OpType> > query_version_ops() const;
+    static boost::optional<std::vector<gavc::OpType> > query_version_ops(const std::string& version);
+
+    boost::optional<gavc::gavc_versions_range_data> query_versions_range() const;
+    static boost::optional<gavc::gavc_versions_range_data> query_versions_range(const std::string& version);
+
+    std::pair<
+        boost::optional<std::vector<gavc::OpType> >,
+        boost::optional<gavc::gavc_versions_range_data>
+    > query_version_data() const;
+
+    static std::pair<
+        boost::optional<std::vector<gavc::OpType> >,
+        boost::optional<gavc::gavc_versions_range_data>
+    > query_version_data(const std::string& version);
+
     std::string format_maven_metadata_url(const std::string& server_url, const std::string& repository) const;
     std::string format_maven_metadata_path(const std::string& repository) const;
 
@@ -102,9 +130,10 @@ public:
     bool is_exact_version_query() const;
     bool is_single_version_query() const;
 
-private:
-    gavc::gavc_data data_;
+    std::vector<std::string> filter(const std::vector<std::string>& versions) const;
 
+private:
+    gavc::gavc_data                 data_;
 };
 
 } } // namespace art::lib

@@ -75,6 +75,7 @@ GAVC::GAVC(const std::string& server_api_access_token
     , cache_mode_(false)
     , list_of_actual_files_()
     , query_results_()
+    , list_of_queued_files_()
     , output_file_(output_file)
     , max_attempts_(max_attempts)
     , retry_timeout_s_(retry_timeout_s)
@@ -357,6 +358,7 @@ void GAVC::on_object(const pt::ptree::value_type& obj, const std::string& versio
             << " version: " << version << " }" << ELOG;
 
     query_results_.insert(std::make_pair(object_path, std::make_pair(object_classifier, version)));
+    list_of_queued_files_.push_back(object_path.string());
 }
 
 std::string GAVC::create_url(const std::string& version_to_query, const std::string& classifier) const
@@ -506,6 +508,11 @@ GAVC::paths_list GAVC::get_list_of_actual_files() const
 GAVC::query_results GAVC::get_query_results() const
 {
     return query_results_;
+}
+
+GAVC::paths_list GAVC::get_list_of_queued_files() const
+{
+    return list_of_queued_files_;
 }
 
 void GAVC::set_cache_mode(bool value)
