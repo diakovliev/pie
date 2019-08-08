@@ -128,7 +128,10 @@ public:
     }
 
     bool is_exact_version_query() const;
+    static bool is_exact_version_query(const std::string& version);
+
     bool is_single_version_query() const;
+    static bool is_single_version_query(const std::string& version);
 
     std::vector<std::string> filter(const std::vector<std::string>& versions) const;
 

@@ -30,6 +30,8 @@
 #define GAVCVERSIONSRANGEFILTER_H_
 
 #include <vector>
+#include <map>
+
 #include <gavcquery.h>
 #include <gavcversionsmatcher.h>
 #include <gavcversionscomparator.h>
@@ -46,8 +48,8 @@ public:
     //! @param query_ops Query operations for creating filter.
     GavcVersionsRangeFilter(
             const std::vector<gavc::OpType>& query_ops,
-            const std::vector<gavc::OpType>& query_ops_left,
-            const std::vector<gavc::OpType>& query_ops_right,
+            const std::string& left_version,
+            const std::string& right_version,
             unsigned char flags);
 
     //! Destructor.
@@ -76,11 +78,11 @@ public:
     GavcVersionsComparator& comparator() const;
 
 protected:
-    std::string border_version(const std::vector<gavc::OpType>& border_ops, const std::vector<std::string>& versions) const;
+    std::pair<std::string, bool> border_version(const std::string& border_version, const std::vector<std::string>& versions) const;
 
 private:
-    std::vector<gavc::OpType>   left_ops_;
-    std::vector<gavc::OpType>   right_ops_;
+    std::string                 left_version_;
+    std::string                 right_version_;
     unsigned int                flags_;
     GavcVersionsMatcher         matcher_;       //!< Marcher
     GavcVersionsComparator      comparator_;    //!< Comparator

@@ -363,10 +363,15 @@ struct QueryOpsFinder_exact_version_query {
 
 bool GavcQuery::is_exact_version_query() const
 {
-    auto range = query_versions_range();
+    return is_exact_version_query(data_.version);
+}
+
+/* static */ bool GavcQuery::is_exact_version_query(const std::string& version)
+{
+    auto range = query_versions_range(version);
     if (range) return false;
 
-    auto pops = query_version_ops();
+    auto pops = query_version_ops(version);
     if (!pops) return false;
 
     return std::find_if(pops->begin(), pops->end(), QueryOpsFinder_exact_version_query()) == pops->end();
@@ -374,10 +379,15 @@ bool GavcQuery::is_exact_version_query() const
 
 bool GavcQuery::is_single_version_query() const
 {
-    auto range = query_versions_range();
+    return is_single_version_query(data_.version);
+}
+
+/* static */ bool GavcQuery::is_single_version_query(const std::string& version)
+{
+    auto range = query_versions_range(version);
     if (range) return false;
 
-    auto pops = query_version_ops();
+    auto pops = query_version_ops(version);
     if (!pops) return false;
 
     bool is_last_op_all = false;
@@ -466,10 +476,7 @@ std::vector<std::string> GavcQuery::filter(const std::vector<std::string>& versi
         auto ops = data.first;
         auto range = data.second;
 
-        auto left_ops = query_version_ops(range->left);
-        auto right_ops = query_version_ops(range->right);
-
-        GavcVersionsRangeFilter filter(*ops, *left_ops, *right_ops, range->flags);
+        GavcVersionsRangeFilter filter(*ops, range->left, range->right, range->flags);
 
         return filter.filtered(result);
     } else if (data.first) {

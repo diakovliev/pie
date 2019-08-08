@@ -41,11 +41,11 @@ namespace art { namespace lib {
 
 GavcVersionsRangeFilter::GavcVersionsRangeFilter(
         const std::vector<gavc::OpType>& query_ops,
-        const std::vector<gavc::OpType>& query_ops_left,
-        const std::vector<gavc::OpType>& query_ops_right,
+        const std::string& left_version,
+        const std::string& right_version,
         unsigned char flags)
-    : left_ops_(query_ops_left)
-    , right_ops_(query_ops_right)
+    : left_version_(left_version)
+    , right_version_(right_version)
     , flags_(flags)
     , matcher_(query_ops)
     , comparator_(query_ops)
@@ -58,23 +58,34 @@ GavcVersionsRangeFilter::~GavcVersionsRangeFilter()
 
 }
 
-std::string GavcVersionsRangeFilter::border_version(const std::vector<gavc::OpType>& border_ops, const std::vector<std::string>& versions) const
+std::pair<std::string, bool> GavcVersionsRangeFilter::border_version(const std::string& border_version, const std::vector<std::string>& versions) const
 {
-    GavcVersionsFilter border_filter(border_ops);
-
-    std::vector<std::string> ret_vector = border_filter.filtered(versions);
-
+    bool exists = true;
     std::string result;
 
-    if (!ret_vector.empty())
-        result = ret_vector.front();
+    if (GavcQuery::is_exact_version_query(border_version)) {
 
-    return result;
+        exists = std::find(versions.begin(), versions.end(), border_version) != versions.end();
+        result = border_version;
+
+    } else if (GavcQuery::is_single_version_query(border_version)) {
+
+        GavcVersionsFilter border_filter(*GavcQuery::query_version_ops(border_version));
+
+        std::vector<std::string> ret_vector = border_filter.filtered(versions);
+
+        if (!ret_vector.empty())
+            result = ret_vector.front();
+    }
+
+    return std::make_pair(result, exists);
 }
 
 std::vector<std::string> GavcVersionsRangeFilter::filtered(const std::vector<std::string>& versions)
 {
     std::vector<std::string> filtered_versions = versions;
+
+    LOGT << "Filter versions" << ELOG;
 
     Match predicate(&matcher_);
     filtered_versions.erase(std::remove_if(filtered_versions.begin(), filtered_versions.end(), Match::not_(predicate)), filtered_versions.end());
@@ -84,24 +95,39 @@ std::vector<std::string> GavcVersionsRangeFilter::filtered(const std::vector<std
 
     std::vector<std::string> result;
 
-    std::string left_version = border_version(left_ops_, filtered_versions);
-    std::string right_version = border_version(right_ops_, filtered_versions);
+    LOGT << "Calculate borders" << ELOG;
 
-    if (flags_ & gavc::RangeFlags_include_left && !left_version.empty()) {
-        LOGT << "add left border value: " << left_version << ELOG;
-        result.push_back(left_version);
+    auto left_version = border_version(left_version_, filtered_versions);
+    if (left_version.first.empty()) {
+        LOGE << "Unable to find left border version in metadata! Border version must be exact or a single version query!" << ELOG;
+        return result;
+    }
+
+    auto right_version = border_version(right_version_, filtered_versions);
+    if (right_version.first.empty()) {
+        LOGE << "Unable to find right border version in metadata! Border version must be exact or a single version query!" << ELOG;
+        return result;
+    }
+
+    LOGT << "left version: " << left_version.first << ELOG;
+    LOGT << "right version: " << right_version.first << ELOG;
+
+    if (flags_ & gavc::RangeFlags_include_left && left_version.second) {
+        LOGT << "add left border value: " << left_version.first << ELOG;
+        result.push_back(left_version.first);
     }
 
     std::for_each(filtered_versions.begin(), filtered_versions.end(), [&](auto i) {
-        if (comparator_.compare(left_version, i) > 0 && comparator_.compare(right_version, i) < 0) {
+        LOGT << "check version: " << i << ELOG;
+        if (comparator_.compare(left_version.first, i) > 0 && comparator_.compare(right_version.first, i) < 0) {
             LOGT << "add value: " << i << ELOG;
             result.push_back(i);
         }
     });
 
-    if (flags_ & gavc::RangeFlags_include_right && !right_version.empty()) {
-        LOGT << "add right border value: " << right_version << ELOG;
-        result.push_back(right_version);
+    if (flags_ & gavc::RangeFlags_include_right && right_version.second) {
+        LOGT << "add right border value: " << right_version.first << ELOG;
+        result.push_back(right_version.first);
     }
 
     std::sort(result.begin(), result.end(), comparator_);
