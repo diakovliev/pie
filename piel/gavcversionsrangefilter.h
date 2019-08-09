@@ -46,6 +46,9 @@ public:
     //! Constructor.
     //!
     //! @param query_ops Query operations for creating filter.
+    //! @param left_version Down/Left range version.
+    //! @param right_version Up/Right range version.
+    //! @param flags Flags will detarmine if borders will be in results.
     GavcVersionsRangeFilter(
             const std::vector<gavc::OpType>& query_ops,
             const std::string& left_version,
