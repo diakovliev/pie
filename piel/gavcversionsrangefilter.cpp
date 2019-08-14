@@ -112,6 +112,11 @@ std::vector<std::string> GavcVersionsRangeFilter::filtered(const std::vector<std
     LOGT << "left version: " << left_version.first << ELOG;
     LOGT << "right version: " << right_version.first << ELOG;
 
+    if (comparator_.compare(left_version.first, right_version.first) <= 0) {
+        LOGE << "Left border version must be less than right!" << ELOG;
+        return result;
+    }
+
     if (flags_ & gavc::RangeFlags_include_left && left_version.second) {
         LOGT << "add left border value: " << left_version.first << ELOG;
         result.push_back(left_version.first);
