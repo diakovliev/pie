@@ -6,8 +6,8 @@
 #set(CMAKE_CXX_COMPILER /usr/bin/clang++)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -Wextra -Wno-unused-parameter -Wno-overloaded-virtual")
 
-#set(CMAKE_C_COMPILER /usr/bin/gcc-5)
-#set(CMAKE_CXX_COMPILER /usr/bin/g++-5)
+set(CMAKE_C_COMPILER ccache /usr/bin/gcc)
+set(CMAKE_CXX_COMPILER ccache /usr/bin/g++)
 
 #include(CheckCXXCompilerFlag)
 #CHECK_CXX_COMPILER_FLAG("--std=c++11" COMPILER_SUPPORTS_CXX11)
