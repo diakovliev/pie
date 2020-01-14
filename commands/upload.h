@@ -30,7 +30,6 @@
 #define UPLOAD_H_
 
 #include <command.h>
-#include <indexesdiff.h>
 #include <gavcquery.h>
 #include <uploadfilesspec.h>
 #include <artdeployartifacthandlers.h>

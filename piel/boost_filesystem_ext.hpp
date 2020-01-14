@@ -34,7 +34,6 @@
 #include <boost/filesystem.hpp>
 
 #include <commonconstants.h>
-#include <assetid.h>
 #include <checksumsdigestbuilder.hpp>
 
 namespace boost { namespace filesystem {
@@ -89,28 +88,6 @@ inline void remove_directory_content(const path& dir, const path& exclude)
             remove_all(e.path());
         }
     }
-}
-
-inline std::string copy_into(boost::shared_ptr<std::ostream> osp, boost::shared_ptr<std::istream> isp)
-{
-    typedef std::vector<char> BufferType;
-
-    piel::lib::ChecksumsDigestBuilder digest_builder;
-    digest_builder.init();
-
-    BufferType copy_buffer(piel::lib::CommonConstants::io_buffer_size);
-    do {
-        BufferType::size_type readed = isp->read(copy_buffer.data(), copy_buffer.size()).gcount();
-        if (readed) {
-            osp->write(copy_buffer.data(), readed);
-            digest_builder.update(copy_buffer.data(), readed);
-        }
-    } while(!isp->eof() & !isp->fail() & !isp->bad());
-
-    piel::lib::ChecksumsDigestBuilder::StrDigests str_digests =
-            digest_builder.finalize<piel::lib::ChecksumsDigestBuilder::StrDigests>();
-
-    return str_digests[piel::lib::AssetId::digest_algo];
 }
 
 } } // namespace boost::filesystem

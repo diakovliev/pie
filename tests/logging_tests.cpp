@@ -28,8 +28,8 @@
 
 #define BOOST_TEST_MODULE LoggingTests
 #include <boost/test/unit_test.hpp>
-#include "test_utils.hpp"
 
+#include <iostream>
 #include <logger/app/logging.h>
 
 using namespace piel::lib;

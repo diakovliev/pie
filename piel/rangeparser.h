@@ -29,9 +29,14 @@
 #ifndef PIEL_RANGEPARSER_H_
 #define PIEL_RANGEPARSER_H_
 
-#include <iobjectsstorage.h>
+#include <string>
+#include <map>
 
 namespace piel { namespace lib {
+
+namespace refs {
+    typedef std::pair<std::string,std::string> Range;
+}
 
 class RangeParser
 {

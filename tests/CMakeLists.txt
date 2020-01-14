@@ -9,31 +9,14 @@ add_definitions(-DBOOST_TEST_DYN_LINK)
 include_directories(${Boost_INCLUDE_DIR})
 
 #############################################################
-add_executable(zip_test zip_tests.cpp)
-target_link_libraries(zip_test ${Piel_LIBRARIES})
-add_test (NAME ZipTest COMMAND zip_test)
-
-#############################################################
 add_executable(uploadfilesspec_test uploadfilesspec_test.cpp)
 target_link_libraries(uploadfilesspec_test ${Piel_LIBRARIES})
 add_test (NAME UploadFilesSpecTest COMMAND uploadfilesspec_test)
 
 #############################################################
-add_executable(outputstream_test outputstream_test.cpp)
-target_link_libraries(outputstream_test ${Piel_LIBRARIES})
-add_test (NAME OutputStreamTests COMMAND outputstream_test)
-
-#############################################################
 add_executable(art_test art_test.cpp)
 target_link_libraries(art_test ${Piel_LIBRARIES})
 #add_test (NAME ArtTests COMMAND art_test)
-
-#############################################################
-add_executable(properties properties.cpp)
-target_link_libraries(properties ${Piel_LIBRARIES})
-add_test (NAME Properties COMMAND properties)
-set_tests_properties(Properties
-    PROPERTIES ENVIRONMENT "test_env_var=test_env_var_default_value")
 
 #############################################################
 add_executable(gavc_query_parsing gavc_query_parsing.cpp)
@@ -61,29 +44,9 @@ target_link_libraries(gavc_versions_comparator ${Piel_LIBRARIES})
 add_test (NAME GavcVersionsComparatorTest COMMAND gavc_versions_comparator)
 
 #############################################################
-add_executable(assets_tests assets_tests.cpp)
-target_link_libraries(assets_tests ${Piel_LIBRARIES})
-add_test (NAME AssetsTests COMMAND assets_tests)
-
-#############################################################
-add_executable(indexers_tests indexers_tests.cpp)
-target_link_libraries(indexers_tests ${Piel_LIBRARIES})
-add_test (NAME IndexersTests COMMAND indexers_tests)
-
-#############################################################
-add_executable(working_copy_tests working_copy_tests.cpp)
-target_link_libraries(working_copy_tests ${Piel_LIBRARIES})
-add_test (NAME WorkingCopyTests COMMAND working_copy_tests)
-
-#############################################################
 add_executable(logging_tests logging_tests.cpp)
 target_link_libraries(logging_tests ${Piel_LIBRARIES})
 add_test (NAME LoggingTests COMMAND logging_tests)
-
-#############################################################
-add_executable(push_test push_tests.cpp)
-target_link_libraries(push_test ${Piel_LIBRARIES})
-#add_test (NAME PushTest COMMAND push_test)
 
 #############################################################
 add_executable(gavc_cache gavc_cache.cpp)
