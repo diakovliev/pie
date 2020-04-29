@@ -29,6 +29,7 @@
 #ifndef PIEL_GAVCVERSIONSCOMPARATOR_H_
 #define PIEL_GAVCVERSIONSCOMPARATOR_H_
 
+#include <boost/assert.hpp>
 #include <gavcversionsmatcher.h>
 
 namespace art { namespace lib {

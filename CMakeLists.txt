@@ -23,7 +23,7 @@ add_definitions(-DBOOST_LOG_DYN_LINK)
 add_definitions(-DBOOST_SPIRIT_USE_PHOENIX_V3)
 add_definitions(-DBOOST_NO_CXX11_SCOPED_ENUMS)
 
-set(Boost_libraries_list program_options regex)
+set(Boost_libraries_list program_options)
 
 add_subdirectory(logger)
 add_subdirectory(piel)

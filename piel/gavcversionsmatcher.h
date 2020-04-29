@@ -31,10 +31,9 @@
 
 #include <gavcquery.h>
 #include <vector>
-#include <boost/regex.hpp>
+#include <regex>
 
-namespace art {
-namespace lib {
+namespace art { namespace lib {
 
 class GavcVersionsMatcher
 {
@@ -46,18 +45,17 @@ public:
 
     std::vector<std::string> significant_parts(const std::string& version) const;
 
-    const boost::regex& regex();
+    const std::regex& regex();
 
 protected:
     std::string escape_string(const std::string& str_to_escape) const;
-    boost::regex create_regex(const std::vector<gavc::OpType>& query_ops) const;
+    std::regex create_regex(const std::vector<gavc::OpType>& query_ops) const;
 
 private:
-    boost::regex regex_;
+    std::regex regex_;
 
 };
 
-} // namespace lib
-} // namespace art
+} } // namespace art::lib
 
 #endif /* GAVCVERSIONSMATCHER_H_ */

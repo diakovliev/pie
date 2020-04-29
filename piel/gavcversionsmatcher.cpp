@@ -30,8 +30,7 @@
 #include <logging.h>
 #include <algorithm>
 
-namespace art {
-namespace lib {
+namespace art { namespace lib {
 
 GavcVersionsMatcher::GavcVersionsMatcher(const std::vector<gavc::OpType>& query_ops)
     : regex_(create_regex(query_ops))
@@ -44,9 +43,9 @@ GavcVersionsMatcher::~GavcVersionsMatcher()
 
 bool GavcVersionsMatcher::match(const std::string& version) const
 {
-    bool result = boost::regex_match(version, regex_);
+    bool result = std::regex_match(version, regex_);
 
-    LOGT << "match version: " << version << " regex: " << regex_ << " result: " << result << ELOG;
+    LOGT << "match version: " << version << " result: " << result << ELOG;
 
     return result;
 }
@@ -55,8 +54,8 @@ std::vector<std::string> GavcVersionsMatcher::significant_parts(const std::strin
 {
     std::vector<std::string> result;
 
-    boost::smatch what;
-    if (boost::regex_match(version, what, regex_)) {
+    std::smatch what;
+    if (std::regex_match(version, what, regex_)) {
         result.resize(what.size() - 1);
         std::copy(++what.begin(), what.end(), result.begin());
     }
@@ -64,20 +63,20 @@ std::vector<std::string> GavcVersionsMatcher::significant_parts(const std::strin
     return result;
 }
 
-const boost::regex& GavcVersionsMatcher::regex()
+const std::regex& GavcVersionsMatcher::regex()
 {
     return regex_;
 }
 
 std::string GavcVersionsMatcher::escape_string(const std::string& str_to_escape) const
 {
-    const boost::regex esc("[.^$|()\\[\\]{}*+?\\\\]");
+    const std::regex esc("[.^$|()\\[\\]{}*+?\\\\]");
     const std::string rep("\\\\&");
-    return boost::regex_replace(str_to_escape, esc, rep,
-            boost::match_default | boost::format_sed);
+    return std::regex_replace(str_to_escape, esc, rep,
+            std::regex_constants::match_default | std::regex_constants::format_sed);
 }
 
-boost::regex GavcVersionsMatcher::create_regex(const std::vector<gavc::OpType>& query_ops) const
+std::regex GavcVersionsMatcher::create_regex(const std::vector<gavc::OpType>& query_ops) const
 {
     std::ostringstream regex_content;
 
@@ -105,8 +104,7 @@ boost::regex GavcVersionsMatcher::create_regex(const std::vector<gavc::OpType>& 
 
     LOGT << "created regex: " << regex_content.str() << ELOG;
 
-    return boost::regex(regex_content.str());
+    return std::regex(regex_content.str());
 }
 
-} // namespace lib
-} // namespace art
+} } // namespace art::lib
