@@ -243,10 +243,10 @@ GavcQuery::~GavcQuery()
 {
 }
 
-boost::optional<GavcQuery> GavcQuery::parse(const std::string& gavc_str)
+std::optional<GavcQuery> GavcQuery::parse(const std::string& gavc_str)
 {
     if (gavc_str.empty())
-        return boost::none;
+        return std::nullopt;
 
     namespace qi = boost::spirit::qi;
     namespace ascii = boost::spirit::ascii;
@@ -257,7 +257,7 @@ boost::optional<GavcQuery> GavcQuery::parse(const std::string& gavc_str)
     try {
         qi::phrase_parse( gavc_str.begin(), gavc_str.end(), grammar, ascii::space, result.data_ );
     } catch (...) {
-        return boost::none;
+        return std::nullopt;
     }
 
     LOGT << "group: "      << result.group()        << ELOG;
@@ -267,35 +267,35 @@ boost::optional<GavcQuery> GavcQuery::parse(const std::string& gavc_str)
     LOGT << "extension: "  << result.extension()    << ELOG;
 
     // Attempt to parse versions query
-    boost::optional<std::vector<gavc::OpType> > ops = result.query_version_ops();
+    std::optional<std::vector<gavc::OpType> > ops = result.query_version_ops();
     if (!ops) {
-        return boost::none;
+        return std::nullopt;
     }
 
     return result;
 }
 
-boost::optional<std::vector<gavc::OpType> > GavcQuery::query_version_ops() const
+std::optional<std::vector<gavc::OpType> > GavcQuery::query_version_ops() const
 {
     return query_version_ops(data_.version);
 }
 
 std::pair<
-    boost::optional<std::vector<gavc::OpType> >,
-    boost::optional<gavc::gavc_versions_range_data>
+    std::optional<std::vector<gavc::OpType> >,
+    std::optional<gavc::gavc_versions_range_data>
 > GavcQuery::query_version_data() const {
     return query_version_data(data_.version);
 }
 
-boost::optional<gavc::gavc_versions_range_data> GavcQuery::query_versions_range() const
+std::optional<gavc::gavc_versions_range_data> GavcQuery::query_versions_range() const
 {
     return query_versions_range(data_.version);
 }
 
 /* static */
 std::pair<
-    boost::optional<std::vector<gavc::OpType> >,
-    boost::optional<gavc::gavc_versions_range_data>
+    std::optional<std::vector<gavc::OpType> >,
+    std::optional<gavc::gavc_versions_range_data>
 > GavcQuery::query_version_data(const std::string& version) {
 
     namespace qi = boost::spirit::qi;
@@ -306,7 +306,7 @@ std::pair<
 
     if (version.empty()) {
         ops.push_back(gavc::OpType(gavc::Op_all, GavcConstants::all_versions));
-        return std::make_pair(ops, boost::none);
+        return std::make_pair(ops, std::nullopt);
     }
 
     gavc::gavc_version_ops_grammar<std::string::const_iterator> version_ops_grammar;
@@ -324,19 +324,19 @@ std::pair<
                 ops, range);
 
         if (!matched)
-            return std::make_pair(boost::none, boost::none);
+            return std::make_pair(std::nullopt, std::nullopt);
 
         if (range_found)
             range.flags = version_range_grammar.flags();
 
     } catch (...) {
-        return std::make_pair(boost::none, boost::none);
+        return std::make_pair(std::nullopt, std::nullopt);
     }
 
     if (!version.empty() & ops.empty())
     {
         LOGE << "version query: " << version << " has wrong syntax!" << ELOG;
-        return std::make_pair(boost::none, boost::none);
+        return std::make_pair(std::nullopt, std::nullopt);
     }
 
     std::for_each(ops.begin(), ops.end(), [&](auto i) {
@@ -346,7 +346,7 @@ std::pair<
     });
 
     if (!range_found)
-        return std::make_pair(ops, boost::none);
+        return std::make_pair(ops, std::nullopt);
 
     LOGT << "versions range left: " << range.left << ELOG;
     LOGT << "versions range right: " << range.right << ELOG;
@@ -355,12 +355,12 @@ std::pair<
     return std::make_pair(ops, range);
 }
 
-/* static */ boost::optional<std::vector<gavc::OpType> > GavcQuery::query_version_ops(const std::string& version)
+/* static */ std::optional<std::vector<gavc::OpType> > GavcQuery::query_version_ops(const std::string& version)
 {
     return query_version_data(version).first;
 }
 
-/* static */ boost::optional<gavc::gavc_versions_range_data> GavcQuery::query_versions_range(const std::string& version)
+/* static */ std::optional<gavc::gavc_versions_range_data> GavcQuery::query_versions_range(const std::string& version)
 {
     return query_version_data(version).second;
 }

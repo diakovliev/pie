@@ -147,10 +147,10 @@ UploadFileSpec::~UploadFileSpec()
 {
 }
 
-boost::optional<UploadFileSpec> UploadFileSpec::parse(const std::string& files_spec_str)
+std::optional<UploadFileSpec> UploadFileSpec::parse(const std::string& files_spec_str)
 {
     if (files_spec_str.empty())
-        return boost::none;
+        return std::nullopt;
 
     namespace qi = boost::spirit::qi;
     namespace ascii = boost::spirit::ascii;
@@ -161,7 +161,7 @@ boost::optional<UploadFileSpec> UploadFileSpec::parse(const std::string& files_s
     try {
         qi::phrase_parse( files_spec_str.begin(), files_spec_str.end(), grammar, ascii::space, result.data_ );
     } catch (...) {
-        return boost::none;
+        return std::nullopt;
     }
 
     return result;

@@ -29,11 +29,9 @@
 #ifndef UPLOADFILESSPEC_H
 #define UPLOADFILESSPEC_H
 
-#include <application.h>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/program_options.hpp>
 #include <map>
 #include <vector>
+#include <optional>
 
 namespace art { namespace lib {
 
@@ -57,7 +55,7 @@ public:
     UploadFileSpec();
     ~UploadFileSpec();
 
-    static boost::optional<UploadFileSpec> parse(const std::string& files_spec_str);
+    static std::optional<UploadFileSpec> parse(const std::string& files_spec_str);
     std::string to_string() const;
 
     ufs::UFSVector get_data() { return  data_; }

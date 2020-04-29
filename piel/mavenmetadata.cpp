@@ -75,7 +75,7 @@ MavenMetadata::~MavenMetadata()
 {
 }
 
-boost::optional<MavenMetadata> MavenMetadata::parse(std::istream& is)
+std::optional<MavenMetadata> MavenMetadata::parse(std::istream& is)
 {
     MavenMetadata result;
 
@@ -84,20 +84,20 @@ boost::optional<MavenMetadata> MavenMetadata::parse(std::istream& is)
 
     pt::ptree metadata = metadata_root.get_child(MavenMetadataConstants::root_element);
 
-    boost::optional<std::string> op_group       = pt::find_value(metadata,
+    std::optional<std::string> op_group       = pt::find_value(metadata,
             pt::FindPropertyHelper(MavenMetadataConstants::group_element));
-    boost::optional<std::string> op_artifact    = pt::find_value(metadata,
+    std::optional<std::string> op_artifact    = pt::find_value(metadata,
             pt::FindPropertyHelper(MavenMetadataConstants::artifact_element));
-    boost::optional<std::string> op_version     = pt::find_value(metadata,
+    std::optional<std::string> op_version     = pt::find_value(metadata,
             pt::FindPropertyHelper(MavenMetadataConstants::version_element));
 
     pt::ptree versioning = metadata.get_child(MavenMetadataConstants::versioning_element);
 
-    boost::optional<std::string> op_latest      = pt::find_value(versioning,
+    std::optional<std::string> op_latest      = pt::find_value(versioning,
             pt::FindPropertyHelper(MavenMetadataConstants::versioning_latest_element));
-    boost::optional<std::string> op_release     = pt::find_value(versioning,
+    std::optional<std::string> op_release     = pt::find_value(versioning,
             pt::FindPropertyHelper(MavenMetadataConstants::versioning_release_element));
-    boost::optional<std::string> op_last_updated= pt::find_value(versioning,
+    std::optional<std::string> op_last_updated= pt::find_value(versioning,
             pt::FindPropertyHelper(MavenMetadataConstants::versioning_last_updated_element));
 
     pt::ptree versions = versioning.get_child(MavenMetadataConstants::versioning_versions_element);
@@ -193,7 +193,7 @@ boost::optional<MavenMetadata> MavenMetadata::parse(std::istream& is)
     if (!have_errors) {
         return result;
     } else {
-        return boost::none;
+        return std::nullopt;
     }
 }
 

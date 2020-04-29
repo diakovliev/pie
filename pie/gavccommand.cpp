@@ -34,7 +34,6 @@
 #include <logging.h>
 #include <mavenmetadata.h>
 
-#include <boost/bind.hpp>
 #include <boost_property_tree_ext.hpp>
 #include <boost/filesystem.hpp>
 
@@ -118,7 +117,7 @@ bool GavcCommand::parse_arguments()
     // Parce query
     LOGT << "query to perform: " << query_str << ELOG;
 
-    boost::optional<art::lib::GavcQuery> parsed_query = art::lib::GavcQuery::parse(query_str);
+    std::optional<art::lib::GavcQuery> parsed_query = art::lib::GavcQuery::parse(query_str);
     if (!parsed_query)
     {
         std::cerr << "Wrong gavc query: " << query_str << "!" << std::endl;

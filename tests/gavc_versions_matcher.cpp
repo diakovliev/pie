@@ -60,7 +60,7 @@ void init_3d_versions(std::vector<SignificantParts_3digits>& sp_3d)
 
 BOOST_AUTO_TEST_CASE(VersionsMatcher_significant_parts_0)
 {
-    boost::optional<GavcQuery> op = GavcQuery::parse("test:test:12.6.*.123.+.*");
+    std::optional<GavcQuery> op = GavcQuery::parse("test:test:12.6.*.123.+.*");
 
     BOOST_CHECK(op);
 
@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(VersionsMatcher_significant_parts_1)
     init_3d_versions(sp_3d);
     for (std::vector<SignificantParts_3digits>::const_iterator i = sp_3d.begin(), end = sp_3d.end(); i != end; ++i)
     {
-        boost::optional<GavcQuery> op = GavcQuery::parse(i->query);
+        std::optional<GavcQuery> op = GavcQuery::parse(i->query);
 
         BOOST_CHECK(op);
 

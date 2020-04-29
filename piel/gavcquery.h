@@ -32,8 +32,8 @@
 #include <vector>
 #include <map>
 #include <string>
-#include <boost/optional.hpp>
-#include <boost/shared_ptr.hpp>
+#include <memory>
+#include <optional>
 
 namespace art { namespace lib {
 
@@ -86,7 +86,7 @@ public:
     GavcQuery();
     ~GavcQuery();
 
-    static boost::optional<GavcQuery> parse(const std::string& gavc_str);
+    static std::optional<GavcQuery> parse(const std::string& gavc_str);
     std::string to_string() const;
 
     std::string group() const           { return data_.group; }
@@ -103,20 +103,20 @@ public:
 
     std::string group_path() const;
 
-    boost::optional<std::vector<gavc::OpType> > query_version_ops() const;
-    static boost::optional<std::vector<gavc::OpType> > query_version_ops(const std::string& version);
+    std::optional<std::vector<gavc::OpType> > query_version_ops() const;
+    static std::optional<std::vector<gavc::OpType> > query_version_ops(const std::string& version);
 
-    boost::optional<gavc::gavc_versions_range_data> query_versions_range() const;
-    static boost::optional<gavc::gavc_versions_range_data> query_versions_range(const std::string& version);
+    std::optional<gavc::gavc_versions_range_data> query_versions_range() const;
+    static std::optional<gavc::gavc_versions_range_data> query_versions_range(const std::string& version);
 
     std::pair<
-        boost::optional<std::vector<gavc::OpType> >,
-        boost::optional<gavc::gavc_versions_range_data>
+        std::optional<std::vector<gavc::OpType> >,
+        std::optional<gavc::gavc_versions_range_data>
     > query_version_data() const;
 
     static std::pair<
-        boost::optional<std::vector<gavc::OpType> >,
-        boost::optional<gavc::gavc_versions_range_data>
+        std::optional<std::vector<gavc::OpType> >,
+        std::optional<gavc::gavc_versions_range_data>
     > query_version_data(const std::string& version);
 
     std::string format_maven_metadata_url(const std::string& server_url, const std::string& repository) const;
@@ -140,7 +140,7 @@ public:
     std::string to_aql(const std::string& repo) const;
 
 private:
-    gavc::gavc_data                 data_;
+    gavc::gavc_data data_;
 };
 
 } } // namespace art::lib

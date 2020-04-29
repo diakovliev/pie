@@ -35,7 +35,7 @@ using namespace art::lib;
 
 BOOST_AUTO_TEST_CASE(VersionsCompatator)
 {
-    boost::optional<GavcQuery> op = GavcQuery::parse("test:test:*.*.*");
+    std::optional<GavcQuery> op = GavcQuery::parse("test:test:*.*.*");
 
     BOOST_CHECK(op);
 

@@ -98,7 +98,7 @@ std::string test_metadata_no_group = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
 BOOST_AUTO_TEST_CASE(ParseMavenMetadata)
 {
     std::istringstream is(test_metadata);
-    boost::optional<MavenMetadata> op = MavenMetadata::parse(is);
+    std::optional<MavenMetadata> op = MavenMetadata::parse(is);
 
     BOOST_CHECK(op);
 
@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(ParseMavenMetadata)
 
     BOOST_CHECK_EQUAL("20171211011023", m.versioning().last_updated());
 
-    boost::optional<GavcQuery> op_q = GavcQuery::parse("adk.trunk:adk:*");
+    std::optional<GavcQuery> op_q = GavcQuery::parse("adk.trunk:adk:*");
     std::vector<std::string>  versions = m.versions_for(*op_q);
 
     BOOST_CHECK_EQUAL(17,               versions.size());
@@ -135,13 +135,13 @@ BOOST_AUTO_TEST_CASE(ParseMavenMetadata)
     BOOST_CHECK_EQUAL("62",             versions[15]);
     BOOST_CHECK_EQUAL("63",             versions[16]);
 
-    boost::optional<GavcQuery> op_q_1 = GavcQuery::parse("adk.trunk:adk:52");
+    std::optional<GavcQuery> op_q_1 = GavcQuery::parse("adk.trunk:adk:52");
     std::vector<std::string>  versions_1 = m.versions_for(*op_q_1);
 
     BOOST_CHECK_EQUAL(1,                versions_1.size());
     BOOST_CHECK_EQUAL("52",             versions_1[0]);
 
-    boost::optional<GavcQuery> op_q_2 = GavcQuery::parse("adk.trunk:adk:49");
+    std::optional<GavcQuery> op_q_2 = GavcQuery::parse("adk.trunk:adk:49");
     std::vector<std::string>  versions_2 = m.versions_for(*op_q_2);
 
     BOOST_CHECK_EQUAL(1,                versions_2.size());
@@ -152,7 +152,7 @@ BOOST_AUTO_TEST_CASE(ParseMavenMetadata)
 BOOST_AUTO_TEST_CASE(ParseMavenMetadata_NoGroup)
 {
     std::istringstream is(test_metadata_no_group);
-    boost::optional<MavenMetadata> op = MavenMetadata::parse(is);
+    std::optional<MavenMetadata> op = MavenMetadata::parse(is);
 
     BOOST_CHECK(!op);
 }

@@ -98,23 +98,23 @@ BOOST_AUTO_TEST_CASE(UploadFileSpec_2)
     LOGT << "UploadFileSpec test 2" << ELOG;
 
     LOGT << "test case -- 1 --" << ELOG;
-    boost::optional<UploadFileSpec> result1 = UploadFileSpec::parse(parse2_1);
+    std::optional<UploadFileSpec> result1 = UploadFileSpec::parse(parse2_1);
     BOOST_CHECK(result1);
     LOGI << "1:" << result1->to_string() << ELOG;
     BOOST_CHECK(check_UploadFileSpec(*result1, check_result2_1));
 
     LOGT << "test case -- 2 --" << ELOG;
-    boost::optional<UploadFileSpec> result2 = UploadFileSpec::parse(parse2_2);
+    std::optional<UploadFileSpec> result2 = UploadFileSpec::parse(parse2_2);
     BOOST_CHECK(result2);
     LOGI << "2:" << result2->to_string() << ELOG;
     BOOST_CHECK(check_UploadFileSpec(*result2, check_result2_2));
 
     LOGT << "test case -- 3 --" << ELOG;
-    boost::optional<UploadFileSpec> result3 = UploadFileSpec::parse(parse2_3);
+    std::optional<UploadFileSpec> result3 = UploadFileSpec::parse(parse2_3);
     BOOST_CHECK(!result3);
 
     LOGT << "test case -- 4 --" << ELOG;
-    boost::optional<UploadFileSpec> result4 = UploadFileSpec::parse(parse2_4);
+    std::optional<UploadFileSpec> result4 = UploadFileSpec::parse(parse2_4);
     BOOST_CHECK(!result4);
 
 }

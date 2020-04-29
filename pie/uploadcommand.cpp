@@ -39,7 +39,6 @@
 #include <logging.h>
 #include <mavenmetadata.h>
 
-#include <boost/bind.hpp>
 #include <boost_property_tree_ext.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string.hpp>
@@ -116,7 +115,7 @@ bool UploadCommand::parse_arguments()
     // Parce query
     LOGT << "target: " << query_str << ELOG;
 
-    boost::optional<art::lib::GavcQuery> parsed_query = art::lib::GavcQuery::parse(query_str);
+    std::optional<art::lib::GavcQuery> parsed_query = art::lib::GavcQuery::parse(query_str);
     if (!parsed_query)
     {
         std::cerr << "Wrong gavc target: " << query_str << "!" << std::endl;
@@ -158,7 +157,7 @@ bool UploadCommand::parse_arguments()
 
     al::UploadFileSpec spec;
 
-    boost::optional<al::UploadFileSpec> result_parse = spec.parse(classifiers_str);
+    std::optional<al::UploadFileSpec> result_parse = spec.parse(classifiers_str);
     if (result_parse)
     {
         classifier_vector_ = result_parse->get_data();

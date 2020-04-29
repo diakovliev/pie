@@ -32,7 +32,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <boost/optional.hpp>
+#include <optional>
 
 #include <gavcquery.h>
 
@@ -57,7 +57,7 @@ public:
     MavenMetadata();
     ~MavenMetadata();
 
-    static boost::optional<MavenMetadata> parse(std::istream& is);
+    static std::optional<MavenMetadata> parse(std::istream& is);
 
     const std::string& group() const { return group_; }
     const std::string& artifact() const { return artifact_; }

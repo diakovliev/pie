@@ -61,7 +61,7 @@ bool contains_value(const std::vector<std::string>& vector, const std::string& v
 
 BOOST_AUTO_TEST_CASE(BasicFiltering_filter)
 {
-    boost::optional<GavcQuery> op = GavcQuery::parse("test:test:16.6.*");
+    std::optional<GavcQuery> op = GavcQuery::parse("test:test:16.6.*");
 
     BOOST_CHECK(op);
 
@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(BasicFiltering_filter)
 
 BOOST_AUTO_TEST_CASE(BasicFiltering_filter_out_all)
 {
-    boost::optional<GavcQuery> op = GavcQuery::parse("test:test:12.6.*");
+    std::optional<GavcQuery> op = GavcQuery::parse("test:test:12.6.*");
 
     BOOST_CHECK(op);
 
@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(BasicFiltering_filter_out_all)
 
 BOOST_AUTO_TEST_CASE(BasicFiltering_trivial_query)
 {
-    boost::optional<GavcQuery> op = GavcQuery::parse("test:test:*");
+    std::optional<GavcQuery> op = GavcQuery::parse("test:test:*");
 
     BOOST_CHECK(op);
 
@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(BasicFiltering_trivial_query)
 
 BOOST_AUTO_TEST_CASE(BasicFiltering_filter_all_plus)
 {
-    boost::optional<GavcQuery> op = GavcQuery::parse("test:test:16.*.+");
+    std::optional<GavcQuery> op = GavcQuery::parse("test:test:16.*.+");
 
     BOOST_CHECK(op);
 
@@ -161,7 +161,7 @@ BOOST_AUTO_TEST_CASE(BasicFiltering_filter_all_plus)
 
 BOOST_AUTO_TEST_CASE(BasicFiltering_filter_all_minus)
 {
-    boost::optional<GavcQuery> op = GavcQuery::parse("test:test:16.*.-");
+    std::optional<GavcQuery> op = GavcQuery::parse("test:test:16.*.-");
 
     BOOST_CHECK(op);
 
@@ -180,7 +180,7 @@ BOOST_AUTO_TEST_CASE(BasicFiltering_filter_all_minus)
 
 BOOST_AUTO_TEST_CASE(BasicFiltering_filter_minus_plus)
 {
-    boost::optional<GavcQuery> op = GavcQuery::parse("test:test:16.-.+");
+    std::optional<GavcQuery> op = GavcQuery::parse("test:test:16.-.+");
 
     BOOST_CHECK(op);
 
@@ -199,7 +199,7 @@ BOOST_AUTO_TEST_CASE(BasicFiltering_filter_minus_plus)
 
 BOOST_AUTO_TEST_CASE(BasicFiltering_filter_minus_minus)
 {
-    boost::optional<GavcQuery> op = GavcQuery::parse("test:test:16.-.-");
+    std::optional<GavcQuery> op = GavcQuery::parse("test:test:16.-.-");
 
     BOOST_CHECK(op);
 
@@ -218,7 +218,7 @@ BOOST_AUTO_TEST_CASE(BasicFiltering_filter_minus_minus)
 
 BOOST_AUTO_TEST_CASE(BasicFiltering_filter_plus_all)
 {
-    boost::optional<GavcQuery> op = GavcQuery::parse("test:test:16.+.*");
+    std::optional<GavcQuery> op = GavcQuery::parse("test:test:16.+.*");
 
     BOOST_CHECK(op);
 
@@ -238,7 +238,7 @@ BOOST_AUTO_TEST_CASE(BasicFiltering_filter_plus_all)
 
 BOOST_AUTO_TEST_CASE(BasicFiltering_filter_minus_all)
 {
-    boost::optional<GavcQuery> op = GavcQuery::parse("test:test:16.-.*");
+    std::optional<GavcQuery> op = GavcQuery::parse("test:test:16.-.*");
 
     BOOST_CHECK(op);
 
@@ -258,7 +258,7 @@ BOOST_AUTO_TEST_CASE(BasicFiltering_filter_minus_all)
 
 BOOST_AUTO_TEST_CASE(BasicFiltering_filter_all_plus_extended)
 {
-    boost::optional<GavcQuery> op = GavcQuery::parse("test:test:16.*.+");
+    std::optional<GavcQuery> op = GavcQuery::parse("test:test:16.*.+");
 
     BOOST_CHECK(op);
 

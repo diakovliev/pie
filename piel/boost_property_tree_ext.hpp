@@ -30,7 +30,8 @@
 #define BOOST_PROPERTY_TREE_EXT_HPP
 
 #include <list>
-#include <boost/optional.hpp>
+#include <optional>
+
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/xml_parser.hpp>
@@ -66,25 +67,25 @@ namespace boost { namespace property_tree {
     // Find sub object.
     // bool predicate(const ptree::value_type& obj)
     template<class UnaryPredicate>
-    boost::optional<ptree::value_type> find(const ptree& obj, UnaryPredicate predicate) {
+    std::optional<ptree::value_type> find(const ptree& obj, UnaryPredicate predicate) {
         for(ptree::const_iterator i = obj.begin(), end = obj.end(); i != end; ++i) {
             if (predicate(*i)) {
                 return (*i);
             }
         }
-        return boost::none;
+        return std::nullopt;
     }
 
     // Find sub object values.
     // bool predicate(const ptree::value_type& obj)
     template<class UnaryPredicate>
-    boost::optional<std::string> find_value(const ptree& obj, UnaryPredicate predicate) {
+    std::optional<std::string> find_value(const ptree& obj, UnaryPredicate predicate) {
         for(ptree::const_iterator i = obj.begin(), end = obj.end(); i != end; ++i) {
             if (predicate(*i)) {
                 return i->second.data();
             }
         }
-        return boost::none;
+        return std::nullopt;
     }
 
     // Find sub objects.

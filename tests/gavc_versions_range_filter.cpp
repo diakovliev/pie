@@ -53,7 +53,7 @@ bool contains_value(const std::vector<std::string>& vector, const std::string& v
 }
 
 std::vector<std::string> filter_according_to_query(const std::string& gavc, const std::vector<std::string>& versions) {
-    boost::optional<GavcQuery> q = GavcQuery::parse(gavc);
+    std::optional<GavcQuery> q = GavcQuery::parse(gavc);
     BOOST_CHECK(q);
     return q->filter(versions);
 }

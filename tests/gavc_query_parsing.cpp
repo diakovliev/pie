@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(FullQuery_GAVCE)
 {
     std::string q_body = "adk.trunk:adk:62:ADK32419p_Explorer3040hd_OCAP_ATSC_SA_pKey@zip";
 
-    boost::optional<GavcQuery> op = GavcQuery::parse(q_body);
+    std::optional<GavcQuery> op = GavcQuery::parse(q_body);
     BOOST_CHECK(op);
     GavcQuery q = *op;
 
@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(FullQuery_GAVCE)
     BOOST_CHECK_EQUAL(q_body,               q.to_string());
     BOOST_CHECK_EQUAL(maven_metadata_url,   q.format_maven_metadata_url(server_url, server_repository));
 
-    boost::optional<std::vector<gavc::OpType> > ops_ = q.query_version_ops();
+    std::optional<std::vector<gavc::OpType> > ops_ = q.query_version_ops();
     BOOST_CHECK(ops_);
     std::vector<gavc::OpType> ops = *ops_;
 
@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(Query_GAVC)
 {
     std::string q_body = "adk.trunk:adk:62:ADK32419p_Explorer3040hd_OCAP_ATSC_SA_pKey";
 
-    boost::optional<GavcQuery> op = GavcQuery::parse(q_body);
+    std::optional<GavcQuery> op = GavcQuery::parse(q_body);
     BOOST_CHECK(op);
     GavcQuery q = *op;
 
@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(Query_GAVC)
     BOOST_CHECK_EQUAL(q_body,               q.to_string());
     BOOST_CHECK_EQUAL(maven_metadata_url,   q.format_maven_metadata_url(server_url, server_repository));
 
-    boost::optional<std::vector<gavc::OpType> > ops_ = q.query_version_ops();
+    std::optional<std::vector<gavc::OpType> > ops_ = q.query_version_ops();
     BOOST_CHECK(ops_);
     std::vector<gavc::OpType> ops = *ops_;
 
@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(Query_GAV)
 {
     std::string q_body = "adk.trunk:adk:62";
 
-    boost::optional<GavcQuery> op = GavcQuery::parse(q_body);
+    std::optional<GavcQuery> op = GavcQuery::parse(q_body);
     BOOST_CHECK(op);
     GavcQuery q = *op;
 
@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(Query_GAV)
     BOOST_CHECK_EQUAL(q_body,               q.to_string());
     BOOST_CHECK_EQUAL(maven_metadata_url,   q.format_maven_metadata_url(server_url, server_repository));
 
-    boost::optional<std::vector<gavc::OpType> > ops_ = q.query_version_ops();
+    std::optional<std::vector<gavc::OpType> > ops_ = q.query_version_ops();
     BOOST_CHECK(ops_);
     std::vector<gavc::OpType> ops = *ops_;
 
@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(Query_GA)
 {
     std::string q_body = "adk.trunk:adk";
 
-    boost::optional<GavcQuery> op = GavcQuery::parse(q_body);
+    std::optional<GavcQuery> op = GavcQuery::parse(q_body);
     BOOST_CHECK(op);
     GavcQuery q = *op;
 
@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(Query_GA)
     BOOST_CHECK_EQUAL(q_body,               q.to_string());
     BOOST_CHECK_EQUAL(maven_metadata_url,   q.format_maven_metadata_url(server_url, server_repository));
 
-    boost::optional<std::vector<gavc::OpType> > ops_ = q.query_version_ops();
+    std::optional<std::vector<gavc::OpType> > ops_ = q.query_version_ops();
     BOOST_CHECK(ops_);
     std::vector<gavc::OpType> ops = *ops_;
 
@@ -147,13 +147,13 @@ BOOST_AUTO_TEST_CASE(FailQuery_G)
 {
     std::string q_body = "adk.trunk";
 
-    boost::optional<GavcQuery> op = GavcQuery::parse(q_body);
+    std::optional<GavcQuery> op = GavcQuery::parse(q_body);
     BOOST_CHECK(!op);
 }
 
 BOOST_AUTO_TEST_CASE(FailEmptyQuery)
 {
-    boost::optional<GavcQuery> op = GavcQuery::parse("");
+    std::optional<GavcQuery> op = GavcQuery::parse("");
     BOOST_CHECK(!op);
 }
 
@@ -162,7 +162,7 @@ BOOST_AUTO_TEST_CASE(VersionParts)
 {
     std::string q_body = "adk.trunk:adk:1.1.+.*.123.-.+.1.3.*";
 
-    boost::optional<GavcQuery> op = GavcQuery::parse(q_body);
+    std::optional<GavcQuery> op = GavcQuery::parse(q_body);
     BOOST_CHECK(op);
     GavcQuery q = *op;
 
@@ -175,7 +175,7 @@ BOOST_AUTO_TEST_CASE(VersionParts)
     BOOST_CHECK_EQUAL(q_body,               q.to_string());
     BOOST_CHECK_EQUAL(maven_metadata_url,   q.format_maven_metadata_url(server_url, server_repository));
 
-    boost::optional<std::vector<gavc::OpType> > ops_ = q.query_version_ops();
+    std::optional<std::vector<gavc::OpType> > ops_ = q.query_version_ops();
     BOOST_CHECK(ops_);
     std::vector<gavc::OpType> ops = *ops_;
 
@@ -196,7 +196,7 @@ BOOST_AUTO_TEST_CASE(VersionParts_not_allow_ops_sequences)
 {
     std::string q_body = "adk.trunk:adk:++++";
 
-    boost::optional<GavcQuery> op = GavcQuery::parse(q_body);
+    std::optional<GavcQuery> op = GavcQuery::parse(q_body);
     BOOST_CHECK(!op);
 
     q_body = "adk.trunk:adk:+***";
@@ -222,7 +222,7 @@ BOOST_AUTO_TEST_CASE(VersionParts_not_allow_ops_sequences)
 
 BOOST_AUTO_TEST_CASE(CheckForExactVersion)
 {
-    boost::optional<GavcQuery> op = GavcQuery::parse("test.test:test:1");
+    std::optional<GavcQuery> op = GavcQuery::parse("test.test:test:1");
     BOOST_CHECK(op);
     BOOST_CHECK(op->is_exact_version_query());
 
