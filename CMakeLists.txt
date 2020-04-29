@@ -1,8 +1,3 @@
-#set(BOOST_INCLUDE_DIRS "${BOOST_ROOT}/boost")
-#set (BOOST_LIBRARYDIR "${BOOST_ROOT}/lib")
-
-#set(CMAKE_C_COMPILER /usr/bin/clang)
-#set(CMAKE_CXX_COMPILER /usr/bin/clang++)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -Wextra -Wno-unused-parameter -Wno-overloaded-virtual")
 
 set(CMAKE_C_COMPILER ccache /usr/bin/gcc-8)
@@ -12,7 +7,8 @@ cmake_minimum_required(VERSION 2.6)
 project(pie)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
-set(CMAKE_BUILD_TYPE Debug)
+# set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_BUILD_TYPE Release)
 
 include_directories("logger" "piel", "commands", "pie")
 
