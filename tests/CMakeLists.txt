@@ -16,7 +16,7 @@ add_test (NAME UploadFilesSpecTest COMMAND uploadfilesspec_test)
 #############################################################
 add_executable(art_test art_test.cpp)
 target_link_libraries(art_test ${Piel_LIBRARIES})
-#add_test (NAME ArtTests COMMAND art_test)
+add_test (NAME ArtTests COMMAND art_test)
 
 #############################################################
 add_executable(gavc_query_parsing gavc_query_parsing.cpp)
@@ -51,7 +51,7 @@ add_test (NAME LoggingTests COMMAND logging_tests)
 #############################################################
 add_executable(gavc_cache gavc_cache.cpp)
 target_link_libraries(gavc_cache ${Piel_LIBRARIES})
-add_test (NAME GAVCCache COMMAND gavc_cache)
+# add_test (NAME GAVCCache COMMAND gavc_cache)
 
 #############################################################
 add_executable(gavc_versions_range_filter gavc_versions_range_filter.cpp)

@@ -26,63 +26,34 @@
  *
  */
 
-#ifndef GAVCCOMMAND_H
-#define GAVCCOMMAND_H
+#ifndef ARTAQLHANDLERS_H
+#define ARTAQLHANDLERS_H
 
-#include <application.h>
-#include <gavc.h>
-#include <gavcquery.h>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/program_options.hpp>
-#include <boost/filesystem.hpp>
+#include <artbaseapihandlers.h>
+#include <datasequencecutter.h>
 
-namespace pie { namespace app {
+namespace art { namespace lib {
 
-namespace utils {
-std::string get_default_cache_path();
-}//namespace utils
-
-class GavcCommand: public ICommand
+class ArtAqlHandlers: public ArtBaseApiHandlers 
 {
 public:
-    GavcCommand(Application *app, int argc, char **argv);
-    virtual ~GavcCommand();
+    ArtAqlHandlers(const std::string& api_token, const std::string& aql);
+    ~ArtAqlHandlers();
 
-    virtual int perform();
+    virtual size_t handle_input(char* ptr, size_t size);
 
-    bool have_to_download_results() const { return have_to_download_results_; }
+    void set_url(const std::string& url);
 
-protected:
-    bool parse_arguments();
-    void show_command_help_message(const boost::program_options::options_description& desc);
+    std::string gen_uri() const;
 
-    void write_files_list(const piel::cmd::GAVC::paths_list& paths_list) const;
+    std::string method() const;
 
 private:
-    int argc_;
-    char **argv_;
+    piel::lib::DataSequenceCutter input_;
+    std::string url_;
 
-    std::string server_url_;
-    std::string server_api_access_token_;
-    std::string server_repository_;
-
-    art::lib::GavcQuery query_;
-
-    bool have_to_download_results_;
-    bool have_to_delete_results_;
-
-    std::string output_file_;
-    std::string cache_path_;
-    bool disable_cache_;
-
-    std::string notifications_file_;
-    unsigned int max_attempts_;
-    unsigned int retry_timeout_s_;
-
-    std::string files_list_;
-    bool force_offline_;
 };
 
-} } // namespace pie::app
+} } // namespace art::lib
 
-#endif // GAVCCOMMAND_H
+#endif // ARTAQLHANDLERS_H

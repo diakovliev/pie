@@ -62,6 +62,7 @@ GavcCommand::GavcCommand(Application *app, int argc, char **argv)
     , server_repository_()
     , query_()
     , have_to_download_results_(false)
+    , have_to_delete_results_(false)
     , output_file_()
     , cache_path_(utils::get_default_cache_path())
     , disable_cache_(false)
@@ -91,6 +92,7 @@ bool GavcCommand::parse_arguments()
         ("server,s",        po::value<std::string>(&server_url_),               "Server url (required). Can be set using GAVC_SERVER_URL environment variable.")
         ("repository,r",    po::value<std::string>(&server_repository_),        "Server repository (required). Can be set using GAVC_SERVER_REPOSITORY environment variable.")
         ("download,d",                                                          "Download query results.")
+        ("delete,x",                                                            "Delete query results from the server. Have sence only in online mode.")
         ("output,o",        po::value<std::string>(&output_file_),              "Output file name. Be careful, it will cause unexpected behavoiur if the query result is set.")
         ("cache-path",      po::value<std::string>(&cache_path_),               (std::string("Cache path. Can be set using GAVC_CACHE environment variable. Default: ") + utils::get_default_cache_path()).c_str())
         ("disable-cache",                                                       "Do not use local cache (enabled by default).")
@@ -148,6 +150,7 @@ bool GavcCommand::parse_arguments()
     }
 
     have_to_download_results_   = vm.count("download");
+    have_to_delete_results_     = vm.count("delete");
     disable_cache_              = vm.count("disable-cache");
     force_offline_              = vm.count("force-offline");
 
@@ -185,7 +188,8 @@ void GavcCommand::write_files_list(const piel::cmd::GAVC::paths_list& files_list
                              notifications_file_,
                              max_attempts_,
                              retry_timeout_s_,
-                             force_offline_);
+                             force_offline_,
+                             have_to_delete_results_);
 
             if (output_file_.empty()) {
                 gavc.set_path_to_download(boost::filesystem::current_path());
@@ -206,7 +210,8 @@ void GavcCommand::write_files_list(const piel::cmd::GAVC::paths_list& files_list
                              notifications_file_,
                              max_attempts_,
                              retry_timeout_s_,
-                             force_offline_);
+                             force_offline_,
+                             have_to_delete_results_);
 
             if (output_file_.empty()) {
                 gavccache.set_path_to_download(boost::filesystem::current_path());
@@ -242,6 +247,10 @@ void GavcCommand::write_files_list(const piel::cmd::GAVC::paths_list& files_list
     }
     catch (piel::cmd::errors::gavc_download_file_error& ) {
         std::cerr << "Can't download file!" << std::endl;
+        return -1;
+    }
+    catch (piel::cmd::errors::gavc_delete_remote_file_error& e) {
+        std::cerr << "Can't delete remote file: " << e.uri << "!" << std::endl;
         return -1;
     }
     catch (piel::cmd::errors::cache_no_cache_for_query& e) {

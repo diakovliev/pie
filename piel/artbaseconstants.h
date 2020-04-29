@@ -50,6 +50,16 @@ struct ArtBaseConstants {
     static const std::string checksums_sha256;
 
     static const std::string pom_classifier;
+
+    static const std::string rest_api__delete_request;
+
+    static const std::string aql_repo;
+    static const std::string aql_name;
+    static const std::string aql_path;
+    static const std::string aql_md5;
+    static const std::string aql_sha1;
+    static const std::string aql_sha256;
+
 };
 
 } } // namespace art::lib

@@ -39,6 +39,7 @@
 #include <artbaseconstants.h>
 #include <artbasedownloadhandlers.h>
 #include <artgavchandlers.h>
+#include <artaqlhandlers.h>
 #include <logging.h>
 #include <mavenmetadata.h>
 #include <artbaseapihandlers.h>
@@ -64,7 +65,8 @@ GAVC::GAVC(const std::string& server_api_access_token
            , const std::string& notifications_file
            , unsigned int max_attempts
            , unsigned int retry_timeout_s
-           , bool force_offline)
+           , bool force_offline
+           , bool have_to_delete_results)
     : pl::IOstreamsHolder()
     , server_url_(server_url)
     , server_api_access_token_(server_api_access_token)
@@ -72,6 +74,7 @@ GAVC::GAVC(const std::string& server_api_access_token
     , query_(query)
     , path_to_download_()
     , have_to_download_results_(have_to_download_results)
+    , have_to_delete_results_(have_to_delete_results)
     , cache_mode_(false)
     , list_of_actual_files_()
     , query_results_()
@@ -234,6 +237,21 @@ void GAVC::download_file(const fs::path& object_path, const std::string& object_
     }
 }
 
+void GAVC::delete_file(const std::string& download_uri) const
+{
+    LOGT << "Delete remote file uri: " << download_uri << ELOG;
+
+    al::ArtGavcHandlers delete_handlers(server_api_access_token_);
+
+    pl::CurlEasyClient<al::ArtGavcHandlers> delete_client(download_uri, &delete_handlers, al::ArtBaseConstants::rest_api__delete_request);
+
+    if (!delete_client.perform())
+    {
+        LOGE << "Error on delete remote file uri: " << download_uri << ELOG;
+        throw errors::gavc_delete_remote_file_error(download_uri);
+    }
+}
+
 /*static*/ piel::lib::Properties GAVC::load_object_properties(const boost::filesystem::path& object_path)
 {
     std::ifstream is(object_path.generic_string() + GAVCConstants::properties_ext);
@@ -353,12 +371,76 @@ void GAVC::on_object(const pt::ptree::value_type& obj, const std::string& versio
         cout() << "- " << object_id << std::endl;
     }
 
+    if (have_to_delete_results_)
+    {
+        delete_file(*op_download_uri);
+
+        cout() << "x " << *op_download_uri << std::endl;
+    }
+
     LOGT << "Add query result. { object path: " << object_path
             << " classifier: " << object_classifier
             << " version: " << version << " }" << ELOG;
 
     query_results_.insert(std::make_pair(object_path, std::make_pair(object_classifier, version)));
     list_of_queued_files_.push_back(object_path.string());
+}
+
+void GAVC::on_aql_object(const pt::ptree::value_type& obj, const std::string& version, const std::string& query_classifier)
+{
+    boost::optional<std::string> repo = pt::find_value(obj.second, pt::FindPropertyHelper(al::ArtBaseConstants::aql_repo));
+    LOGT << "aql repo: " << *repo << ELOG;
+
+    boost::optional<std::string> name = pt::find_value(obj.second, pt::FindPropertyHelper(al::ArtBaseConstants::aql_name));
+    LOGT << "aql name: " << *name << ELOG;
+
+    boost::optional<std::string> path = pt::find_value(obj.second, pt::FindPropertyHelper(al::ArtBaseConstants::aql_path));
+    LOGT << "aql path: " << *path << ELOG;
+
+    std::string path2 = "/" + *path + "/" + *name;
+    LOGT << "aql path2: " << path2 << ELOG;
+
+    std::string downloadUri = server_url_ + "/" + *repo + path2;
+    LOGT << "aql downloadUri: " << downloadUri << ELOG;
+
+    std::string uri = server_url_ + "/api/storage/" + *repo + path2;
+    LOGT << "aql uri: " << uri << ELOG;
+
+    pt::ptree item;
+
+    item.put("repo", *repo);
+    item.put("path", path2);
+    item.put("downloadUri", downloadUri);
+    item.put("uri", uri);
+
+    pt::ptree checksums;
+    pt::ptree originalChecksums;
+
+    boost::optional<std::string> md5 = pt::find_value(obj.second, pt::FindPropertyHelper(al::ArtBaseConstants::aql_md5));
+    if (md5) {
+        LOGT << "aql md5: " << *md5 << ELOG;
+        checksums.put(al::ArtBaseConstants::checksums_md5, *md5);
+        originalChecksums.put(al::ArtBaseConstants::checksums_md5, *md5);
+    }
+
+    boost::optional<std::string> sha1 = pt::find_value(obj.second, pt::FindPropertyHelper(al::ArtBaseConstants::aql_sha1));
+    if (sha1) {
+        LOGT << "aql sha1: " << *sha1 << ELOG;
+        checksums.put(al::ArtBaseConstants::checksums_sha1, *sha1);
+        originalChecksums.put(al::ArtBaseConstants::checksums_sha1, *sha1);
+    }
+
+    boost::optional<std::string> sha256 = pt::find_value(obj.second, pt::FindPropertyHelper(al::ArtBaseConstants::aql_sha256));
+    if (sha256) {
+        LOGT << "aql sha256: " << *sha256 << ELOG;
+        checksums.put(al::ArtBaseConstants::checksums_sha256, *sha256);
+        originalChecksums.put(al::ArtBaseConstants::checksums_sha256, *sha256);
+    }
+
+    item.add_child("checksums", checksums);
+    item.add_child("originalChecksums", originalChecksums);
+
+    on_object(std::make_pair("", item), version, query_classifier);
 }
 
 std::string GAVC::create_url(const std::string& version_to_query, const std::string& classifier) const
@@ -439,6 +521,7 @@ void GAVC::process_version(const std::string& i)
     {
         LOGT << "Classifier: " << *c << ELOG;
 
+#if 0
         al::ArtGavcHandlers api_handlers(server_api_access_token_);
         pl::CurlEasyClient<art::lib::ArtGavcHandlers> client(create_url(i, *c), &api_handlers);
 
@@ -453,6 +536,25 @@ void GAVC::process_version(const std::string& i)
         // Load the json file into this ptree
         pt::read_json(api_handlers.responce_stream(), root);
         pt::each(root.get_child("results"), boost::bind(&GAVC::on_object, this, _1, i, *c));
+#endif
+
+        al::GavcQuery q = query_;
+        q.set_version(i);
+        q.set_classifier(*c);
+
+        al::ArtAqlHandlers aql_handlers(server_api_access_token_, q.to_aql(server_repository_));
+        aql_handlers.set_url(server_url_);
+
+        pl::CurlEasyClient<art::lib::ArtAqlHandlers> client(aql_handlers.gen_uri(), &aql_handlers, aql_handlers.method());
+
+        if (!client.perform())
+        {
+            throw errors::error_processing_version(client.curl_error().presentation(), i);
+        }
+
+        pt::ptree root;
+        pt::read_json(aql_handlers.responce_stream(), root);
+        pt::each(root.get_child("results"), boost::bind(&GAVC::on_aql_object, this, _1,  i, *c));
     }
 }
 

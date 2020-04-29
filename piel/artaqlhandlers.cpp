@@ -26,63 +26,48 @@
  *
  */
 
-#ifndef GAVCCOMMAND_H
-#define GAVCCOMMAND_H
+#include <artbaseconstants.h>
+#include <artaqlhandlers.h>
 
-#include <application.h>
-#include <gavc.h>
-#include <gavcquery.h>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/program_options.hpp>
-#include <boost/filesystem.hpp>
+#include <sstream>
 
-namespace pie { namespace app {
+//      custom_header,    handle_header,  handle_input,   handle_output,  before_input,   before_output)
+CURLH_T_(art::lib::ArtAqlHandlers,\
+        true,             false,          true,           true,           false,          true);
 
-namespace utils {
-std::string get_default_cache_path();
-}//namespace utils
+namespace art { namespace lib {
 
-class GavcCommand: public ICommand
+ArtAqlHandlers::ArtAqlHandlers(const std::string& api_token, const std::string& aql)
+    : ArtBaseApiHandlers(api_token)
+    , input_()
+    , url_()
 {
-public:
-    GavcCommand(Application *app, int argc, char **argv);
-    virtual ~GavcCommand();
+    input_.push_input_stream(boost::shared_ptr<std::istringstream>(new std::istringstream(aql)));
+}
 
-    virtual int perform();
+ArtAqlHandlers::~ArtAqlHandlers()
+{
 
-    bool have_to_download_results() const { return have_to_download_results_; }
+}
 
-protected:
-    bool parse_arguments();
-    void show_command_help_message(const boost::program_options::options_description& desc);
+/*virtual*/ size_t ArtAqlHandlers::handle_input(char* ptr, size_t size)
+{
+    return input_.putto(ptr, size);
+}
 
-    void write_files_list(const piel::cmd::GAVC::paths_list& paths_list) const;
+void ArtAqlHandlers::set_url(const std::string& url)
+{
+    url_ = url;
+}
 
-private:
-    int argc_;
-    char **argv_;
+std::string ArtAqlHandlers::gen_uri() const
+{
+    return url_ + "/api/search/aql";
+}
 
-    std::string server_url_;
-    std::string server_api_access_token_;
-    std::string server_repository_;
+std::string ArtAqlHandlers::method() const
+{
+    return "POST";
+}
 
-    art::lib::GavcQuery query_;
-
-    bool have_to_download_results_;
-    bool have_to_delete_results_;
-
-    std::string output_file_;
-    std::string cache_path_;
-    bool disable_cache_;
-
-    std::string notifications_file_;
-    unsigned int max_attempts_;
-    unsigned int retry_timeout_s_;
-
-    std::string files_list_;
-    bool force_offline_;
-};
-
-} } // namespace pie::app
-
-#endif // GAVCCOMMAND_H
+} } // namespace art::lib

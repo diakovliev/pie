@@ -42,8 +42,18 @@
 #include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/split.hpp>
 
+#if 0
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
+#include <boost_property_tree_ext.hpp>
+#endif
+
 #include <gavcversionsfilter.h>
 #include <gavcversionsrangefilter.h>
+
+#if 0
+namespace pt = boost::property_tree;
+#endif
 
 //! Versions based queries
 //
@@ -492,6 +502,94 @@ std::vector<std::string> GavcQuery::filter(const std::vector<std::string>& versi
     }
 
     return result;
+}
+
+std::string GavcQuery::to_aql_path() const
+{
+    std::ostringstream oss;
+    oss << group_path();
+    oss << "/";
+    oss << name();
+    oss << "/*";
+    return oss.str();
+}
+
+std::string GavcQuery::to_aql_name() const
+{
+    bool append_star = classifier().empty() | extension().empty();
+    std::ostringstream oss;
+    oss << name();
+    oss << "-";
+    oss << version();
+    if (!classifier().empty())
+    {
+        oss << "-";
+        oss << classifier();
+    }
+    if (!extension().empty())
+    {
+        oss << ".";
+        oss << extension();
+    }
+    if (append_star)
+    {
+        oss << "*";
+    }
+    return oss.str();
+}
+
+std::string GavcQuery::to_aql(const std::string& repo) const
+{
+    std::ostringstream oss;
+
+//#if 0
+    oss << "items.find(";
+        oss << "{";
+
+        oss << " \"repo\" :";
+            oss << " \"";
+            oss << repo;
+            oss << "\" ";
+
+        oss << ",";
+        oss << " \"path\" :";
+            oss << " { \"$match\": \"";
+            oss << to_aql_path();
+            oss << "\" } ";
+
+        oss << ",";
+        oss << " \"name\" :";
+            oss << " { \"$match\": \"";
+            oss << to_aql_name();
+            oss << "\" } ";
+
+        oss << "}";
+    oss << ").include(\"*\")";
+//#endif
+
+#if 0
+    std::ostringstream qoss;
+    pt::ptree query, path_match, name_match;
+
+    path_match.put("$match", to_aql_path());
+    name_match.put("$match", to_aql_name());
+
+    query.put("repo", repo);
+    query.add_child("path", path_match);
+    query.add_child("name", name_match);
+
+    pt::write_json(qoss, query, false);
+
+    std::string aql_json_query = qoss.str();
+    LOGT << "aql json query: " << aql_json_query << ELOG;
+
+    oss << "items.find(" << aql_json_query << ").include(\"*\")";
+#endif
+
+    std::string aql_query = oss.str();
+    LOGT << "aql query: " << aql_query << ELOG;
+
+    return aql_query;
 }
 
 } } // namespace art::lib

@@ -45,4 +45,13 @@ namespace art { namespace lib {
 
 /*static*/ const std::string ArtBaseConstants::pom_classifier                       = ".pom";
 
+/*static*/ const std::string ArtBaseConstants::rest_api__delete_request             = "DELETE";
+
+/*static*/ const std::string ArtBaseConstants::aql_repo                             = "repo";
+/*static*/ const std::string ArtBaseConstants::aql_name                             = "name";
+/*static*/ const std::string ArtBaseConstants::aql_path                             = "path";
+/*static*/ const std::string ArtBaseConstants::aql_md5                              = "actual_md5";
+/*static*/ const std::string ArtBaseConstants::aql_sha1                             = "actual_sha1";
+/*static*/ const std::string ArtBaseConstants::aql_sha256                           = "sha256";
+
 } } // namespace art::lib

@@ -70,8 +70,7 @@ UploadCommand::~UploadCommand()
 
 void UploadCommand::show_command_help_message(const po::options_description& desc)
 {
-    std::cerr << "Usage: upload <gavc query> [options]" << std::endl;
-    std::cout << "Note: Use exact version in the <gavc query>" << std::endl;
+    std::cerr << "Usage: upload <gavc target> [options]" << std::endl;
     std::cout << desc;
 }
 
@@ -115,12 +114,12 @@ bool UploadCommand::parse_arguments()
     std::string query_str(argv_[1]);
 
     // Parce query
-    LOGT << "query to perform: " << query_str << ELOG;
+    LOGT << "target: " << query_str << ELOG;
 
     boost::optional<art::lib::GavcQuery> parsed_query = art::lib::GavcQuery::parse(query_str);
     if (!parsed_query)
     {
-        std::cout << "Wrong gavc query: " << query_str << "!" << std::endl;
+        std::cerr << "Wrong gavc target: " << query_str << "!" << std::endl;
         show_command_help_message(desc);
         return false;
     }
@@ -129,7 +128,8 @@ bool UploadCommand::parse_arguments()
 
     if (!query_.is_exact_version_query())
     {
-        std::cerr << "Exact version is needed for the upload command!" << std::endl;
+        std::cerr << "Wrong gavc target: " << query_str << "! Exact version query required for the upload command!" << std::endl;
+        show_command_help_message(desc);
         return false;
     }
 

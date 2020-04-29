@@ -72,7 +72,8 @@ GAVCCache::GAVCCache(const std::string& server_api_access_token
            , const std::string& notifications_file
            , unsigned int max_attempts
            , unsigned int retry_timeout_s
-           , bool force_offline)
+           , bool force_offline
+           , bool have_to_delete_results)
     : pl::IOstreamsHolder()
     , server_url_(server_url)
     , server_api_access_token_(server_api_access_token)
@@ -80,6 +81,7 @@ GAVCCache::GAVCCache(const std::string& server_api_access_token
     , query_(query)
     , path_to_download_()
     , have_to_download_results_(have_to_download_results)
+    , have_to_delete_results_(have_to_delete_results)
     , output_file_(output_file)
     , cache_path_(cache_path)
     , max_attempts_(max_attempts)
@@ -330,7 +332,11 @@ void GAVCCache::perform()
          query_,
          have_to_download_results_,
          "",
-         notifications_file_);
+         notifications_file_,
+         max_attempts_,
+         retry_timeout_s_,
+         false,
+         have_to_delete_results_);
 
     gavc.set_cache_mode(true);
 

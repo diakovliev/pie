@@ -61,6 +61,12 @@ namespace errors {
     struct cant_get_maven_metadata {};
     struct cant_find_version_for_query {};
     struct gavc_download_file_error {};
+    struct gavc_delete_remote_file_error {
+        gavc_delete_remote_file_error(const std::string& e)
+            : uri(e)
+        {}
+        std::string uri;
+    };
 };
 
 class GAVC: public piel::lib::IOstreamsHolder
@@ -78,7 +84,8 @@ public:
          , const std::string& notifications_file = std::string()
          , unsigned int max_attempts = 3
          , unsigned int retry_timeout_s = 5
-         , bool force_offline = false);
+         , bool force_offline = false
+         , bool have_to_delete_results = false);
 
     virtual ~GAVC();
 
@@ -107,9 +114,13 @@ public:
 
 protected:
     std::string create_url(const std::string& version_to_query, const std::string& classifier) const;
-    void on_object(const boost::property_tree::ptree::value_type& obj, const std::string& version, const std::string& query_classifier);
+
+    void on_object     (const boost::property_tree::ptree::value_type& obj, const std::string& version, const std::string& classifier);
+    void on_aql_object (const boost::property_tree::ptree::value_type& obj, const std::string& version, const std::string& classifier);
+
     std::map<std::string,std::string> get_server_checksums(const boost::property_tree::ptree& obj_tree, const std::string& section) const;
     void download_file(const boost::filesystem::path& object_path, const std::string& object_id, const std::string& download_uri) const;
+    void delete_file(const std::string& download_uri) const;
 
 private:
     std::string server_url_;
@@ -118,6 +129,7 @@ private:
     art::lib::GavcQuery query_;
     boost::filesystem::path path_to_download_;
     bool have_to_download_results_;
+    bool have_to_delete_results_;
     bool cache_mode_;
 
     paths_list list_of_actual_files_;

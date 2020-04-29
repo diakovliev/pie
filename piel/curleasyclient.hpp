@@ -169,11 +169,13 @@ public:
     //! Constructor. Will init internal libcurl handle.
     //! \param url Working url.
     //! \param handlers Pointer to implementation instance of *Handlers.
+    //! \param custom_request The CURLOPT_CUSTOMREQUEST value.
     //! \sa curl_easy_init
-    CurlEasyClient(const std::string& url, HandlersPtr handlers)
+    CurlEasyClient(const std::string& url, HandlersPtr handlers, const std::string& custom_request = std::string())
         : url_(url)
         , handlers_(handlers)
         , curl_error_()
+        , custom_request_(custom_request)
     {
         curl_ = ::curl_easy_init();
     }
@@ -209,6 +211,8 @@ private:
     HandlersPtr handlers_;          //!< Pointer to implementation instance of *Handlers.
     char errbuf_[CURL_ERROR_SIZE];  //!< libcurl error buffer
     CurlError curl_error_;          //!< libcurl error description
+
+    std::string custom_request_;    //!< CURLOPT_CUSTOMREQUEST
 };
 
 template<class Handlers>
@@ -253,16 +257,20 @@ size_t CurlEasyClient<Handlers>::handle_read(char *ptr, size_t size, size_t coun
 template<class Handlers>
 bool CurlEasyClient<Handlers>::perform()
 {
+    ::curl_slist *custom_headers = 0;
+
     ::curl_easy_setopt(curl_, CURLOPT_URL, url_.c_str());
+    if (!custom_request_.empty()) {
+        ::curl_easy_setopt(curl_, CURLOPT_CUSTOMREQUEST, custom_request_.c_str());
+    }
     if (CurlEasyHandlersTraits<Handlers>::have_custom_header) {
-        ::curl_slist *chunk = 0;
         CurlEasyHandlers::headers_type headers = handlers_->custom_header();
         typedef CurlEasyHandlers::headers_type::const_iterator Iter;
         for (Iter i = headers.begin(); i != headers.end(); ++i)
         {
-            chunk = ::curl_slist_append(chunk, (*i).c_str());
+            custom_headers = ::curl_slist_append(custom_headers, (*i).c_str());
         }
-        ::curl_easy_setopt(curl_, CURLOPT_HTTPHEADER, chunk);
+        ::curl_easy_setopt(curl_, CURLOPT_HTTPHEADER, custom_headers);
     }
     if (CurlEasyHandlersTraits<Handlers>::have_handle_header) {
         ::curl_easy_setopt(curl_, CURLOPT_HEADERDATA, this);
@@ -279,12 +287,12 @@ bool CurlEasyClient<Handlers>::perform()
     }
     ::curl_easy_setopt(curl_, CURLOPT_FAILONERROR, 1L);
 #ifdef DEBUG_VERBOSE_CURL
-    curl_easy_setopt(curl_, CURLOPT_VERBOSE, 1L);
+    ::curl_easy_setopt(curl_, CURLOPT_VERBOSE, 1L);
 #endif
-    curl_easy_setopt(curl_, CURLOPT_ERRORBUFFER, errbuf_);
+    ::curl_easy_setopt(curl_, CURLOPT_ERRORBUFFER, errbuf_);
     CURLcode code = ::curl_easy_perform(curl_);
     long http_code = 0;
-    curl_easy_getinfo(curl_, CURLINFO_RESPONSE_CODE, &http_code);
+    ::curl_easy_getinfo(curl_, CURLINFO_RESPONSE_CODE, &http_code);
     bool result = CURLE_OK == code && http_code < 400;
     if (!result)
     {
@@ -294,6 +302,12 @@ bool CurlEasyClient<Handlers>::perform()
     {
         curl_error_ = CurlError(code, http_code, "OK");
     }
+
+    if (custom_headers)
+    {
+        ::curl_slist_free_all(custom_headers);
+    }
+
     return result;
 }
 
