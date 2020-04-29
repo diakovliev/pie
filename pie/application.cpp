@@ -109,9 +109,9 @@ CommandsFactory::CommandsFactory(Application *app)
 {
 }
 
-void CommandsFactory::register_command(ICommmandConstructor *constructor)
+void CommandsFactory::register_command(ICommandConstructor *constructor)
 {
-    constructors_.insert(std::make_pair(constructor->name(), std::shared_ptr<ICommmandConstructor>(constructor)));
+    constructors_.insert(std::make_pair(constructor->name(), constructor));
 }
 
 std::shared_ptr<ICommand> CommandsFactory::create(int argc, char **argv)
@@ -158,7 +158,7 @@ int Application::run()
     return command->perform();
 }
 
-void Application::register_command(ICommmandConstructor *constructor)
+void Application::register_command(ICommandConstructor *constructor)
 {
     commands_factory_.register_command(constructor);
 }

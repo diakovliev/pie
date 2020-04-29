@@ -70,7 +70,7 @@ private:
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-struct ICommmandConstructor {
+struct ICommandConstructor {
     virtual std::shared_ptr<ICommand> create(Application *app, int argc, char **argv) const = 0;
     virtual std::string name() const = 0;
     virtual std::string description() const = 0;
@@ -78,9 +78,9 @@ struct ICommmandConstructor {
 
 ////////////////////////////////////////////////////////////////////////////////
 template<class Command>
-class CommmandConstructor: public ICommmandConstructor {
+class CommandConstructor: public ICommandConstructor {
 public:
-    CommmandConstructor(const std::string& name, const std::string& description)
+    CommandConstructor(const std::string& name, const std::string& description)
         : name_(name)
         , description_(description)
     {}
@@ -100,11 +100,11 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 class CommandsFactory {
 public:
-    typedef std::map<std::string, std::shared_ptr<ICommmandConstructor> > Constructors;
+    typedef std::map<std::string, ICommandConstructor* > Constructors;
 
     CommandsFactory(Application *app);
 
-    void register_command(ICommmandConstructor *constructor);
+    void register_command(ICommandConstructor *constructor);
     void show_registered_commands() const;
 
     std::shared_ptr<ICommand> create(int argc, char **argv);
@@ -122,7 +122,7 @@ public:
     ~Application();
 
     int run();
-    void register_command(ICommmandConstructor *constructor);
+    void register_command(ICommandConstructor *constructor);
     void show_registered_commands() const;
 
 private:

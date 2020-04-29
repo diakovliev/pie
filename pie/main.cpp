@@ -38,14 +38,15 @@ int main(int argc, char **argv)
 {
     pa::Application app(argc, argv);
 
-#define C_(x,y,z) app.register_command( new pa::CommmandConstructor< x >( y, z ) )
+    pa::CommandConstructor<pa::GavcCommand>             cgavc(   "gavc",             "GAVC query implementation." );
+    pa::CommandConstructor<pa::GavcCacheCleanCommand>   cclean(  "gavccacheclean",   "Clean GAVC cache." );
+    pa::CommandConstructor<pa::GavcCacheInitCommand>    cinit(   "gavccacheinit",    "Init GAVC cache." );
+    pa::CommandConstructor<pa::UploadCommand>           cupload( "upload",           "Upload to Artifactory server." );
 
-    C_ ( pa::GavcCommand,               "gavc",             "GAVC query implementation." );
-    C_ ( pa::GavcCacheCleanCommand,     "gavccacheclean",   "Clean GAVC cache." );
-    C_ ( pa::GavcCacheInitCommand,      "gavccacheinit",    "Init GAVC cache." );
-    C_ ( pa::UploadCommand,             "upload",           "Upload to Artifactory server." );
-
-#undef C_
+    app.register_command(&cgavc);
+    app.register_command(&cclean);
+    app.register_command(&cinit);
+    app.register_command(&cupload);
 
     return app.run();
 }
