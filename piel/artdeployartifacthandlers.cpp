@@ -78,8 +78,7 @@ ArtDeployArtifactHandlers::~ArtDeployArtifactHandlers()
 
 void ArtDeployArtifactHandlers::file(const std::string& fname)
 {
-    boost::shared_ptr<std::istream> file_ptr(new std::ifstream(fname));
-    push_input_stream(file_ptr);
+    push_input_stream(std::make_shared<std::ifstream>(fname));
 }
 
 size_t ArtDeployArtifactHandlers::handle_input(char *ptr, size_t size)

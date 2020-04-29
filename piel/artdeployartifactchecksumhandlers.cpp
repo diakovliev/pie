@@ -72,7 +72,7 @@ ArtDeployArtifactCheckSumHandlers::ArtDeployArtifactCheckSumHandlers(ArtDeployAr
     LOGT << "Checksum URI: " << gen_uri()                   << ELOG;
     LOGT << "Checksum " << digest << ":" << digests[basic_digest_name(digest)] << ELOG;
 
-    push_input_stream(boost::shared_ptr<std::istream>(new std::istringstream(digests[basic_digest_name(digest)])));
+    push_input_stream(std::make_shared<std::istringstream>(digests[basic_digest_name(digest)]));
 }
 
 /*virtual*/ ArtDeployArtifactCheckSumHandlers::~ArtDeployArtifactCheckSumHandlers()

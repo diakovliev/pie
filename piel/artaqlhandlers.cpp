@@ -42,7 +42,7 @@ ArtAqlHandlers::ArtAqlHandlers(const std::string& api_token, const std::string& 
     , input_()
     , url_()
 {
-    input_.push_input_stream(boost::shared_ptr<std::istringstream>(new std::istringstream(aql)));
+    input_.push_input_stream(std::make_shared<std::istringstream>(aql));
 }
 
 ArtAqlHandlers::~ArtAqlHandlers()

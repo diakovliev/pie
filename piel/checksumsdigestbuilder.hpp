@@ -35,8 +35,8 @@
 #include <map>
 #include <iostream>
 #include <vector>
+#include <memory>
 #include <boost/format.hpp>
-#include <boost/shared_ptr.hpp>
 
 namespace piel { namespace lib {
 
@@ -191,7 +191,7 @@ public:
 
     typedef std::map<std::string, std::string> StrDigests;
     typedef std::map<std::string, IDigestContext::Digest> Digests;
-    typedef std::vector<boost::shared_ptr<IDigestContext> >::iterator CtxIter;
+    typedef std::vector<std::shared_ptr<IDigestContext> >::iterator CtxIter;
 
     //! Constructor
     ChecksumsDigestBuilder();
@@ -239,7 +239,7 @@ protected:
     void reset();
 
 private:
-    std::vector<boost::shared_ptr<IDigestContext> > contexts_;  //!< Digests contexts.
+    std::vector<std::shared_ptr<IDigestContext> > contexts_;  //!< Digests contexts.
     std::vector<std::istream::char_type> buf_;                  //!< Internal IO buffer.
     bool bad_;                                                  //!< Field to store istream.bad() result after calculations based on istream data.
 

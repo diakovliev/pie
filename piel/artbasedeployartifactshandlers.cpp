@@ -89,7 +89,7 @@ ArtBaseDeployArtifactsHandlers::ArtBaseDeployArtifactsHandlers(const std::string
     set_path(path);
 }
 
-void ArtBaseDeployArtifactsHandlers::push_input_stream(boost::shared_ptr<std::istream> is)
+void ArtBaseDeployArtifactsHandlers::push_input_stream(std::shared_ptr<std::istream> is)
 {
     uploader_.push_input_stream(is);
 }

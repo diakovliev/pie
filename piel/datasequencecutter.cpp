@@ -52,7 +52,7 @@ DataSequenceCutter::DataSequenceCutter()
     digest_builder_.init();
 }
 
-void DataSequenceCutter::push_input_stream(boost::shared_ptr<std::istream> is)
+void DataSequenceCutter::push_input_stream(DataSequenceCutter::ISPtr is)
 {
     is_queue_.push(is);
 }

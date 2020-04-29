@@ -108,9 +108,9 @@ ChecksumsDigestBuilder::ChecksumsDigestBuilder()
     , buf_(DigestConstants::buf_size)
     , bad_(false)
 {
-    contexts_.push_back(boost::shared_ptr<IDigestContext>(new Sha256Context()));
-    contexts_.push_back(boost::shared_ptr<IDigestContext>(new ShaContext()));
-    contexts_.push_back(boost::shared_ptr<IDigestContext>(new Md5Context()));
+    contexts_.push_back(std::make_shared<Sha256Context>());
+    contexts_.push_back(std::make_shared<ShaContext>());
+    contexts_.push_back(std::make_shared<Md5Context>());
 }
 
 bool ChecksumsDigestBuilder::bad() const

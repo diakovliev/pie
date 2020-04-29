@@ -154,7 +154,7 @@ std::map<std::string, std::string>& ArtBaseApiHandlers::headers()
 
 /*virtual*/ std::istringstream &ArtBaseApiHandlers::responce_stream()
 {
-    stream_ = boost::shared_ptr<std::istringstream>(new std::istringstream(response_buffer_));
+    stream_ = std::make_shared<std::istringstream>(response_buffer_);
     return *stream_.get();
 }
 

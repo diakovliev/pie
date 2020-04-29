@@ -66,14 +66,14 @@ inline path make_relative( const path& from_arg, const path& to_arg )
     return result;
 }
 
-inline boost::shared_ptr<std::istream> istream( const path& from )
+inline std::shared_ptr<std::istream> istream( const path& from )
 {
-    return boost::shared_ptr<std::istream>(new std::ifstream(from.string().c_str(), std::ifstream::in|std::ifstream::binary));
+    return std::make_shared<std::ifstream>(from.string().c_str(), std::ifstream::in|std::ifstream::binary);
 }
 
-inline boost::shared_ptr<std::ostream> ostream( const path& from )
+inline std::shared_ptr<std::ostream> ostream( const path& from )
 {
-    return boost::shared_ptr<std::ostream>(new std::ofstream(from.string().c_str(), std::ofstream::out|std::ifstream::binary));
+    return std::make_shared<std::ofstream>(from.string().c_str(), std::ofstream::out|std::ifstream::binary);
 }
 
 inline void remove_directory_content(const path& dir, const path& exclude)

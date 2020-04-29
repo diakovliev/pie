@@ -30,7 +30,7 @@
 #define APPLICATION_H
 
 #include <map>
-#include <boost/shared_ptr.hpp>
+#include <memory>
 #include <boost/program_options.hpp>
 
 namespace pie { namespace app {
@@ -71,7 +71,7 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 struct ICommmandConstructor {
-    virtual boost::shared_ptr<ICommand> create(Application *app, int argc, char **argv) const = 0;
+    virtual std::shared_ptr<ICommand> create(Application *app, int argc, char **argv) const = 0;
     virtual std::string name() const = 0;
     virtual std::string description() const = 0;
 };
@@ -85,8 +85,8 @@ public:
         , description_(description)
     {}
 
-    boost::shared_ptr<ICommand> create(Application *app, int argc, char **argv) const {
-        return boost::shared_ptr<ICommand>(new Command(app, argc, argv));
+    std::shared_ptr<ICommand> create(Application *app, int argc, char **argv) const {
+        return std::make_shared<Command>(app, argc, argv);
     }
 
     std::string name() const        { return name_;         }
@@ -100,14 +100,14 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 class CommandsFactory {
 public:
-    typedef std::map<std::string, boost::shared_ptr<ICommmandConstructor> > Constructors;
+    typedef std::map<std::string, std::shared_ptr<ICommmandConstructor> > Constructors;
 
     CommandsFactory(Application *app);
 
     void register_command(ICommmandConstructor *constructor);
     void show_registered_commands() const;
 
-    boost::shared_ptr<ICommand> create(int argc, char **argv);
+    std::shared_ptr<ICommand> create(int argc, char **argv);
 
 private:
     Application *app_;

@@ -33,7 +33,7 @@
 #ifndef DATASEQUENCECUTTER_H
 #define DATASEQUENCECUTTER_H
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 #include <queue>
 #include <checksumsdigestbuilder.hpp>
 
@@ -41,14 +41,14 @@ namespace piel { namespace lib {
 
 class DataSequenceCutter
 {
-    typedef boost::shared_ptr<std::istream> ISPtr;
+public:
+    typedef std::shared_ptr<std::istream> ISPtr;
     typedef std::queue<ISPtr> ISPtrQueue;
 
-public:
     DataSequenceCutter();
     ~DataSequenceCutter(){}
 
-    void push_input_stream(boost::shared_ptr<std::istream> is);
+    void push_input_stream(ISPtr is);
 
     size_t putto(char* ptr, size_t size);
 

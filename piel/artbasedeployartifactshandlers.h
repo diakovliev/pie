@@ -64,7 +64,7 @@ public:
 
     virtual std::string gen_uri();
 
-    void push_input_stream(boost::shared_ptr<std::istream> is);
+    void push_input_stream(std::shared_ptr<std::istream> is);
     size_t putto(char* ptr, size_t size);
 
     piel::lib::ChecksumsDigestBuilder::StrDigests& str_digests(bool reset = false);

@@ -32,7 +32,7 @@
 #include <string>
 #include <sstream>
 #include <map>
-#include <boost/shared_ptr.hpp>
+#include <memory>
 #include <curleasyclient.hpp>
 
 namespace art { namespace lib {
@@ -110,7 +110,7 @@ public:
 private:
     std::string api_token_;                         //!< Artifactory server REST api access token.
     std::string response_buffer_;                   //!< Buffer to collect server responce data.
-    boost::shared_ptr<std::istringstream> stream_;  //!< Input stream to read server responce data.
+    std::shared_ptr<std::istringstream> stream_;    //!< Input stream to read server responce data.
     std::map<std::string, std::string> headers_;    //!< Map with server responce HTTP headers.
 
     IBeforeCallback *before_input_callback_;        //!< Pointer to the callback instance.

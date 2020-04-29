@@ -111,19 +111,19 @@ CommandsFactory::CommandsFactory(Application *app)
 
 void CommandsFactory::register_command(ICommmandConstructor *constructor)
 {
-    constructors_.insert(std::make_pair(constructor->name(), boost::shared_ptr<ICommmandConstructor>(constructor)));
+    constructors_.insert(std::make_pair(constructor->name(), std::shared_ptr<ICommmandConstructor>(constructor)));
 }
 
-boost::shared_ptr<ICommand> CommandsFactory::create(int argc, char **argv)
+std::shared_ptr<ICommand> CommandsFactory::create(int argc, char **argv)
 {
     // second argument is command name
     if (argc < 2) {
-        return boost::shared_ptr<ICommand>(new UnknownCommand(app_, argc, argv));
+        return std::make_shared<UnknownCommand>(app_, argc, argv);
     }
 
     Constructors::iterator cmd_iter = constructors_.find(std::string(argv[1]));
     if (cmd_iter == constructors_.end()) {
-        return boost::shared_ptr<ICommand>(new UnknownCommand(app_, argc, argv));
+        return std::make_shared<UnknownCommand>(app_, argc, argv);
     }
 
     return cmd_iter->second->create(app_, argc - 1, argv + 1);
@@ -154,7 +154,7 @@ Application::~Application()
 
 int Application::run()
 {
-    boost::shared_ptr<ICommand> command = commands_factory_.create(argc_, argv_);
+    std::shared_ptr<ICommand> command = commands_factory_.create(argc_, argv_);
     return command->perform();
 }
 
