@@ -2,14 +2,10 @@
 
 #include <string>
 #include <list>
-#include <boost/shared_ptr.hpp>
+#include <memory>
 #include "logmessage.h"
 
 namespace piel { namespace lib { namespace logger {
-
-class Log;
-typedef boost::shared_ptr<Log> LogPtr;
-typedef std::list<LogPtr> LogPtrList;
 
 class Log {
 public:
@@ -41,5 +37,8 @@ protected:
 protected:
     std::string name;
 };
+
+using LogPtr        = std::shared_ptr<Log>;
+using LogPtrList    = std::list<LogPtr>;
 
 } } } // namespace piel::lib::logger

@@ -1,7 +1,7 @@
 #include <list>
 #include <string>
 #include <iostream>
-#include <boost/lambda/bind.hpp>
+#include <functional>
 #include "loggerout.h"
 #include "baselogger.h"
 #include "filelogger.h"
@@ -22,7 +22,9 @@ LogPtr LoggerOut::common_logger_(new CommonLogger());
 LoggerOut::LoggerOut()
     : qthread_(QueuedThread<logger::LogMessage>::start())
 {
-    qthread_->on_message.connect(boost::bind(&LoggerOut::on_message, this, _1));
+    using namespace std::placeholders;
+
+    qthread_->on_message = std::bind(&LoggerOut::on_message, this, _1);
 }
 
 LoggerOut::~LoggerOut()

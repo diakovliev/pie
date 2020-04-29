@@ -1,8 +1,9 @@
 #pragma once
 
 #include <queue>
-#include <boost/thread/mutex.hpp>
-#include <boost/thread/condition_variable.hpp>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
 
 #include "../logmessage.h"
 
@@ -18,8 +19,8 @@ public:
 
 private:
     logger::LogMessagesQueue    queue_;
-    boost::mutex                mutex_;
-    boost::condition_variable   cond_;
+    std::mutex                  mutex_;
+    std::condition_variable     cond_;
 
 };
 

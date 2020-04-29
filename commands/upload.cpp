@@ -165,7 +165,7 @@ void Upload::deploy_pom()
     deploy_handlers.set_name(query_.name());
     deploy_handlers.set_version(query_.version());
     deploy_handlers.set_classifier(art::lib::ArtBaseConstants::pom_classifier);
-    deploy_handlers.push_input_stream(boost::shared_ptr<std::istream>(new std::istringstream(os.str())));
+    deploy_handlers.push_input_stream(std::make_shared<std::istringstream>(os.str()));
 
     piel::lib::CurlEasyClient<art::lib::ArtDeployArtifactHandlers> upload_client(deploy_handlers.gen_uri(), &deploy_handlers);
 

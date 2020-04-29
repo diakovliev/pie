@@ -1,21 +1,20 @@
 #pragma once
 
 #include <queue>
-#include <boost/weak_ptr.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/thread/thread.hpp>
+#include <memory>
+#include <thread>
 
 namespace piel { namespace lib { namespace logger_out {
 
 class LoggerOut;
 class LogMessageQueue;
 
-typedef boost::shared_ptr<LoggerOut>        LoggerOutPtr;
-typedef boost::weak_ptr<LoggerOut>          LoggerOutWeakPtr;
+using LoggerOutPtr              = std::shared_ptr<LoggerOut>;
+using LoggerOutWeakPtr          = std::weak_ptr<LoggerOut>;
 
-typedef boost::shared_ptr<LogMessageQueue>  LogMessageQueuePtr;
-typedef boost::weak_ptr<LogMessageQueue>    LogMessageQueueWeakPtr;
+using LogMessageQueuePtr        = std::shared_ptr<LogMessageQueue>;
+using LogMessageQueueWeakPtr    = std::weak_ptr<LogMessageQueue>;
 
-typedef boost::shared_ptr<boost::thread>    ThreadPtr;
+using ThreadPtr                 = std::shared_ptr<std::thread>;
 
 } } } // namespace piel::lib::logger_app

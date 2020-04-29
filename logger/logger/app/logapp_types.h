@@ -1,13 +1,13 @@
 #pragma once
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 namespace piel { namespace lib { namespace logger_app {
 
 class SingleLevelLogProxy;
 class LogApp;
 
-typedef boost::shared_ptr<LogApp>               LogAppPtr;
-typedef boost::shared_ptr<SingleLevelLogProxy>  SingleLevelLogProxyPtr;
+using LogAppPtr                 = std::shared_ptr<LogApp>;
+using SingleLevelLogProxyPtr    = std::shared_ptr<SingleLevelLogProxy>;
 
 } } } // namespace piel::lib::logger_out

@@ -1,15 +1,14 @@
 #pragma once
 
 #include <string>
-#include <boost/shared_ptr.hpp>
-#include <boost/weak_ptr.hpp>
+#include <memory>
+#include <functional>
 #include "../singletone.h"
 #include "../logmessage.h"
 #include "logdispatcher_types.h"
 #include "../out/loggerout_types.h"
 #include "../out/logmessagequeue.h"
 #include "../app/logapp_types.h"
-#include <boost/signals2.hpp>
 
 namespace piel { namespace lib { namespace logger_dispatcher {
 
@@ -21,13 +20,13 @@ public:
 
      template<typename FuncObj>
      void connect(FuncObj obj) {
-         enqueue_signal.connect(obj);
+         enqueue_signal = obj;
      }
 
      void enqueue(const logger::LogMessage& m);
 
 protected:
-    boost::signals2::signal<void (const logger::LogMessage& m)> enqueue_signal;
+     std::function<void (const logger::LogMessage& m)> enqueue_signal;
 
 };
 

@@ -2,8 +2,10 @@
 
 #include <string>
 #include <sstream>
-#include <boost/shared_ptr.hpp>
+#include <memory>
+
 #include "logapp_types.h"
+
 #include "../dispatcher/logdispatcher_types.h"
 
 namespace piel { namespace lib { namespace logger_app {

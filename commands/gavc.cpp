@@ -100,14 +100,14 @@ struct BeforeOutputCallback: public al::ArtBaseApiHandlers::IBeforeCallback
     {
         LOGT << "Output path: " << object_path_.generic_string() << ELOG;
 
-        dest_ = boost::shared_ptr<std::ofstream>(new std::ofstream(object_path_.generic_string().c_str()));
+        dest_ = std::make_shared<std::ofstream>(object_path_.generic_string().c_str());
 
         dynamic_cast<al::ArtBaseDownloadHandlers*>(handlers)->set_destination(dest_.get());
 
         return true;
     }
 private:
-    boost::shared_ptr<std::ofstream> dest_;
+    std::shared_ptr<std::ofstream> dest_;
     fs::path object_path_;
 };
 

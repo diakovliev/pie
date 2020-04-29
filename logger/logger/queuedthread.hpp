@@ -1,14 +1,15 @@
 #pragma once
 
 #include <queue>
-#include <boost/shared_ptr.hpp>
-#include <boost/thread.hpp>
-#include <boost/thread/mutex.hpp>
-#include <boost/thread/condition_variable.hpp>
-#include <boost/lambda/bind.hpp>
-#include <boost/optional.hpp>
-#include <boost/signals2.hpp>
+#include <memory>
+#include <thread>
+#include <optional>
 #include <iostream>
+#include <atomic>
+#include <chrono>
+#include <mutex>
+#include <condition_variable>
+#include <functional>
 
 namespace piel { namespace lib {
 
@@ -17,12 +18,12 @@ class QueuedThread
 {
 public:
     typedef QueuedThread<T, wait_timeout_ms>    ThisType;
-    typedef boost::shared_ptr<ThisType>         ThisPtr;
+    typedef std::shared_ptr<ThisType>           ThisPtr;
     typedef std::queue<T>                       Queue;
-    typedef boost::shared_ptr<Queue>            QueuePtr;
-    typedef boost::shared_ptr<boost::thread>    ThreadPtr;
+    typedef std::shared_ptr<Queue>              QueuePtr;
+    typedef std::shared_ptr<std::thread>        ThreadPtr;
 
-    boost::signals2::signal<int (const T& m)>   on_message;
+    std::function<int (const T& m)>             on_message;
 
     virtual ~QueuedThread() {
         join();
@@ -30,17 +31,19 @@ public:
 
     inline static ThisPtr start() {
         ThisPtr instance(new ThisType());
-        instance->thread_.reset(new boost::thread(boost::lambda::bind(&ThisType::entry, instance.get())));
+        instance->thread_.reset(new std::thread(std::bind(&ThisType::entry, instance.get())));
         return instance;
     }
 
     void join() {
-        thread_->join();
+        if (thread_->joinable()) {
+            thread_->join();
+        }
     }
 
     void enqueue(T v) {
         if (quit_) return;
-        boost::unique_lock<boost::mutex> lock{mutex_};
+        std::unique_lock<std::mutex> lock{mutex_};
         queue_->push(v);
         cond_.notify_all();
     }
@@ -60,9 +63,9 @@ public:
     }
 
 protected:
-    boost::optional<T> dequeue() {
-        boost::unique_lock<boost::mutex> lock{mutex_};
-        boost::optional<T> ret_val = boost::none;
+    std::optional<T> dequeue() {
+        std::unique_lock<std::mutex> lock{mutex_};
+        std::optional<T> ret_val = std::nullopt;
 
         if (!queue_->empty())
         {
@@ -77,10 +80,10 @@ protected:
         bool quit = false;
 
         while (!quit) {
-            boost::optional<T> opt = dequeue();
+            std::optional<T> opt = dequeue();
             if (opt) {
-                boost::optional<int> ret_opt = on_message(*opt);
-                if (!ret_opt || (*ret_opt < 0))
+                int ret = on_message(*opt);
+                if (ret < 0)
                 {
                     quit_ = true;
                 }
@@ -89,17 +92,17 @@ protected:
                     quit = true;
                     continue;
                 }
-                boost::unique_lock<boost::mutex> lock{mutex_};
-                cond_.timed_wait(lock, boost::get_system_time()+boost::posix_time::milliseconds(wait_timeout_ms));
+                std::unique_lock<std::mutex> lock{mutex_};
+                cond_.wait_for(lock, std::chrono::milliseconds(wait_timeout_ms));
             }
         }
     }
 
 private:
-    bool                        quit_;
+    std::atomic_bool            quit_;
     QueuePtr                    queue_;
-    boost::mutex                mutex_;
-    boost::condition_variable   cond_;
+    std::mutex                  mutex_;
+    std::condition_variable     cond_;
     ThreadPtr                   thread_;
 };
 

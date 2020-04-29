@@ -29,8 +29,10 @@ Logging::~Logging()
         p->logger_out_thread_.reset(new logger_out::LoggerOut());
     }
 
+    using namespace std::placeholders;
+
     logger_dispatcher::LogDispatcherPtr disp(new logger_dispatcher::LogDispatcher());
-    disp->connect(boost::bind(&logger_out::LoggerOut::enqueue, p->logger_out_thread_.get(), _1));
+    disp->connect(std::bind(&logger_out::LoggerOut::enqueue, p->logger_out_thread_.get(), _1));
     disp->enqueue(m);
 
     logger_app::LogAppPtr res(new LogApp(name, disp));
