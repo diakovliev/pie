@@ -49,7 +49,6 @@
 #include <artbaseapihandlers.h>
 #include <properties.h>
 
-#include <boost/bind.hpp>
 #include <boost_property_tree_ext.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>

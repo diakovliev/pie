@@ -32,8 +32,9 @@
 #include <gavcconstants.h>
 
 #include <algorithm>
+#include <functional>
+
 #include <boost/format.hpp>
-#include <boost/bind.hpp>
 #include <boost/config/warning_disable.hpp>
 #include <boost/spirit/include/phoenix.hpp>
 #include <boost/fusion/include/adapt_struct.hpp>
@@ -42,18 +43,8 @@
 #include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/split.hpp>
 
-#if 0
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
-#include <boost_property_tree_ext.hpp>
-#endif
-
 #include <gavcversionsfilter.h>
 #include <gavcversionsrangefilter.h>
-
-#if 0
-namespace pt = boost::property_tree;
-#endif
 
 //! Versions based queries
 //
@@ -191,7 +182,7 @@ namespace gavc {
             _left_braket    = lexeme[
                                 lit(GavcConstants::left_include_braket)
                                     [
-                                        boost::bind(&gavc_versions_range_grammar::include_left, this)
+                                        std::bind(&gavc_versions_range_grammar::include_left, this)
                                     ]
                                 | lit(GavcConstants::left_exclude_braket)
                               ];
@@ -199,7 +190,7 @@ namespace gavc {
             _right_braket   = lexeme[
                                 lit(GavcConstants::right_include_braket)
                                     [
-                                        boost::bind(&gavc_versions_range_grammar::include_right, this)
+                                        std::bind(&gavc_versions_range_grammar::include_right, this)
                                     ]
                                 | lit(GavcConstants::right_exclude_braket)
                               ];
