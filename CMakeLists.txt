@@ -5,8 +5,8 @@
 #set(CMAKE_CXX_COMPILER /usr/bin/clang++)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -Wextra -Wno-unused-parameter -Wno-overloaded-virtual")
 
-set(CMAKE_C_COMPILER ccache /usr/bin/gcc)
-set(CMAKE_CXX_COMPILER ccache /usr/bin/g++)
+set(CMAKE_C_COMPILER ccache /usr/bin/gcc-8)
+set(CMAKE_CXX_COMPILER ccache /usr/bin/g++-8)
 
 cmake_minimum_required(VERSION 2.6)
 project(pie)
@@ -27,7 +27,7 @@ add_definitions(-DBOOST_LOG_DYN_LINK)
 add_definitions(-DBOOST_SPIRIT_USE_PHOENIX_V3)
 add_definitions(-DBOOST_NO_CXX11_SCOPED_ENUMS)
 
-set(Boost_libraries_list program_options system filesystem regex thread)
+set(Boost_libraries_list program_options system regex)
 
 add_subdirectory(logger)
 add_subdirectory(piel)

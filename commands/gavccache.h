@@ -80,8 +80,8 @@ public:
 
     void operator()();
 
-    void set_path_to_download(const boost::filesystem::path& path);
-    boost::filesystem::path get_path_to_download() const;
+    void set_path_to_download(const std::filesystem::path& path);
+    std::filesystem::path get_path_to_download() const;
 
     std::vector<std::string> get_cached_versions(const std::string &path) const;
     GAVC::paths_list get_cached_files_list(const std::vector<std::string> &versions_to_process, const std::string &path);
@@ -90,8 +90,8 @@ public:
     std::vector<std::string> get_cached_classifiers_list(const std::string& artifacts_cache);
     std::string find_file_for_classifier(const std::string& artifacts_cache, const std::string& classifier);
 
-    static void update_last_access_time(const boost::filesystem::path& cache_object_path);
-    static std::tm get_last_access_time(const boost::filesystem::path& cache_object_path);
+    static void update_last_access_time(const std::filesystem::path& cache_object_path);
+    static std::tm get_last_access_time(const std::filesystem::path& cache_object_path);
 
     static void init(const std::string& cache_path);
     static bool validate(const std::string& cache_path);
@@ -110,7 +110,7 @@ private:
     std::string server_api_access_token_;
     std::string server_repository_;
     art::lib::GavcQuery query_;
-    boost::filesystem::path path_to_download_;
+    std::filesystem::path path_to_download_;
     bool have_to_download_results_;
     bool have_to_delete_results_;
     std::string output_file_;

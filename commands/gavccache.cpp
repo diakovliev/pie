@@ -55,7 +55,7 @@
 
 namespace al = art::lib;
 namespace pl = piel::lib;
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 namespace pt = boost::property_tree;
 namespace po = boost::program_options;
 
@@ -425,14 +425,14 @@ void GAVCCache::perform()
 
         for (GAVC::paths_list::iterator f = list_files.begin(), end = list_files.end(); f != end; ++f) {
 
-            fs::path path        = output_file_.empty()         ?   fs::path(*f).filename() : output_file_                          ;
-            fs::path object_path = path_to_download_.empty()    ?   path                    : path_to_download_ / path.filename()   ;
+            fs::path path        = output_file_.empty()         ?   fs::path(*f).filename().string()    : output_file_                          ;
+            fs::path object_path = path_to_download_.empty()    ?   path                                : path_to_download_ / path.filename()   ;
 
             LOGT << *f << "->" << object_path << ELOG;
 
             cout() << "+ " << object_path.filename().string() << std::endl;
 
-            fs::copy_file(*f, object_path, fs::copy_option::overwrite_if_exists);
+            fs::copy_file(*f, object_path, fs::copy_options::overwrite_existing);
             update_last_access_time(*f);
 
             pl::Properties props    = GAVC::load_object_properties(*f);
@@ -470,12 +470,12 @@ void GAVCCache::operator()()
     }
 }
 
-void GAVCCache::set_path_to_download(const boost::filesystem::path& path)
+void GAVCCache::set_path_to_download(const std::filesystem::path& path)
 {
     path_to_download_ = path;
 }
 
-boost::filesystem::path GAVCCache::get_path_to_download() const
+std::filesystem::path GAVCCache::get_path_to_download() const
 {
     return path_to_download_;
 }

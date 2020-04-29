@@ -35,6 +35,7 @@
 #include <iomanip>
 #include <cstdlib>
 #include <vector>
+#include <filesystem>
 
 #include <gavccache.h>
 #include <gavccacheinit.h>
@@ -52,7 +53,7 @@
 
 namespace al = art::lib;
 namespace pl = piel::lib;
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 namespace pt = boost::property_tree;
 namespace po = boost::program_options;
 

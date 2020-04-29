@@ -30,7 +30,6 @@
 #define GAVCCACHEINIT_H_
 
 #include <iostreamsholder.h>
-#include <boost/filesystem.hpp>
 
 namespace piel { namespace cmd {
 

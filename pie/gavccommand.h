@@ -34,7 +34,7 @@
 #include <gavcquery.h>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/program_options.hpp>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 
 namespace pie { namespace app {
 

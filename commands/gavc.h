@@ -36,8 +36,8 @@
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/program_options.hpp>
-#include <boost/filesystem.hpp>
 
+#include <filesystem>
 #include <list>
 
 namespace piel { namespace cmd {
@@ -72,8 +72,8 @@ namespace errors {
 class GAVC: public piel::lib::IOstreamsHolder
 {
 public:
-    typedef std::list<boost::filesystem::path> paths_list;
-    typedef std::map<boost::filesystem::path,std::pair<std::string,std::string> > query_results;
+    typedef std::list<std::filesystem::path> paths_list;
+    typedef std::map<std::filesystem::path,std::pair<std::string,std::string> > query_results;
 
     GAVC(  const std::string& server_api_access_token
          , const std::string& server_url
@@ -91,8 +91,8 @@ public:
 
     void operator()();
 
-    void set_path_to_download(const boost::filesystem::path& path);
-    boost::filesystem::path get_path_to_download() const;
+    void set_path_to_download(const std::filesystem::path& path);
+    std::filesystem::path get_path_to_download() const;
     paths_list get_list_of_actual_files() const;
     query_results get_query_results() const;
     paths_list get_list_of_queued_files() const;
@@ -102,10 +102,10 @@ public:
     void process_version(const std::string&);
     std::string get_maven_metadata_path() const;
 
-    static bool validate_local_file(const boost::filesystem::path& object_path, const piel::lib::Properties& server_checksums);
+    static bool validate_local_file(const std::filesystem::path& object_path, const piel::lib::Properties& server_checksums);
 
-    static piel::lib::Properties load_object_properties(const boost::filesystem::path& object_path);
-    static void store_object_properties(const boost::filesystem::path& object_path, const piel::lib::Properties& properties);
+    static piel::lib::Properties load_object_properties(const std::filesystem::path& object_path);
+    static void store_object_properties(const std::filesystem::path& object_path, const piel::lib::Properties& properties);
 
     void set_cache_mode(bool value);
     static std::string get_classifier_file_name(const std::string& query_name, const std::string& ver, const std::string& classifier);
@@ -119,7 +119,7 @@ protected:
     void on_aql_object (const boost::property_tree::ptree::value_type& obj, const std::string& version, const std::string& classifier);
 
     std::map<std::string,std::string> get_server_checksums(const boost::property_tree::ptree& obj_tree, const std::string& section) const;
-    void download_file(const boost::filesystem::path& object_path, const std::string& object_id, const std::string& download_uri) const;
+    void download_file(const std::filesystem::path& object_path, const std::string& object_id, const std::string& download_uri) const;
     void delete_file(const std::string& download_uri) const;
 
 private:
@@ -127,7 +127,7 @@ private:
     std::string server_api_access_token_;
     std::string server_repository_;
     art::lib::GavcQuery query_;
-    boost::filesystem::path path_to_download_;
+    std::filesystem::path path_to_download_;
     bool have_to_download_results_;
     bool have_to_delete_results_;
     bool cache_mode_;

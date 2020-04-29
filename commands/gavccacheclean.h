@@ -29,8 +29,8 @@
 #ifndef GAVCCACHECLEAN_H_
 #define GAVCCACHECLEAN_H_
 
+#include <filesystem>
 #include <iostreamsholder.h>
-#include <boost/filesystem.hpp>
 
 namespace piel { namespace cmd {
 
@@ -44,7 +44,7 @@ public:
     void operator()();
 
 private:
-    bool clean(boost::filesystem::path path);
+    bool clean(std::filesystem::path path);
 
 private:
     std::string cache_path_;

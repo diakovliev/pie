@@ -28,6 +28,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <filesystem>
 #include <cstdlib>
 #include <gavccommand.h>
 #include <gavccache.h>
@@ -35,7 +36,6 @@
 #include <mavenmetadata.h>
 
 #include <boost_property_tree_ext.hpp>
-#include <boost/filesystem.hpp>
 
 namespace pie { namespace app {
 
@@ -191,7 +191,7 @@ void GavcCommand::write_files_list(const piel::cmd::GAVC::paths_list& files_list
                              have_to_delete_results_);
 
             if (output_file_.empty()) {
-                gavc.set_path_to_download(boost::filesystem::current_path());
+                gavc.set_path_to_download(std::filesystem::current_path());
             }
 
             gavc();
@@ -213,7 +213,7 @@ void GavcCommand::write_files_list(const piel::cmd::GAVC::paths_list& files_list
                              have_to_delete_results_);
 
             if (output_file_.empty()) {
-                gavccache.set_path_to_download(boost::filesystem::current_path());
+                gavccache.set_path_to_download(std::filesystem::current_path());
             }
 
             gavccache();

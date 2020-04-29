@@ -36,7 +36,7 @@
 #include <mavenmetadata.h>
 
 #include <boost_property_tree_ext.hpp>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 
 namespace pie { namespace app {
 

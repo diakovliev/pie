@@ -52,7 +52,7 @@
 
 namespace al = art::lib;
 namespace pl = piel::lib;
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 namespace pt = boost::property_tree;
 namespace po = boost::program_options;
 
@@ -254,13 +254,13 @@ void GAVC::delete_file(const std::string& download_uri) const
     }
 }
 
-/*static*/ piel::lib::Properties GAVC::load_object_properties(const boost::filesystem::path& object_path)
+/*static*/ piel::lib::Properties GAVC::load_object_properties(const std::filesystem::path& object_path)
 {
     std::ifstream is(object_path.generic_string() + GAVCConstants::properties_ext);
     return pl::Properties::load(is);
 }
 
-/*static*/ void GAVC::store_object_properties(const boost::filesystem::path& object_path, const piel::lib::Properties& properties)
+/*static*/ void GAVC::store_object_properties(const std::filesystem::path& object_path, const piel::lib::Properties& properties)
 {
     std::ofstream os(object_path.generic_string() + GAVCConstants::properties_ext);
     properties.store(os);
@@ -577,12 +577,12 @@ void GAVC::operator()()
     }
 }
 
-void GAVC::set_path_to_download(const boost::filesystem::path& path)
+void GAVC::set_path_to_download(const std::filesystem::path& path)
 {
     path_to_download_ = path;
 }
 
-boost::filesystem::path GAVC::get_path_to_download() const
+std::filesystem::path GAVC::get_path_to_download() const
 {
     return path_to_download_;
 }

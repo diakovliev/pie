@@ -52,7 +52,7 @@
 
 namespace al = art::lib;
 namespace pl = piel::lib;
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 namespace pt = boost::property_tree;
 namespace po = boost::program_options;
 
@@ -96,7 +96,7 @@ bool GAVCCacheClean::clean(fs::path path)
                 fs::remove_all(entry.path());
             }
         } else if (fs::is_regular_file(entry)
-                   && (fs::extension(entry) != GAVCConstants::properties_ext) ) {
+                   && (entry.path().extension() != GAVCConstants::properties_ext) ) {
 
             std::tm     last_access_tm   = GAVCCache::get_last_access_time(entry.path().generic_string());
             std::time_t last_access_time = std::mktime(&last_access_tm);
