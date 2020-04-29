@@ -34,7 +34,7 @@
 
 #include <string>
 #include <ostream>
-#include <boost/signals2.hpp>
+#include <functional>
 
 namespace art { namespace lib {
 
@@ -62,7 +62,7 @@ public:
 
     template<typename FuncObj>
     void connect(FuncObj obj) {
-        on_buffer_.connect(obj);
+        on_buffer_ = obj;
     }
 
 private:
@@ -70,7 +70,7 @@ private:
     std::string api_token_;                                         //!< Artifactory server REST API access token.
     std::ostream* dest_;                                            //!< Destination stream.
     piel::lib::ChecksumsDigestBuilder checksums_builder_;           //!< Checksums digest builder for the content.
-    boost::signals2::signal<void (const BufferInfo& m)> on_buffer_; //!< Signal processed buffer
+    std::function<void (const BufferInfo& m)> on_buffer_;           //!< Signal processed buffer
 };
 
 } } // namespace art::lib
