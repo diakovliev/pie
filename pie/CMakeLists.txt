@@ -16,7 +16,6 @@ include_directories(${Boost_INCLUDE_DIR})
 target_link_libraries(${Module_name} LINK_PUBLIC
     stdc++fs
     libboost_program_options.a
-    libboost_system.a
     libboost_regex.a
 )
 
