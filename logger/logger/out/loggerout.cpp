@@ -78,8 +78,8 @@ void LoggerOut::create_log(const std::string& _name)
 
 void LoggerOut::remove_log(const std::string& _name)
 {
-    log_ptr_list_.remove_if(std::bind2nd(CheckEqualLog(), _name));
-    log_ptr_list_.remove_if(std::bind2nd(CheckEqualLog(), _name+"_null"));
+    log_ptr_list_.remove_if([_name](auto& it){ return CheckEqualLog()(it, _name); });
+    log_ptr_list_.remove_if([_name](auto& it){ return CheckEqualLog()(it, _name+"_null"); });
 }
 
 void LoggerOut::print(const logger::LogMessage& m)
