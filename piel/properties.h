@@ -32,7 +32,6 @@
 #include <iostream>
 #include <string>
 #include <map>
-#include <boost/function.hpp>
 
 namespace piel { namespace lib {
 
