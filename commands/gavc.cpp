@@ -211,7 +211,7 @@ std::map<std::string,std::string> GAVC::get_server_checksums(const pt::ptree& ob
     {
         LOGT   << "Md5 from server: "       << server_checksums.get(al::ArtBaseConstants::checksums_md5, "")
                << " local: "                << str_digests[pl::Md5::t::name()] << ELOG;
-        local_file_is_actual &= server_checksums.get(al::ArtBaseConstants::checksums_md5, std::string("")) == str_digests[pl::Md5::t::name()];
+        local_file_is_actual &= server_checksums.get(al::ArtBaseConstants::checksums_md5, "") == str_digests[pl::Md5::t::name()];
     }
 
     return local_file_is_actual;
