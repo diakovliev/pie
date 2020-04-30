@@ -34,13 +34,6 @@ namespace piel { namespace lib {
 
 const size_t DigestConstants::buf_size = piel::lib::CommonConstants::io_buffer_size;       //!< Size of the internal IO buffers.
 
-template<> char const* const DigestTraits<Sha256>::name_    = "SHA-256";
-template<> const int DigestTraits<Sha256>::len_             = SHA256_DIGEST_LENGTH;
-template<> char const* const DigestTraits<Sha>::name_       = "SHA-1";
-template<> const int DigestTraits<Sha>::len_                = SHA_DIGEST_LENGTH;
-template<> char const* const DigestTraits<Md5>::name_       = "MD5";
-template<> const int DigestTraits<Md5>::len_                = MD5_DIGEST_LENGTH;
-
 //! Format digest string.
 //! \return Digest string representation.
 std::string IDigestContext::format(const Digest& digest) {

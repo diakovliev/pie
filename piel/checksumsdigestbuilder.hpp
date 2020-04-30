@@ -52,12 +52,12 @@ struct DigestTraits {
     static std::string name() {
         return name_;
     }
-    static int len() {
+    static size_t len() {
         return len_;
     }
 private:
-    static char const* const name_;
-    static const int len_;
+    static constexpr const char* name_ = nullptr;
+    static constexpr size_t len_ = 0;
 };
 
 struct Sha256 {
@@ -72,6 +72,13 @@ struct Md5 {
     typedef MD5_CTX ctx;
     typedef DigestTraits<Md5> t;
 };
+
+template<> constexpr const char* DigestTraits<Sha256>::name_    = "SHA-256";
+template<> constexpr size_t DigestTraits<Sha256>::len_          = SHA256_DIGEST_LENGTH;
+template<> constexpr const char* DigestTraits<Sha>::name_       = "SHA-1";
+template<> constexpr size_t DigestTraits<Sha>::len_             = SHA_DIGEST_LENGTH;
+template<> constexpr const char* DigestTraits<Md5>::name_       = "MD5";
+template<> constexpr size_t DigestTraits<Md5>::len_             = MD5_DIGEST_LENGTH;
 
 ////////////////////////////////////////////////////////////////////////////////
 //! \brief Checksums formatter.

@@ -50,7 +50,6 @@
 
 #include <boost_property_tree_ext.hpp>
 #include <boost/algorithm/string.hpp>
-#include <boost/assert.hpp>
 
 namespace al = art::lib;
 namespace pl = piel::lib;

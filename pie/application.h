@@ -41,6 +41,7 @@ class Application;
 ////////////////////////////////////////////////////////////////////////////////
 struct ICommand {
     ICommand(Application *app) : app_(app) {}
+    virtual ~ICommand() = default;
 
     virtual int perform() = 0;
 
@@ -63,7 +64,9 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 struct UnknownCommand: public ICommand {
     UnknownCommand(Application *app, int argc, char **argv);
-    int perform();
+    virtual ~UnknownCommand() = default;
+
+    virtual int perform();
 private:
     int argc_;
     char **argv_;
@@ -71,6 +74,8 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 struct ICommandConstructor {
+    virtual ~ICommandConstructor() = default;
+
     virtual std::shared_ptr<ICommand> create(Application *app, int argc, char **argv) const = 0;
     virtual std::string name() const = 0;
     virtual std::string description() const = 0;
@@ -84,6 +89,8 @@ public:
         : name_(name)
         , description_(description)
     {}
+
+    virtual ~CommandConstructor() = default;
 
     std::shared_ptr<ICommand> create(Application *app, int argc, char **argv) const {
         return std::make_shared<Command>(app, argc, argv);

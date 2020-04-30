@@ -19,7 +19,8 @@ target_link_libraries(${Module_name} LINK_PUBLIC
 )
 
 # OpenSSL (libssl-dev)
-target_link_libraries(${Module_name} crypto)
+# target_link_libraries(${Module_name} crypto)
+target_link_libraries(${Module_name} libcrypto.a)
 
 # libzip (libzip-dev)
 #target_link_libraries(${Module_name} ${ZIP})
