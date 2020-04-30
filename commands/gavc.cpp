@@ -36,6 +36,7 @@
 #include <vector>
 #include <functional>
 #include <optional>
+#include <algorithm>
 
 #include <gavc.h>
 #include "gavcconstants.h"
@@ -49,6 +50,7 @@
 
 #include <boost_property_tree_ext.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/assert.hpp>
 
 namespace al = art::lib;
 namespace pl = piel::lib;
@@ -154,34 +156,20 @@ std::map<std::string,std::string> GAVC::get_server_checksums(const pt::ptree& ob
 {
     std::map<std::string,std::string> result;
 
-    pt::ptree checksums = obj_tree.get_child(section);
+    auto checksums = obj_tree.get_child(section);
 
-    std::optional<std::string> op_sha1 = pt::find_value(checksums,
-            pt::FindPropertyHelper(al::ArtBaseConstants::checksums_sha1));
+    auto get_sum = [&](auto sum_name) {
+        auto op_sum = pt::find_value(checksums, pt::FindPropertyHelper(sum_name));
+        if (op_sum)
+        {
+            LOGT << section << " " << sum_name << ":" << *op_sum << ELOG;
+            result[sum_name] = *op_sum;
+        }
+    };
 
-    if (op_sha1)
-    {
-        result[al::ArtBaseConstants::checksums_sha1] = *op_sha1;
-        LOGT << section << " sha1: " << *op_sha1 << ELOG;
-    }
-
-    std::optional<std::string> op_sha256 = pt::find_value(checksums,
-            pt::FindPropertyHelper(al::ArtBaseConstants::checksums_sha256));
-
-    if (op_sha256)
-    {
-        result[al::ArtBaseConstants::checksums_sha256] = *op_sha256;
-        LOGT << section << " sha256: " << *op_sha256 << ELOG;
-    }
-
-    std::optional<std::string> op_md5 = pt::find_value(checksums,
-            pt::FindPropertyHelper(al::ArtBaseConstants::checksums_md5));
-
-    if (op_md5)
-    {
-        result[al::ArtBaseConstants::checksums_md5] = *op_md5;
-        LOGT << section << " md5: " << *op_md5 << ELOG;
-    }
+    get_sum(al::ArtBaseConstants::checksums_sha1);
+    get_sum(al::ArtBaseConstants::checksums_sha256);
+    get_sum(al::ArtBaseConstants::checksums_md5);
 
     return result;
 }
@@ -191,28 +179,26 @@ std::map<std::string,std::string> GAVC::get_server_checksums(const pt::ptree& ob
     bool local_file_is_actual = fs::exists(object_path);
 
     std::ifstream is(object_path.generic_string());
-    pl::ChecksumsDigestBuilder::StrDigests str_digests = pl::ChecksumsDigestBuilder().str_digests_for(is);
 
-    if (server_checksums.contains(al::ArtBaseConstants::checksums_sha256))
-    {
-        LOGT   << "Sha256 from server: "    << server_checksums.get(al::ArtBaseConstants::checksums_sha256, "")
-               << " local: "                << str_digests[pl::Sha256::t::name()] << ELOG;
-        local_file_is_actual &= server_checksums.get(al::ArtBaseConstants::checksums_sha256, "") == str_digests[pl::Sha256::t::name()];
-    }
+    auto str_digests = pl::ChecksumsDigestBuilder().str_digests_for(is);
 
-    if (server_checksums.contains(al::ArtBaseConstants::checksums_sha1))
-    {
-        LOGT   << "Sha1 from server: "      << server_checksums.get(al::ArtBaseConstants::checksums_sha1, "")
-               << " local: "                << str_digests[pl::Sha::t::name()] << ELOG;
-        local_file_is_actual &= server_checksums.get(al::ArtBaseConstants::checksums_sha1, "") == str_digests[pl::Sha::t::name()];
-    }
+    auto verify_sum = [&](auto remote_sum_name, auto local_sum_name) {
+        if (server_checksums.contains(remote_sum_name))
+        {
+            LOGT << remote_sum_name
+                 << " from server: "
+                 << server_checksums.get(remote_sum_name, "")
+                 << " local: "
+                 << str_digests[local_sum_name]
+                 << ELOG;
 
-    if (server_checksums.contains(al::ArtBaseConstants::checksums_md5))
-    {
-        LOGT   << "Md5 from server: "       << server_checksums.get(al::ArtBaseConstants::checksums_md5, "")
-               << " local: "                << str_digests[pl::Md5::t::name()] << ELOG;
-        local_file_is_actual &= server_checksums.get(al::ArtBaseConstants::checksums_md5, "") == str_digests[pl::Md5::t::name()];
-    }
+            local_file_is_actual &= server_checksums.get(remote_sum_name, "") == str_digests[local_sum_name];
+        }
+    };
+
+    verify_sum(al::ArtBaseConstants::checksums_sha256,  pl::Sha256::t::name());
+    verify_sum(al::ArtBaseConstants::checksums_sha1,    pl::Sha::t::name());
+    verify_sum(al::ArtBaseConstants::checksums_md5,     pl::Md5::t::name());
 
     return local_file_is_actual;
 }
@@ -270,14 +256,14 @@ void GAVC::on_object(const pt::ptree::value_type& obj, const std::string& versio
 {
     LOGT << "on_object version: " << version << " query classifier: " << query_classifier << ELOG;
 
-    std::optional<std::string> op_download_uri = pt::find_value(obj.second, pt::FindPropertyHelper("downloadUri"));
+    auto op_download_uri = pt::find_value(obj.second, pt::FindPropertyHelper("downloadUri"));
     if (!op_download_uri)
     {
         LOGF << "Can't find downloadUri property!" << ELOG;
         return;
     }
 
-    std::optional<std::string> op_path = pt::find_value(obj.second, pt::FindPropertyHelper("path"));
+    auto op_path = pt::find_value(obj.second, pt::FindPropertyHelper("path"));
     if (!op_path)
     {
         LOGF << "Can't find path property!" << ELOG;
@@ -323,8 +309,8 @@ void GAVC::on_object(const pt::ptree::value_type& obj, const std::string& versio
         return;
     }
 
-    std::map<std::string,std::string> server_checksums      = get_server_checksums(obj.second, "checksums");
-    //std::map<std::string,std::string> original_checksums    = get_server_checksums(obj.second, "originalChecksums");
+    auto server_checksums      = get_server_checksums(obj.second, "checksums");
+    //auto original_checksums    = get_server_checksums(obj.second, "originalChecksums");
 
     cout() << "? " << object_id << "\r";
     cout().flush();
@@ -390,14 +376,33 @@ void GAVC::on_object(const pt::ptree::value_type& obj, const std::string& versio
 
 void GAVC::on_aql_object(const pt::ptree::value_type& obj, const std::string& version, const std::string& query_classifier)
 {
-    std::optional<std::string> repo = pt::find_value(obj.second, pt::FindPropertyHelper(al::ArtBaseConstants::aql_repo));
-    LOGT << "aql repo: " << *repo << ELOG;
+    pt::ptree item;
+    pt::ptree checksums;
+    pt::ptree originalChecksums;
 
-    std::optional<std::string> name = pt::find_value(obj.second, pt::FindPropertyHelper(al::ArtBaseConstants::aql_name));
-    LOGT << "aql name: " << *name << ELOG;
+    auto get_req_value = [&](auto name) {
+        auto value = pt::find_value(obj.second, pt::FindPropertyHelper(name));
+        if (!value) {
+            LOGF << "Can't find " << name << " property in aql results!" << ELOG;
+        }
 
-    std::optional<std::string> path = pt::find_value(obj.second, pt::FindPropertyHelper(al::ArtBaseConstants::aql_path));
-    LOGT << "aql path: " << *path << ELOG;
+        return value;
+    };
+
+    auto get_sum = [&](auto sum_name) {
+        auto op_sum = pt::find_value(obj.second, pt::FindPropertyHelper(sum_name));
+        if (op_sum) {
+            auto sum = *op_sum;
+            LOGT << "aql " << sum_name + ": " << sum << ELOG;
+            checksums.put(sum_name, sum);
+            originalChecksums.put(sum_name, sum);
+        }
+    };
+
+
+    auto repo = get_req_value(al::ArtBaseConstants::aql_repo);
+    auto name = get_req_value(al::ArtBaseConstants::aql_name);
+    auto path = get_req_value(al::ArtBaseConstants::aql_path);
 
     std::string path2 = "/" + *path + "/" + *name;
     LOGT << "aql path2: " << path2 << ELOG;
@@ -408,57 +413,19 @@ void GAVC::on_aql_object(const pt::ptree::value_type& obj, const std::string& ve
     std::string uri = server_url_ + "/api/storage/" + *repo + path2;
     LOGT << "aql uri: " << uri << ELOG;
 
-    pt::ptree item;
-
     item.put("repo", *repo);
     item.put("path", path2);
     item.put("downloadUri", downloadUri);
     item.put("uri", uri);
 
-    pt::ptree checksums;
-    pt::ptree originalChecksums;
-
-    std::optional<std::string> md5 = pt::find_value(obj.second, pt::FindPropertyHelper(al::ArtBaseConstants::aql_md5));
-    if (md5) {
-        LOGT << "aql md5: " << *md5 << ELOG;
-        checksums.put(al::ArtBaseConstants::checksums_md5, *md5);
-        originalChecksums.put(al::ArtBaseConstants::checksums_md5, *md5);
-    }
-
-    std::optional<std::string> sha1 = pt::find_value(obj.second, pt::FindPropertyHelper(al::ArtBaseConstants::aql_sha1));
-    if (sha1) {
-        LOGT << "aql sha1: " << *sha1 << ELOG;
-        checksums.put(al::ArtBaseConstants::checksums_sha1, *sha1);
-        originalChecksums.put(al::ArtBaseConstants::checksums_sha1, *sha1);
-    }
-
-    std::optional<std::string> sha256 = pt::find_value(obj.second, pt::FindPropertyHelper(al::ArtBaseConstants::aql_sha256));
-    if (sha256) {
-        LOGT << "aql sha256: " << *sha256 << ELOG;
-        checksums.put(al::ArtBaseConstants::checksums_sha256, *sha256);
-        originalChecksums.put(al::ArtBaseConstants::checksums_sha256, *sha256);
-    }
+    get_sum(al::ArtBaseConstants::aql_md5);
+    get_sum(al::ArtBaseConstants::aql_sha1);
+    get_sum(al::ArtBaseConstants::aql_sha256);
 
     item.add_child("checksums", checksums);
     item.add_child("originalChecksums", originalChecksums);
 
     on_object(std::make_pair("", item), version, query_classifier);
-}
-
-std::string GAVC::create_url(const std::string& version_to_query, const std::string& classifier) const
-{
-    std::string url = server_url_;
-    url.append("/api/search/gavc");
-    url.append("?r=").append(server_repository_);
-    url.append("&g=").append(query_.group());
-    url.append("&a=").append(query_.name());
-    if (!version_to_query.empty()) {
-        url.append("&v=").append(version_to_query);
-    }
-    if (!classifier.empty()) {
-        url.append("&c=").append(classifier);
-    }
-    return url;
 }
 
 std::string GAVC::get_maven_metadata_path() const
@@ -494,7 +461,7 @@ std::vector<std::string> GAVC::get_versions_to_process() const
         throw errors::cant_get_maven_metadata();
     }
 
-    al::MavenMetadata metadata = *metadata_op;
+    auto metadata = *metadata_op;
 
     std::vector<std::string> versions_to_process = metadata.versions_for(query_);
     if (versions_to_process.empty())
@@ -505,27 +472,26 @@ std::vector<std::string> GAVC::get_versions_to_process() const
     return versions_to_process;
 }
 
-void GAVC::process_version(const std::string& i)
+void GAVC::process_version(const std::string& version)
 {
-    LOGT << "Version: " << i << ELOG;
+    LOGT << "Version: " << version << ELOG;
 
-    GAVC::notify_gavc_version(i);
+    GAVC::notify_gavc_version(version);
 
-    cout() << "Version: "       << i << std::endl;
-    cout() << "Mode: online"         << std::endl;
+    cout() << "Version: "       << version  << std::endl;
+    cout() << "Mode: online"                << std::endl;
 
     std::string classifier_spec = query_.classifier();
     std::vector<std::string> classifiers;
 
     boost::split(classifiers, classifier_spec, boost::is_any_of(","));
 
-    for (std::vector<std::string>::const_iterator c = classifiers.begin(), cend = classifiers.end(); c != cend; ++c)
-    {
-        LOGT << "Classifier: " << *c << ELOG;
+    std::for_each(classifiers.begin(), classifiers.end(), [&] (auto& classifier) {
+        LOGT << "Classifier: " << classifier << ELOG;
 
         al::GavcQuery q = query_;
-        q.set_version(i);
-        q.set_classifier(*c);
+        q.set_version(version);
+        q.set_classifier(classifier);
 
         al::ArtAqlHandlers aql_handlers(server_api_access_token_, q.to_aql(server_repository_));
         aql_handlers.set_url(server_url_);
@@ -534,22 +500,21 @@ void GAVC::process_version(const std::string& i)
 
         if (!client.perform())
         {
-            throw errors::error_processing_version(client.curl_error().presentation(), i);
+            throw errors::error_processing_version(client.curl_error().presentation(), version);
         }
 
         pt::ptree root;
         pt::read_json(aql_handlers.responce_stream(), root);
-        pt::each(root.get_child("results"), std::bind(&GAVC::on_aql_object, this, std::placeholders::_1,  i, *c));
-    }
+        pt::each(root.get_child("results"), [&](auto& result){ on_aql_object(result,  version, classifier); });
+    });
 }
 
 void GAVC::process_versions(const std::vector<std::string>& versions_to_process)
 {
-    for (std::vector<std::string>::const_iterator i = versions_to_process.begin(), end = versions_to_process.end(); i != end; ++i)
-    {
-        LOGT << "Version: " << *i << ELOG;
-        process_version(*i);
-    }
+    std::for_each(versions_to_process.begin(), versions_to_process.end(), [this](auto version) {
+        LOGT << "Version: " << version << ELOG;
+        process_version(version);
+    });
 }
 
 void GAVC::operator()()

@@ -113,8 +113,6 @@ public:
     void notify_gavc_version(const std::string& version);
 
 protected:
-    std::string create_url(const std::string& version_to_query, const std::string& classifier) const;
-
     void on_object     (const boost::property_tree::ptree::value_type& obj, const std::string& version, const std::string& classifier);
     void on_aql_object (const boost::property_tree::ptree::value_type& obj, const std::string& version, const std::string& classifier);
 
