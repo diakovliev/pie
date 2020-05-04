@@ -1,9 +1,9 @@
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -Wextra -Wno-unused-parameter -Wno-overloaded-virtual")
 
-# set(CMAKE_C_COMPILER ccache /usr/bin/gcc-8)
-# set(CMAKE_CXX_COMPILER ccache /usr/bin/g++-8)
-set(CMAKE_C_COMPILER ccache /usr/bin/clang)
-set(CMAKE_CXX_COMPILER ccache /usr/bin/clang++)
+set(CMAKE_C_COMPILER ccache /usr/bin/gcc-8)
+set(CMAKE_CXX_COMPILER ccache /usr/bin/g++-8)
+# set(CMAKE_C_COMPILER ccache /usr/bin/clang)
+# set(CMAKE_CXX_COMPILER ccache /usr/bin/clang++)
 
 cmake_minimum_required(VERSION 2.6)
 project(pie)
