@@ -71,10 +71,10 @@ bool GavcCacheCommand::parse_arguments()
 {
     po::options_description desc("Query options");
     desc.add_options()
-        ("cache-path",      po::value<std::string>(&cache_path_),   (std::string("Cache path. Can be set using GAVC_CACHE environment variable. Default: ") + utils::get_default_cache_path()).c_str())
+        ("cache-path",      po::value<std::string>(&cache_path_),   (std::string("Cache location. Can be set using GAVC_CACHE environment variable. Default: ") + utils::get_default_cache_path()).c_str())
         ("init",                                                    (std::string("Perform cache initialization.")).c_str())
         ("clean",                                                   (std::string("Perform cache clean.")).c_str())
-        ("max-age-days",    po::value<int>(&max_age_),              (std::string("(clean) Max age for artifactory in days. Default: ") + std::to_string(default_age)).c_str())
+        ("max-age-days",    po::value<int>(&max_age_),              (std::string("(clean) Max age of elements in days. Default: ") + std::to_string(default_age)).c_str())
         ;
 
     if (show_help(desc, argc_, argv_)) {
