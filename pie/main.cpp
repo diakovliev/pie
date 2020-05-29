@@ -28,8 +28,7 @@
 
 #include <application.h>
 #include <gavccommand.h>
-#include <gavccachecleancommand.h>
-#include <gavccacheinitcommand.h>
+#include <gavccachecommand.h>
 #include <uploadcommand.h>
 
 namespace pa = pie::app;
@@ -39,13 +38,11 @@ int main(int argc, char **argv)
     pa::Application app(argc, argv);
 
     pa::CommandConstructor<pa::GavcCommand>             cgavc(   "gavc",             "GAVC query implementation." );
-    pa::CommandConstructor<pa::GavcCacheCleanCommand>   cclean(  "gavccacheclean",   "Clean GAVC cache." );
-    pa::CommandConstructor<pa::GavcCacheInitCommand>    cinit(   "gavccacheinit",    "Init GAVC cache." );
+    pa::CommandConstructor<pa::GavcCacheCommand>        ccache(  "cache",            "Cache related actions." );
     pa::CommandConstructor<pa::UploadCommand>           cupload( "upload",           "Upload to Artifactory server." );
 
     app.register_command(&cgavc);
-    app.register_command(&cclean);
-    app.register_command(&cinit);
+    app.register_command(&ccache);
     app.register_command(&cupload);
 
     return app.run();

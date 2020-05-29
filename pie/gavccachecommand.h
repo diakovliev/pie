@@ -30,18 +30,16 @@
 #define GAVCCACHECLEANCOMMAND_H
 
 #include <application.h>
-#include <gavcquery.h>
-#include <boost/property_tree/ptree.hpp>
 #include <boost/program_options.hpp>
 #include <filesystem>
 
 namespace pie { namespace app {
 
-class GavcCacheCleanCommand: public ICommand
+class GavcCacheCommand: public ICommand
 {
 public:
-    GavcCacheCleanCommand(Application *app, int argc, char **argv);
-    virtual ~GavcCacheCleanCommand();
+    GavcCacheCommand(Application *app, int argc, char **argv);
+    virtual ~GavcCacheCommand();
 
     virtual int perform();
 
@@ -52,6 +50,9 @@ protected:
 private:
     int argc_;
     char **argv_;
+
+    bool do_init_;
+    bool do_clean_;
 
     std::string cache_path_;
     int         max_age_;

@@ -29,9 +29,10 @@
 #include <iostream>
 #include <cstdlib>
 #include <gavccommand.h>
-#include <gavccacheinitcommand.h>
-#include "gavccacheinit.h"
+#include <gavccachecommand.h>
 #include <gavccache.h>
+#include <gavccacheinit.h>
+#include <gavccacheclean.h>
 #include <logging.h>
 #include <mavenmetadata.h>
 
@@ -43,29 +44,37 @@ namespace pie { namespace app {
 namespace pt = boost::property_tree;
 namespace po = boost::program_options;
 
-GavcCacheInitCommand::GavcCacheInitCommand(Application *app, int argc, char **argv)
+const int default_age = 180;
+
+GavcCacheCommand::GavcCacheCommand(Application *app, int argc, char **argv)
     : ICommand(app)
     , argc_(argc)
     , argv_(argv)
+    , do_init_(false)
+    , do_clean_(false)
     , cache_path_(utils::get_default_cache_path())
+    , max_age_(default_age)
 {
 }
 
-GavcCacheInitCommand::~GavcCacheInitCommand()
+GavcCacheCommand::~GavcCacheCommand()
 {
 }
 
-void GavcCacheInitCommand::show_command_help_message(const po::options_description& desc)
+void GavcCacheCommand::show_command_help_message(const po::options_description& desc)
 {
-    std::cerr << "Usage: gavccacheclean [options]" << std::endl;
+    std::cerr << "Usage: cache [options]" << std::endl;
     std::cout << desc;
 }
 
-bool GavcCacheInitCommand::parse_arguments()
+bool GavcCacheCommand::parse_arguments()
 {
     po::options_description desc("Query options");
     desc.add_options()
-        ("cache-path", po::value<std::string>(&cache_path_), (std::string("Cache path. Can be set using GAVC_CACHE environment variable. Default: ") + utils::get_default_cache_path()).c_str())
+        ("cache-path",      po::value<std::string>(&cache_path_),   (std::string("Cache path. Can be set using GAVC_CACHE environment variable. Default: ") + utils::get_default_cache_path()).c_str())
+        ("init",                                                    (std::string("Perform cache initialization.")).c_str())
+        ("clean",                                                   (std::string("Perform cache clean.")).c_str())
+        ("max-age-days",    po::value<int>(&max_age_),              (std::string("(clean) Max age for artifactory in days. Default: ") + std::to_string(default_age)).c_str())
         ;
 
     if (show_help(desc, argc_, argv_)) {
@@ -82,12 +91,15 @@ bool GavcCacheInitCommand::parse_arguments()
         return false;
     }
 
+    do_init_    = (vm.count("init") > 0);
+    do_clean_   = (vm.count("clean") > 0);
+
     get_from_env(vm, "cache",       "GAVC_CACHE",                   cache_path_);
 
     return true;
 }
 
-/*virtual*/ int GavcCacheInitCommand::perform()
+/*virtual*/ int GavcCacheCommand::perform()
 {
     int result = -1;
 
@@ -95,9 +107,38 @@ bool GavcCacheInitCommand::parse_arguments()
         return result;
     }
 
-    piel::cmd::GAVCCacheInit gavccachecheinit(cache_path_);
+    std::cout << "Cache path: " << cache_path_ << std::endl;
 
-    gavccachecheinit();
+    if (do_init_)
+    {
+        std::cout << "Initialize cache ...";
+
+        piel::cmd::GAVCCacheInit gavccachecheinit(cache_path_);
+
+        gavccachecheinit();
+
+        std::cout << " DONE" << std::endl;
+    }
+
+    if (do_clean_)
+    {
+        try 
+        {
+            std::cout << "Clean cache ...";
+
+            piel::cmd::GAVCCacheClean gavccacheclean(
+                             cache_path_,
+                             max_age_);
+
+            gavccacheclean();
+
+            std::cout << " DONE" << std::endl;
+        }
+        catch (piel::cmd::errors::cache_folder_does_not_exist& e) {
+            std::cerr << "cache_folder_does_not_exist: " << e.folder << "!" << std::endl;
+            return result;
+        }
+    }
 
     result = 0;
 
