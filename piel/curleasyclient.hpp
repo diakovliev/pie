@@ -174,6 +174,7 @@ public:
     CurlEasyClient(const std::string& url, HandlersPtr handlers, const std::string& custom_request = std::string())
         : url_(url)
         , handlers_(handlers)
+        , errbuf_(CURL_ERROR_SIZE, ' ')
         , curl_error_()
         , custom_request_(custom_request)
     {
@@ -209,7 +210,7 @@ private:
     std::string url_;               //!< Working url.
     ::CURL *curl_;                  //!< libcurl handle.
     HandlersPtr handlers_;          //!< Pointer to implementation instance of *Handlers.
-    char errbuf_[CURL_ERROR_SIZE];  //!< libcurl error buffer
+    std::string errbuf_;            //!< libcurl error buffer
     CurlError curl_error_;          //!< libcurl error description
 
     std::string custom_request_;    //!< CURLOPT_CUSTOMREQUEST
@@ -289,14 +290,15 @@ bool CurlEasyClient<Handlers>::perform()
 #ifdef DEBUG_VERBOSE_CURL
     ::curl_easy_setopt(curl_, CURLOPT_VERBOSE, 1L);
 #endif
-    ::curl_easy_setopt(curl_, CURLOPT_ERRORBUFFER, errbuf_);
+    ::curl_easy_setopt(curl_, CURLOPT_ERRORBUFFER, errbuf_.data());
     CURLcode code = ::curl_easy_perform(curl_);
+
     long http_code = 0;
     ::curl_easy_getinfo(curl_, CURLINFO_RESPONSE_CODE, &http_code);
     bool result = CURLE_OK == code && http_code < 400;
     if (!result)
     {
-        curl_error_ = CurlError(code, http_code, std::string(errbuf_));
+        curl_error_ = CurlError(code, http_code, errbuf_);
     }
     else
     {
