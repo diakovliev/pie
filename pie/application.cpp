@@ -29,6 +29,8 @@
 #include <application.h>
 #include <iostream>
 
+#include <curl/curl.h>
+
 namespace pie { namespace app {
 
 bool ICommand::show_help(boost::program_options::options_description &desc, int argc, char **argv)
@@ -89,11 +91,31 @@ UnknownCommand::UnknownCommand(Application *app, int argc, char **argv)
 {
 }
 
+void UnknownCommand::print_curl_version()
+{
+    ::curl_version_info_data *data = ::curl_version_info(CURLVERSION_NOW);
+
+    std::cout << "CURL:"                                    << std::endl;
+    std::cout << "\tversion: "      << data->version        << std::endl;
+    std::cout << "\tssl: "          << data->ssl_version    << std::endl;
+
+    unsigned int i = 0;
+    const char* protocol = nullptr;
+
+    std::cout << "\tprotocols:";
+    while ((protocol = data->protocols[i++])) {
+        std::cout << " " << protocol;
+    }
+    std::cout << std::endl;
+}
+
 int UnknownCommand::perform()
 {
     std::cerr << "Incorrect command line or unknown command."               << std::endl;
 
     std::cout << "Version: " << PIE_VERSION                                 << std::endl;
+    print_curl_version();
+
     std::cout << "Usage:"                                                   << std::endl;
     std::cout << "\t" << argv_[0] << " <command name> [command arguments]"  << std::endl;
     std::cout << "Help:"                                                    << std::endl;

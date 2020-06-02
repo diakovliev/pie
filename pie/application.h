@@ -67,6 +67,10 @@ struct UnknownCommand: public ICommand {
     virtual ~UnknownCommand() = default;
 
     virtual int perform();
+
+protected:
+    void print_curl_version();
+
 private:
     int argc_;
     char **argv_;
