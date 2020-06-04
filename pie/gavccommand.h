@@ -38,10 +38,6 @@
 
 namespace pie { namespace app {
 
-namespace utils {
-std::string get_default_cache_path();
-}//namespace utils
-
 class GavcCommand: public ICommand
 {
 public:

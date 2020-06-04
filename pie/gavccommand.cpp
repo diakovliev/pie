@@ -42,16 +42,6 @@ namespace pie { namespace app {
 namespace pt = boost::property_tree;
 namespace po = boost::program_options;
 
-namespace utils {
-
-std::string get_default_cache_path() {
-    static const std::string default_cache_path = "/.pie/gavc/cache";
-    static const char *home_c_str = ::getenv("HOME");
-    return std::string(home_c_str) + default_cache_path;
-}
-
-}//namespace utils
-
 GavcCommand::GavcCommand(Application *app, int argc, char **argv)
     : ICommand(app)
     , argc_(argc)
@@ -63,7 +53,7 @@ GavcCommand::GavcCommand(Application *app, int argc, char **argv)
     , have_to_download_results_(false)
     , have_to_delete_results_(false)
     , output_file_()
-    , cache_path_(utils::get_default_cache_path())
+    , cache_path_(piel::cmd::utils::get_default_cache_path())
     , disable_cache_(false)
     , notifications_file_()
     , max_attempts_(3)
@@ -93,7 +83,7 @@ bool GavcCommand::parse_arguments()
         ("download,d",                                                          "Download query results.")
         ("delete,x",                                                            "Delete query results from the server. Have sence only in online mode.")
         ("output,o",        po::value<std::string>(&output_file_),              "Output file name. Be careful, it will cause unexpected behavoiur if the query result is set.")
-        ("cache-path",      po::value<std::string>(&cache_path_),               (std::string("Cache path. Can be set using GAVC_CACHE environment variable. Default: ") + utils::get_default_cache_path()).c_str())
+        ("cache-path",      po::value<std::string>(&cache_path_),               (std::string("Cache path. Can be set using GAVC_CACHE environment variable. Default: ") + piel::cmd::utils::get_default_cache_path()).c_str())
         ("disable-cache",                                                       "Do not use local cache (enabled by default).")
         ("notifications,n", po::value<std::string>(&notifications_file_),       "If specified, PIE will generate notifications file with actions details.")
         ("max-attempts",    po::value<unsigned int>(&max_attempts_),            "Max attempts on IO errors.")

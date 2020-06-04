@@ -96,6 +96,7 @@ public:
     paths_list get_list_of_actual_files() const;
     query_results get_query_results() const;
     paths_list get_list_of_queued_files() const;
+    std::vector<std::string> get_versions() const;
 
     std::vector<std::string> get_versions_to_process() const;
     void process_versions(const std::vector<std::string>&);
@@ -133,6 +134,7 @@ private:
     paths_list list_of_actual_files_;
     query_results query_results_;
     paths_list list_of_queued_files_;
+    std::vector<std::string> versions_;
 
     std::string output_file_;
     unsigned int max_attempts_;

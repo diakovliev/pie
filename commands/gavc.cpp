@@ -82,6 +82,7 @@ GAVC::GAVC(const std::string& server_api_access_token
     , list_of_actual_files_()
     , query_results_()
     , list_of_queued_files_()
+    , versions_()
     , output_file_(output_file)
     , max_attempts_(max_attempts)
     , retry_timeout_s_(retry_timeout_s)
@@ -580,6 +581,13 @@ void GAVC::notify_gavc_version(const std::string& version)
 
     notifications_file_.notify("VERSION", version);
     notifications_file_.notify("GAVC", q.to_string());
+
+    versions_.push_back(version);
+}
+
+std::vector<std::string> GAVC::get_versions() const
+{
+    return versions_;
 }
 
 } } // namespace piel::cmd

@@ -60,6 +60,10 @@ namespace errors {
     };
 }
 
+namespace utils {
+std::string get_default_cache_path();
+}//namespace utils
+
 class GAVCCache: public piel::lib::IOstreamsHolder
 {
 public:
@@ -86,6 +90,7 @@ public:
     std::vector<std::string> get_cached_versions(const std::string &path) const;
     GAVC::paths_list get_cached_files_list(const std::vector<std::string> &versions_to_process, const std::string &path);
     void copy_file_list(GAVC::paths_list &file_list);
+    std::vector<std::string> get_versions() const;
 
     std::vector<std::string> get_cached_classifiers_list(const std::string& artifacts_cache);
     std::string find_file_for_classifier(const std::string& artifacts_cache, const std::string& classifier);
@@ -122,6 +127,8 @@ private:
 
     GAVC::query_results query_results_;
     GAVC::paths_list list_of_queued_files_;
+
+    std::vector<std::string> versions_;
 };
 
 } } // namespace piel::cmd

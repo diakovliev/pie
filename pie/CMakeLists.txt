@@ -22,13 +22,6 @@ target_link_libraries(${Module_name} LINK_PUBLIC
 # target_link_libraries(${Module_name} crypto)
 target_link_libraries(${Module_name} libcrypto.a)
 
-# libzip (libzip-dev)
-#target_link_libraries(${Module_name} ${ZIP})
-#include_directories("third-party/libzip/include")
-
-# libcurl (libcurl4-openssl-dev)
-# target_link_libraries(${Module_name} curl)
-
 # libcurl (libcurl4-gnutls-dev)
 target_link_libraries(${Module_name} curl-gnutls)
 

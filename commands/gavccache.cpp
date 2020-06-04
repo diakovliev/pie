@@ -61,6 +61,16 @@ namespace po = boost::program_options;
 
 namespace piel { namespace cmd {
 
+namespace utils {
+
+std::string get_default_cache_path() {
+    static const std::string default_cache_path = "/.pie/gavc/cache";
+    static const char *home_c_str = ::getenv("HOME");
+    return std::string(home_c_str) + default_cache_path;
+}
+
+}//namespace utils
+
 GAVCCache::GAVCCache(const std::string& server_api_access_token
            , const std::string& server_url
            , const std::string& server_repository
@@ -89,6 +99,7 @@ GAVCCache::GAVCCache(const std::string& server_api_access_token
     , force_offline_(force_offline)
     , query_results_()
     , list_of_queued_files_()
+    , versions_()
 {
 }
 
@@ -354,7 +365,7 @@ void GAVCCache::perform()
     bool offline            = force_offline;
     bool have_cached_files  = false;
 
-    GAVC::paths_list list_files;
+    GAVC::paths_list cashed_files_list;
 
     if (!offline) {
         try {
@@ -373,8 +384,8 @@ void GAVCCache::perform()
         try {
             versions_to_process_cache   = query_.filter(get_cached_versions(mm_path));
             // Initial cache files list
-            list_files                  = get_cached_files_list(versions_to_process_cache, mm_path);
-            have_cached_files           = !list_files.empty();
+            cashed_files_list           = get_cached_files_list(versions_to_process_cache, mm_path);
+            have_cached_files           = !cashed_files_list.empty();
 
             LOGT << "have_cached_files: " << have_cached_files << ELOG;
         } catch (errors::cache_folder_does_not_exist& e) {
@@ -392,7 +403,7 @@ void GAVCCache::perform()
             gavc.notify_gavc_version(*ver);
         }
 
-        for (GAVC::paths_list::iterator f = list_files.begin(), end = list_files.end(); f != end; ++f) {
+        for (GAVC::paths_list::iterator f = cashed_files_list.begin(), end = cashed_files_list.end(); f != end; ++f) {
 
             fs::path object_name        = fs::path(*f).filename();
 
@@ -414,11 +425,13 @@ void GAVCCache::perform()
             gavc.process_version(*i);
 
             // Get actial files list
-            list_files = gavc.get_list_of_actual_files();
+            cashed_files_list = gavc.get_list_of_actual_files();
         }
 
         versions_to_process = versions_to_process_remote;
     }
+
+    versions_ = gavc.get_versions();
 
     if (have_to_download_results_) {
 
@@ -426,7 +439,7 @@ void GAVCCache::perform()
             throw errors::cache_no_cache_for_query(query_.to_string());
         }
 
-        for (GAVC::paths_list::iterator f = list_files.begin(), end = list_files.end(); f != end; ++f) {
+        for (GAVC::paths_list::iterator f = cashed_files_list.begin(), end = cashed_files_list.end(); f != end; ++f) {
 
             fs::path path        = output_file_.empty()         ?   fs::path(*f).filename().string()    : output_file_                          ;
             fs::path object_path = path_to_download_.empty()    ?   path                                : path_to_download_ / path.filename()   ;
@@ -491,6 +504,11 @@ GAVC::query_results GAVCCache::get_query_results() const
 GAVC::paths_list GAVCCache::get_list_of_queued_files() const
 {
     return list_of_queued_files_;
+}
+
+std::vector<std::string> GAVCCache::get_versions() const
+{
+    return versions_;
 }
 
 } } // namespace piel::cmd

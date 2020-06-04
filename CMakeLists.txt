@@ -8,7 +8,7 @@ set(CMAKE_CXX_COMPILER ccache /usr/bin/g++-8)
 cmake_minimum_required(VERSION 2.6)
 project(pie)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -fPIC")
 # set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_BUILD_TYPE Release)
 
@@ -31,6 +31,7 @@ add_subdirectory(logger)
 add_subdirectory(piel)
 add_subdirectory(commands)
 add_subdirectory(pie)
+add_subdirectory(python_extension)
 
 enable_testing()
 add_subdirectory(tests)
