@@ -10,6 +10,8 @@
 #include <vector>
 #include <exception>
 #include <filesystem>
+#include <memory>
+#include <sstream>
 
 #define MODULE_VESRION 1
 
@@ -190,6 +192,10 @@ public:
 
         auto notifications_file_         = "";
 
+        auto cout_ = std::make_unique<std::ostringstream>();
+        auto cerr_ = std::make_unique<std::ostringstream>();
+        auto cin_ = std::make_unique<std::istringstream>();
+
         try {
             if (disable_cache_) {
                 piel::cmd::GAVC gavc(
@@ -205,6 +211,9 @@ public:
                     force_offline_,
                     have_to_delete_results_
                 );
+
+                // Suppress output
+                gavc.setup_iostreams(cout_.get(), cerr_.get(), cin_.get());
 
                 if (output_file_.empty()) {
                     gavc.set_path_to_download(std::filesystem::current_path());
@@ -230,6 +239,9 @@ public:
                     force_offline_,
                     have_to_delete_results_
                 );
+
+                // Suppress output
+                gavccache.setup_iostreams(cout_.get(), cerr_.get(), cin_.get());
 
                 if (output_file_.empty()) {
                     gavccache.set_path_to_download(std::filesystem::current_path());

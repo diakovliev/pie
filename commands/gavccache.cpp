@@ -348,6 +348,7 @@ void GAVCCache::perform()
          false,
          have_to_delete_results_);
 
+    gavc.setup_iostreams(&cout(), &cerr(), &cin());
     gavc.set_cache_mode(true);
 
     LOGT << " gavc.get_maven_metadata_path:"    << gavc.get_maven_metadata_path()   << ELOG;

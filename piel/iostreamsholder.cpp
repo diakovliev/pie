@@ -26,12 +26,13 @@
  *
  */
 
+#include <logging.h>
 #include <iostreamsholder.h>
 
 namespace piel { namespace lib {
 
 IOstreamsHolder::IOstreamsHolder()
-    : cout_(0), cerr_(0), cin_(0)
+    : cout_(nullptr), cerr_(nullptr), cin_(nullptr)
 {
 }
 
@@ -41,33 +42,43 @@ IOstreamsHolder::~IOstreamsHolder()
 
 std::ostream& IOstreamsHolder::cout() const
 {
-    if (cout_)
+    if (cout_) {
+        LOGT << "Return custom cout." << ELOG;
         return *cout_;
-    else
+    } else {
+        LOGT << "Return std::cout." << ELOG;
         return std::cout;
+    }
 }
 
 std::ostream& IOstreamsHolder::cerr() const
 {
-    if (cerr_)
+    if (cerr_) {
+        LOGT << "Return custom cerr." << ELOG;
         return *cerr_;
-    else
+    } else {
+        LOGT << "Return std::cerr." << ELOG;
         return std::cerr;
+    }
 }
 
 std::istream& IOstreamsHolder::cin() const
 {
-    if (cin_)
+    if (cin_) {
+        LOGT << "Return custom cin." << ELOG;
         return *cin_;
-    else
+    } else {
+        LOGT << "Return std::cin." << ELOG;
         return std::cin;
+    }
 }
 
-void IOstreamsHolder::setup_iostreams(std::ostream *cout, std::ostream *cerr, std::istream *cin)
+void IOstreamsHolder::setup_iostreams(std::ostream *coutp, std::ostream *cerrp, std::istream *cinp)
 {
-    cout_   = cout;
-    cerr_   = cerr;
-    cin_    = cin;
+    LOGT << "Setup custom streams." << ELOG;
+    cout_   = coutp;
+    cerr_   = cerrp;
+    cin_    = cinp;
 }
 
 } } // namespace piel::lib
