@@ -17,6 +17,7 @@ class GavcParams:
     PARAM_CACHE_PATH       = "cache-path";
     PARAM_CACHE_PATH_ENV   = "GAVC_CACHE";
 
+    # Gavc
     PARAM_DOWNLOAD         = "download";
     PARAM_DELETE           = "delete";
     PARAM_OUTPUT           = "output";
@@ -25,8 +26,19 @@ class GavcParams:
     PARAM_RETRY_TIMEOUT    = "retry-timeout";
     PARAM_FORCE_OFFLINE    = "force-offline";
 
+    # Upload
+    PARAM_FILELIST         = "filelist"
+
 ################################################################################
 class TestLib(unittest.TestCase):
+
+    CACHE_PATH = ".test_cache"
+
+    @classmethod
+    def setUp(self):
+        cache = lib.Cache()
+        cache.set_param(GavcParams.PARAM_CACHE_PATH, self.CACHE_PATH)
+        cache.init()
 
     def test_version(self):
         self.assertEqual(1, lib.version())
@@ -57,6 +69,7 @@ class TestLib(unittest.TestCase):
 
         gavc = lib.Gavc()
 
+        self.assertEqual(0, gavc.set_param(GavcParams.PARAM_CACHE_PATH, self.CACHE_PATH))
         self.assertEqual(0, gavc.set_param(GavcParams.PARAM_DOWNLOAD, "1"))
         self.assertEqual(0, gavc.perform("zodiac.aosp.oemsdk.release:aosp:+"))
 
@@ -67,10 +80,26 @@ class TestLib(unittest.TestCase):
 
         gavc = lib.Gavc()
 
+        self.assertEqual(0, gavc.set_param(GavcParams.PARAM_CACHE_PATH, self.CACHE_PATH))
         self.assertEqual(0, gavc.perform("zodiac.aosp.oemsdk.release:aosp:*"))
 
         for v in gavc.versions():
             print(" -- version: %s" % v)
+
+    def test_cache_clean(self):
+
+        cache = lib.Cache()
+
+        cache.set_param(GavcParams.PARAM_CACHE_PATH, self.CACHE_PATH)
+
+        self.assertEqual(0, cache.clean(3))
+
+    def test_upload(self):
+        upload = lib.Upload()
+
+        upload.set_param(GavcParams.PARAM_FILELIST, "cmake_install:cmake_install.cmake,makefile:Makefile")
+
+        self.assertEqual(0, upload.perform("test_upload:test_upload:1"))
 
 print("Version: %d" % lib.version())
 unittest.main(verbosity = 5)
