@@ -30,12 +30,14 @@
 #define CURLEASYCLIENT_H
 
 #include <curl/curl.h>
+#include <cstdlib>
+#include <cstring>
 
 #include <vector>
 #include <string>
 #include <sstream>
 
-//#define DEBUG_VERBOSE_CURL
+#define DEBUG_VERBOSE_CURL "debug_verbose_curl"
 
 //! File contains implementation of libcurl curl_easy_* api wrapper. Wrapper is designed
 //! for hiding C style api usage.
@@ -258,6 +260,11 @@ size_t CurlEasyClient<Handlers>::handle_read(char *ptr, size_t size, size_t coun
 template<class Handlers>
 bool CurlEasyClient<Handlers>::perform()
 {
+    const char* debug_verbose_curl = ::getenv(DEBUG_VERBOSE_CURL);
+    if (debug_verbose_curl && 0 == ::strncmp(debug_verbose_curl, "1", 1)) {
+        ::curl_easy_setopt(curl_, CURLOPT_VERBOSE, 1L);
+    }
+
     ::curl_slist *custom_headers = 0;
 
     ::curl_easy_setopt(curl_, CURLOPT_URL, url_.c_str());
@@ -287,9 +294,6 @@ bool CurlEasyClient<Handlers>::perform()
         ::curl_easy_setopt(curl_, CURLOPT_UPLOAD, 1L);
     }
     ::curl_easy_setopt(curl_, CURLOPT_FAILONERROR, 1L);
-#ifdef DEBUG_VERBOSE_CURL
-    ::curl_easy_setopt(curl_, CURLOPT_VERBOSE, 1L);
-#endif
     ::curl_easy_setopt(curl_, CURLOPT_ERRORBUFFER, errbuf_.data());
     CURLcode code = ::curl_easy_perform(curl_);
 

@@ -19,7 +19,6 @@ echo "python_pie: $bdir/pie/python_extension/libpython_pie.so"
 
 cp -vf $bdir/pie/pie                                            $cdir/../../gn/bin/
 cp -vf $bdir/python_extension/libpython_pie.so                  $cdir/../../gn/py_libs/
-cp -vf /usr/lib/x86_64-linux-gnu/libboost_python27.so.1.67.0    $cdir/../../gn/py_libs/
 
 strip --strip-unneeded $cdir/../../gn/bin/pie
 strip --strip-unneeded $cdir/../../gn/py_libs/libpython_pie.so
