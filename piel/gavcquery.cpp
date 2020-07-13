@@ -505,7 +505,7 @@ std::string GavcQuery::to_aql_path() const
     return oss.str();
 }
 
-std::string GavcQuery::to_aql_name() const
+std::string GavcQuery::to_aql_name(bool pom) const
 {
     bool append_star = classifier().empty() | extension().empty();
     std::ostringstream oss;
@@ -522,11 +522,47 @@ std::string GavcQuery::to_aql_name() const
         oss << ".";
         oss << extension();
     }
-    if (append_star)
+    if (append_star && pom)
     {
-        oss << "*";
+        oss << ".*";
     }
+    else if (append_star && !pom)
+    {
+        oss << "-*";
+    }
+
     return oss.str();
+}
+
+std::string GavcQuery::to_aql_cond(const std::string& repo, bool pom) const
+{
+    std::ostringstream oss;
+
+    oss << "{ \"$and\": [ ";
+
+    oss << " {  \"repo\" :";
+        oss << " \"";
+        oss << repo;
+        oss << "\" ";
+
+    oss << " } , { ";
+    oss << " \"path\" :";
+        oss << " { \"$match\": \"";
+        oss << to_aql_path();
+        oss << "\" } ";
+
+    oss << " } , { ";
+    oss << " \"name\" :";
+        oss << " { \"$match\": \"";
+        oss << to_aql_name(pom);
+        oss << "\" } ";
+
+    oss << "} ] }";
+
+    std::string aql_cond = oss.str();
+    LOGT << "aql cond: " << aql_cond << ELOG;
+
+    return aql_cond;
 }
 
 std::string GavcQuery::to_aql(const std::string& repo) const
@@ -534,28 +570,13 @@ std::string GavcQuery::to_aql(const std::string& repo) const
     std::ostringstream oss;
 
 //#if 0
-    oss << "items.find(";
-        oss << "{";
-
-        oss << " \"repo\" :";
-            oss << " \"";
-            oss << repo;
-            oss << "\" ";
-
-        oss << ",";
-        oss << " \"path\" :";
-            oss << " { \"$match\": \"";
-            oss << to_aql_path();
-            oss << "\" } ";
-
-        oss << ",";
-        oss << " \"name\" :";
-            oss << " { \"$match\": \"";
-            oss << to_aql_name();
-            oss << "\" } ";
-
-        oss << "}";
-    oss << ").include(\"*\")";
+    oss << "items.find({";
+        oss << "\"$or\": [ ";
+            oss << to_aql_cond(repo, false);
+        oss << " , ";
+            oss << to_aql_cond(repo, true);
+        oss << "]";
+    oss << "}).include(\"*\")";
 //#endif
 
 #if 0

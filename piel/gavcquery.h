@@ -136,8 +136,9 @@ public:
     std::vector<std::string> filter(const std::vector<std::string>& versions) const;
 
     std::string to_aql_path() const;
-    std::string to_aql_name() const;
+    std::string to_aql_name(bool pom) const;
     std::string to_aql(const std::string& repo) const;
+    std::string to_aql_cond(const std::string& repo, bool pom) const;
 
 private:
     gavc::gavc_data data_;
