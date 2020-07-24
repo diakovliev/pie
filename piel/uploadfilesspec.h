@@ -31,6 +31,7 @@
 
 #include <map>
 #include <vector>
+#include <string>
 #include <optional>
 
 namespace art { namespace lib {
