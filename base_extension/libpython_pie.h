@@ -1,6 +1,7 @@
 #pragma once
 
-#include <boost/python.hpp>
+#include <string>
+#include <exception>
 
 #define LIBPYTHON_PIE_VERSION 1
 

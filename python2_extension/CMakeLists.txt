@@ -1,4 +1,4 @@
-set(Module_name python_pie)
+set(Module_name python2_pie)
 file(GLOB SOURCES "*.cpp" "*.h" "*.hpp")
 
 set(Boost_libraries_list python)
@@ -14,7 +14,7 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/test.py
     ${CMAKE_CURRENT_BINARY_DIR}/test.py COPYONLY)
 
 # Components
-target_link_libraries(${Module_name} commands piel logger pthread)
+target_link_libraries(${Module_name} base_extension commands piel logger pthread)
 
 target_link_libraries(${Module_name} LINK_PUBLIC stdc++fs ${Boost_LIBRARIES})
 # target_link_libraries(${Module_name} LINK_PUBLIC

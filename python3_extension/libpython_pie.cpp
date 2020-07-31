@@ -1,13 +1,15 @@
-#include "libpython_pie.h"
+#include <libpython_pie.h>
 
+#include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+
 #include <vector>
 #include <set>
 #include <string>
 
-#include "gavc_extension.h"
-#include "cache_extension.h"
-#include "upload_extension.h"
+#include <gavc_extension.h>
+#include <cache_extension.h>
+#include <upload_extension.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 int version() {
@@ -35,7 +37,7 @@ void translate_exception(std::exception const& e)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-BOOST_PYTHON_MODULE(libpython_pie)
+BOOST_PYTHON_MODULE(libpython3_pie)
 {
     using namespace boost::python;
 

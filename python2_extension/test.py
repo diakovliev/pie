@@ -1,7 +1,7 @@
 import os
 import unittest
 
-import libpython_pie as lib
+import libpython2_pie as lib
 
 ################################################################################
 class GavcParams:
