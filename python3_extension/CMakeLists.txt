@@ -12,6 +12,8 @@ add_library(${Module_name} SHARED ${SOURCES})
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/test.py
     ${CMAKE_CURRENT_BINARY_DIR}/test.py COPYONLY)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/python_pie.py
+    ${CMAKE_CURRENT_BINARY_DIR}/python_pie.py COPYONLY)
 
 # Components
 target_link_libraries(${Module_name} base_extension commands piel logger pthread)
