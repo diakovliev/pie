@@ -1,8 +1,8 @@
-set(Module_name python3_pie)
-file(GLOB SOURCES "*.cpp" "*.h" "*.hpp")
+# set(Module_name python2_pie)
+# set(Boost_libraries_list python)
+# set(Python_INCLUDE_DIRS /usr/include/python2.7)
 
-set(Boost_libraries_list python3)
-set(Python_INCLUDE_DIRS /usr/include/python3.6)
+file(GLOB SOURCES "*.cpp" "*.h" "*.hpp")
 
 # Boost (libboost-all-dev)
 find_package( Boost COMPONENTS ${Boost_libraries_list} REQUIRED)
@@ -10,13 +10,13 @@ include_directories(${Boost_INCLUDE_DIR} ${Python_INCLUDE_DIRS})
 
 add_library(${Module_name} SHARED ${SOURCES})
 
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/test.py
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/../base/test.py
     ${CMAKE_CURRENT_BINARY_DIR}/test.py COPYONLY)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/python_pie.py
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/../base/python_pie.py
     ${CMAKE_CURRENT_BINARY_DIR}/python_pie.py COPYONLY)
 
 # Components
-target_link_libraries(${Module_name} base_extension commands piel logger pthread)
+target_link_libraries(${Module_name} python_pie_base commands piel logger pthread)
 
 target_link_libraries(${Module_name} LINK_PUBLIC stdc++fs ${Boost_LIBRARIES})
 # target_link_libraries(${Module_name} LINK_PUBLIC

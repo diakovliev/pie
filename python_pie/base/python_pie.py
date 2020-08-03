@@ -1,4 +1,11 @@
-import libpython2_pie as nlib
+import sys
+
+if sys.version_info.major == 2:
+    import libpython2_pie as nlib
+elif sys.version_info.major == 3:
+    import libpython3_pie as nlib
+else:
+    raise ImportError()
 
 ################################################################################
 class Base:

@@ -1,7 +1,13 @@
 import os
 import unittest
+import sys
 
-import libpython2_pie as lib
+if sys.version_info.major == 2:
+    import libpython2_pie as lib
+elif sys.version_info.major == 3:
+    import libpython3_pie as lib
+else:
+    raise ImportError()
 
 ################################################################################
 class GavcParams:
@@ -41,7 +47,7 @@ class TestLib(unittest.TestCase):
         cache.init()
 
     def test_version(self):
-        self.assertEqual(2, lib.version())
+        self.assertEqual(sys.version_info.major, lib.version())
 
     def test_unsupported_params(self):
         gavc = lib.Gavc()

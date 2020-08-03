@@ -6,11 +6,8 @@
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
 #include <vector>
-#include <set>
-#include <string>
-#include <exception>
 
-#include <utils.h>
+#include <pyutils.h>
 #include <gavc_extension.h>
 #include <cache_extension.h>
 #include <upload_extension.h>
