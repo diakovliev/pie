@@ -41,7 +41,7 @@ class TestLib(unittest.TestCase):
         cache.init()
 
     def test_version(self):
-        self.assertEqual(1, lib.version())
+        self.assertEqual(2, lib.version())
 
     def test_unsupported_params(self):
         gavc = lib.Gavc()

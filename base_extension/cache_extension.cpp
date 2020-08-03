@@ -1,4 +1,6 @@
+#include "libpython_pie.h"
 #include "cache_extension.h"
+#include "utils.h"
 
 #include <logging.h>
 

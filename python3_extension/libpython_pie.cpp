@@ -6,34 +6,22 @@
 #include <vector>
 #include <set>
 #include <string>
+#include <exception>
 
+#include <utils.h>
 #include <gavc_extension.h>
 #include <cache_extension.h>
 #include <upload_extension.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 int version() {
-    return LIBPYTHON_PIE_VERSION;
+    return 3;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 void translate_exception(std::exception const& e)
 {
     PyErr_SetString(PyExc_RuntimeError, e.what());
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/*static*/ bool Utils::string2bool(std::string value) {
-    static std::set<std::string> negative_values {
-        "",
-        "0",
-        "false",
-        "False",
-    };
-
-    if (value.empty()) return false;
-
-    return negative_values.find(value) == negative_values.end();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

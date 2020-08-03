@@ -4,7 +4,6 @@
 #include <map>
 #include <vector>
 
-#include "libpython_pie.h"
 #include "base_extension.h"
 
 class Cache: public BaseExtension {
