@@ -1,11 +1,11 @@
 include(FindPkgConfig)
 
-pkg_check_modules(PYTHON REQUIRED python2)
+pkg_check_modules(PYTHON2 REQUIRED python2)
 
-message(" --- python2 includes: ${PYTHON_INCLUDE_DIRS}")
+message(" --- python2 includes: ${PYTHON2_INCLUDE_DIRS}")
 
 set(Module_name python2_pie)
-set(Python_INCLUDE_DIRS ${PYTHON_INCLUDE_DIRS})
+set(Python_INCLUDE_DIRS ${PYTHON2_INCLUDE_DIRS})
 
 set(Boost_libraries_list python2)
 find_package(Boost COMPONENTS ${Boost_libraries_list})

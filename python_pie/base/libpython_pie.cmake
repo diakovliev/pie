@@ -24,8 +24,8 @@ target_link_libraries(${Module_name} LINK_PUBLIC stdc++fs ${Boost_LIBRARIES})
 # )
 
 # OpenSSL (libssl-dev)
-# target_link_libraries(${Module_name} crypto)
-target_link_libraries(${Module_name} libcrypto.a)
+target_link_libraries(${Module_name} crypto)
+# target_link_libraries(${Module_name} libcrypto.a)
 
 # libcurl (libcurl4-gnutls-dev)
 target_link_libraries(${Module_name} curl-gnutls)

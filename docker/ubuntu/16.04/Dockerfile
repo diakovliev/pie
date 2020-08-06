@@ -1,0 +1,27 @@
+FROM ubuntu:16.04
+MAINTAINER Dmytro Iakovliev "dmytro.iakovliev@zodiacsystems.com"
+LABEL version="0.0.1"
+
+# Needed for latest ubuntu
+ENV TZ=Europe/Kiev
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+RUN apt-get update && \
+    apt-get install build-essential software-properties-common -y && \
+    add-apt-repository ppa:ubuntu-toolchain-r/test -y
+
+RUN apt-get update && apt-get install -y --force-yes \
+    pkg-config \
+    git \
+    gcc-8 \
+    g++-8 \
+    cmake \
+    python2.7-dev \
+    python3-dev \
+    python3-pkgconfig \
+    libssl-dev \
+    libcurl4-gnutls-dev \
+    libboost-program-options-dev \
+    libboost-python-dev \
+    libboost-random-dev \
+    libboost-test-dev
