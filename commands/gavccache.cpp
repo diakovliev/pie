@@ -290,27 +290,63 @@ GAVC::paths_list GAVCCache::get_cached_files_list(const std::vector<std::string>
 /*static*/ void GAVCCache::init(const std::string& cache_path)
 {
     if (!fs::is_directory(cache_path) || !fs::exists(cache_path)) {
-        fs::remove_all(cache_path);
-        fs::create_directories(cache_path);
+        LOGT << "Try to remove existing file which name is conflict with cache path! cache path: " << cache_path << ELOG;
+        try {
+            fs::remove_all(cache_path);
+        } catch (...) {
+            LOGE << "Unable to remove existing file which name is conflict with cache path! cache path: " << cache_path << ELOG;
+            throw errors::cache_folder_does_not_exist(cache_path);
+        }
     }
 
+    if (!fs::exists(cache_path)) {
+        LOGT << "Try to create cache directory at cache path: " << cache_path << ELOG;
+        try {
+            fs::create_directories(cache_path);
+        } catch (...) {
+            LOGE << "Unable to create cache directory at cache path: " << cache_path << ELOG;
+            throw errors::cache_folder_does_not_exist(cache_path);
+        }
+    }
+
+    LOGT << "Create cache properties..." << ELOG;
     pl::Properties props = pl::Properties();
+
+    LOGT << "Set cache version to: " << GAVCConstants::cache_version;
     props.set(GAVCConstants::cache_version_property, GAVCConstants::cache_version);
 
-    std::ofstream os(cache_properties_file(cache_path));
+    auto cache_properties_filepath = cache_properties_file(cache_path);
+
+    LOGT << "Write cache properties file: " << cache_properties_filepath;
+    std::ofstream os(cache_properties_filepath);
     props.store(os);
 }
 
 /*static*/ bool GAVCCache::validate(const std::string& cache_path)
 {
+    LOGT << "Try to read cache properties..." << ELOG;
+
     std::string properties_file = cache_properties_file(cache_path);
+
     if (!fs::is_regular_file(properties_file)) {
+        LOGT << "No cache properties file! Cache is invalid!" << ELOG;
         return false;
     }
 
     std::ifstream is(properties_file);
     pl::Properties props = pl::Properties::load(is);
-    return GAVCConstants::cache_version == props.get(GAVCConstants::cache_version_property, "");
+
+    std::string properties_version = props.get(GAVCConstants::cache_version_property, "");
+
+    bool ret = GAVCConstants::cache_version == properties_version;
+
+    LOGT
+        << "Validate cache version. Expected version: "     << GAVCConstants::cache_version
+        << " version from properties: "                     << properties_version
+        << " cache version validation result: "             << ret
+        << ELOG;
+
+    return ret;
 }
 
 bool GAVCCache::is_force_offline() const
@@ -473,6 +509,8 @@ void GAVCCache::operator()()
             LOGT << "GAVCCache query attempt: " << attempt << " from: " << max_attempts << " start." << ELOG;
             perform();
             LOGT << "GAVCCache query attempt: " << attempt << " success." <<  ELOG;
+            break;
+        } catch (errors::cache_folder_does_not_exist) {
             break;
         } catch (...) {
             LOGT << "GAVCCache query attempt: " << attempt << " from: " << max_attempts << " failed." <<  ELOG;

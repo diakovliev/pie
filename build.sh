@@ -24,4 +24,4 @@ cp -vf $bdir/python_pie/python${pyver}/libpython${pyver}_pie.so $cdir/../../gn/p
 cp -vf $bdir/python_pie/python${pyver}/python_pie.py            $cdir/../../gn/py_libs/
 
 strip --strip-unneeded $cdir/../../gn/bin/pie
-strip --strip-unneeded $cdir/../../gn/py_libs/libpython_pie.so
+strip --strip-unneeded $cdir/../../gn/py_libs/libpython${pyver}_pie.so
