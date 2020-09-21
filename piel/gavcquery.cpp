@@ -34,17 +34,14 @@
 #include <algorithm>
 #include <functional>
 
+#include <gavcversionsfilter.h>
+#include <gavcversionsrangefilter.h>
+
 #include <boost/format.hpp>
-#include <boost/config/warning_disable.hpp>
-#include <boost/spirit/include/phoenix.hpp>
-#include <boost/fusion/include/adapt_struct.hpp>
-#include <boost/spirit/include/qi.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/split.hpp>
 
-#include <gavcversionsfilter.h>
-#include <gavcversionsrangefilter.h>
 
 //! Versions based queries
 //
@@ -68,162 +65,7 @@
 // | * | + | - | * |
 // -----------------
 
-BOOST_FUSION_ADAPT_STRUCT(
-    art::lib::gavc::gavc_data,
-    (std::string, group)
-    (std::string, name)
-    (std::string, version)
-    (std::string, classifier)
-    (std::string, extension)
-)
-
-BOOST_FUSION_ADAPT_STRUCT(
-    art::lib::gavc::gavc_versions_range_data,
-    (std::string, left)
-    (std::string, right)
-)
-
 namespace art { namespace lib {
-
-namespace gavc {
-
-    namespace qi = boost::spirit::qi;
-    namespace ascii = boost::spirit::ascii;
-
-    template<typename Iterator>
-    struct gavc_version_ops_grammar: qi::grammar<Iterator, std::vector<OpType>(), ascii::space_type> {
-        gavc_version_ops_grammar(): gavc_version_ops_grammar::base_type(_ops)
-        {
-            using qi::char_;
-            using qi::as_string;
-
-            _op      = ops;
-            _const   = as_string[ +( char_ - _op - GavcConstants::left_include_braket - GavcConstants::left_exclude_braket ) ];
-            _ops     = *( (_op >> !_op) | _const );
-        }
-
-    private:
-        struct ops_: qi::symbols<char,OpType> {
-            ops_()
-            {
-                add_sym(GavcConstants::all_versions, Op_all);
-                add_sym(GavcConstants::latest_version, Op_latest);
-                add_sym(GavcConstants::oldest_version, Op_oldest);
-            }
-
-            void add_sym(const std::string& sym, Ops op)
-            {
-                add(sym, OpType(op, sym));
-            }
-
-            void add_sym(char ch, Ops op)
-            {
-                std::string sym;
-                sym.push_back(ch);
-                add(sym, OpType(op, sym));
-            }
-
-        } ops;
-
-        qi::rule<Iterator, OpType()>                                    _op;        //!< Operation.
-        qi::rule<Iterator, std::string()>                               _const;     //!< Constanst.
-        qi::rule<Iterator, std::vector<OpType>(), ascii::space_type>    _ops;
-    };
-
-    // req         :req         :opt              :opt           @opt
-    // <group.spec>:<name-spec>[:][<version.spec>[:{[classifier][@][extension]}]]
-    template<typename Iterator>
-    struct gavc_grammar: qi::grammar<Iterator, gavc_data(), ascii::space_type> {
-        gavc_grammar(): gavc_grammar::base_type(_gavc)
-        {
-
-            using qi::char_;
-            using qi::skip;
-
-            _body            = +( char_ - GavcConstants::delimiter );
-            _group           = _body > skip[ GavcConstants::delimiter ];
-            _name            = _body > -( skip[ GavcConstants::delimiter ] );
-            _version         = _body > -( skip[ GavcConstants::delimiter ] );
-            _classifier      = +( char_ - GavcConstants::extension_prefix ) > -( skip[ GavcConstants::extension_prefix ] );
-            _extension       = +( char_ );
-
-            _gavc   =  _group
-                    >  _name
-                    >  -_version
-                    >  -_classifier
-                    >  -_extension
-                    ;
-
-        }
-
-    private:
-        qi::rule<Iterator, std::string()>                   _body;          //!< Helper.
-        qi::rule<Iterator, std::string()>                   _group;         //!< Consumer is gavc_data.group .
-        qi::rule<Iterator, std::string()>                   _name;          //!< Consumer is gavc_data.name .
-        qi::rule<Iterator, std::string()>                   _version;       //!< Consumer is gavc_data.version .
-        qi::rule<Iterator, std::string()>                   _classifier;    //!< Consumer is gavc_data.classifier .
-        qi::rule<Iterator, std::string()>                   _extension;     //!< Consumer is gavc_data.extension .
-        qi::rule<Iterator, gavc_data(), ascii::space_type>  _gavc;          //!< Consumer is gavc_data.
-    };
-
-    // <[|(><left>,<right><]|(>
-    template<typename Iterator>
-    struct gavc_versions_range_grammar: qi::grammar<Iterator, gavc_versions_range_data()> {
-        gavc_versions_range_grammar()
-            : gavc_versions_range_grammar::base_type(_data)
-            , _flags(RangeFlags_exclude_all)
-        {
-            using qi::char_;
-            using qi::skip;
-            using qi::lit;
-            using qi::lexeme;
-            using qi::as_string;
-
-            _left_braket    = lexeme[
-                                lit(GavcConstants::left_include_braket)
-                                    [
-                                        std::bind(&gavc_versions_range_grammar::include_left, this)
-                                    ]
-                                | lit(GavcConstants::left_exclude_braket)
-                              ];
-
-            _right_braket   = lexeme[
-                                lit(GavcConstants::right_include_braket)
-                                    [
-                                        std::bind(&gavc_versions_range_grammar::include_right, this)
-                                    ]
-                                | lit(GavcConstants::right_exclude_braket)
-                              ];
-
-            _left      = as_string[ +( char_ - GavcConstants::range_separator ) ];
-            _right     = as_string[ +( char_ - _right_braket )];
-            _data      = _left_braket > _left > GavcConstants::range_separator > _right > _right_braket;
-        }
-
-        unsigned char flags() const {
-            return _flags;
-        }
-
-        void include_left() {
-            _flags |= RangeFlags_include_left;
-        }
-
-        void include_right() {
-            _flags |= RangeFlags_include_right;
-        }
-
-    private:
-        qi::rule<Iterator>                              _left_braket;
-        qi::rule<Iterator>                              _right_braket;
-
-        qi::rule<Iterator, std::string()>               _left;
-        qi::rule<Iterator, std::string()>               _right;
-        qi::rule<Iterator, gavc_versions_range_data()>  _data;
-
-        unsigned char _flags;
-    };
-
-} // namespace gavc
 
 GavcQuery::GavcQuery()
     : data_()
@@ -239,26 +81,17 @@ std::optional<GavcQuery> GavcQuery::parse(const std::string& gavc_str)
     if (gavc_str.empty())
         return std::nullopt;
 
-    namespace qi = boost::spirit::qi;
-    namespace ascii = boost::spirit::ascii;
+    GavcQuery result;
 
-    GavcQuery                                       result;
-    gavc::gavc_grammar<std::string::const_iterator> grammar;
-
-    try {
-        qi::phrase_parse( gavc_str.begin(), gavc_str.end(), grammar, ascii::space, result.data_ );
-    } catch (...) {
+    auto data = parsers::gavc::parse_query(gavc_str);
+    if (!data) {
+        LOGE << "Can't parse GAVC query: " << gavc_str << "!" << ELOG;
         return std::nullopt;
     }
 
-    LOGT << "group: "      << result.group()        << ELOG;
-    LOGT << "name: "       << result.name()         << ELOG;
-    LOGT << "version: "    << result.version()      << ELOG;
-    LOGT << "classifier: " << result.classifier()   << ELOG;
-    LOGT << "extension: "  << result.extension()    << ELOG;
+    result.data_ = *data;
 
-    // Attempt to parse versions query
-    std::optional<std::vector<gavc::OpType> > ops = result.query_version_ops();
+    auto ops = result.query_version_ops();
     if (!ops) {
         return std::nullopt;
     }
@@ -283,68 +116,28 @@ std::optional<gavc::gavc_versions_range_data> GavcQuery::query_versions_range() 
     return query_versions_range(data_.version);
 }
 
+
 /* static */
 std::pair<
     std::optional<std::vector<gavc::OpType> >,
     std::optional<gavc::gavc_versions_range_data>
 > GavcQuery::query_version_data(const std::string& version) {
 
-    namespace qi = boost::spirit::qi;
-    namespace ascii = boost::spirit::ascii;
-
-    std::vector<gavc::OpType> ops;
-    gavc::gavc_versions_range_data range;
-
     if (version.empty()) {
+        std::vector<gavc::OpType> ops;
         ops.push_back(gavc::OpType(gavc::Op_all, GavcConstants::all_versions));
         return std::make_pair(ops, std::nullopt);
     }
 
-    gavc::gavc_version_ops_grammar<std::string::const_iterator> version_ops_grammar;
-    gavc::gavc_versions_range_grammar<std::string::const_iterator> version_range_grammar;
-
-    bool range_found = false;
-    auto range_callback = [&]() { range_found = true; };
-
-    try {
-        bool matched = qi::phrase_parse(
-                version.begin(),
-                version.end(),
-                version_ops_grammar > -version_range_grammar[ range_callback ],
-                ascii::space,
-                ops, range);
-
-        if (!matched)
-            return std::make_pair(std::nullopt, std::nullopt);
-
-        if (range_found)
-            range.flags = version_range_grammar.flags();
-
-    } catch (...) {
-        return std::make_pair(std::nullopt, std::nullopt);
-    }
-
-    if (!version.empty() & ops.empty())
-    {
+    auto version_data = parsers::gavc::parse_version(version);
+    if (!version_data) {
         LOGE << "version query: " << version << " has wrong syntax!" << ELOG;
         return std::make_pair(std::nullopt, std::nullopt);
     }
 
-    std::for_each(ops.begin(), ops.end(), [&](auto i) {
-        {
-            LOGT << "version query op: " << i.second << ELOG;
-        }
-    });
-
-    if (!range_found)
-        return std::make_pair(ops, std::nullopt);
-
-    LOGT << "versions range left: " << range.left << ELOG;
-    LOGT << "versions range right: " << range.right << ELOG;
-    LOGT << "versions range flags: " << int(range.flags) << ELOG;
-
-    return std::make_pair(ops, range);
+    return *version_data;
 }
+
 
 /* static */ std::optional<std::vector<gavc::OpType> > GavcQuery::query_version_ops(const std::string& version)
 {

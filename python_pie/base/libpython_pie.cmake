@@ -15,7 +15,7 @@ configure_file(
     COPYONLY)
 
 # Components
-target_link_libraries(${Module_name} python_pie_base commands parsers piel logger pthread)
+target_link_libraries(${Module_name} python_pie_base commands piel parsers logger pthread)
 
 target_link_libraries(${Module_name} LINK_PUBLIC stdc++fs ${Boost_LIBRARIES})
 # target_link_libraries(${Module_name} LINK_PUBLIC

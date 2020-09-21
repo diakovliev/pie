@@ -2,7 +2,7 @@
 
 # From ./gnb --root-shell
 
-apt install -y libboost-all-dev libcurl4-gnutls-dev libssl-dev python2-dev python3-dev
+apt install -y libboost-all-dev libcurl4-gnutls-dev libssl-dev python2-dev python3-dev ragel
 
 cdir=$(pwd)
 bdir=/tmp/build_pie

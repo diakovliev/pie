@@ -29,13 +29,8 @@
 #ifndef GAVCQUERY_H
 #define GAVCQUERY_H
 
-#if 0
-#include <memory>
-#endif
-
 #include <parsers/gavc_query.h>
 #include <parsers/gavc_query_version.h>
-#include <parsers/gavc_query_versions_range.h>
 
 namespace art { namespace lib {
 
