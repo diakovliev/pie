@@ -4,7 +4,7 @@ file(GLOB SOURCES "*.cpp")
 add_executable(${Module_name} ${SOURCES})
 
 # Components
-target_link_libraries(${Module_name} commands piel logger pthread)
+target_link_libraries(${Module_name} commands piel parsers logger pthread)
 
 # Externals
 #

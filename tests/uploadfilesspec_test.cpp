@@ -45,8 +45,8 @@ typedef const std::string CheckStringArray[][files_spec_data_items];
 
 std::string get_str_from_files_spec_data(const ufs::files_spec_data& data, int i){
     switch (i) {
-    case 0 : return data.classifier;
-    case 1 : return data.extension;
+    case 0 : return data.classifier ? (*data.classifier) : "";
+    case 1 : return data.extension ? (*data.extension) : "";
     case 2 : return data.file_name;
     }
     return "";

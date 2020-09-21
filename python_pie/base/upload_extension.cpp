@@ -18,7 +18,7 @@ bool check_empty_classifiers_count(const al::ufs::UFSVector& c)
     int count_empty_classifier = 0;
     for (auto it = c.begin(), end = c.end(); it != end && ret_val; ++it)
     {
-        if (it->classifier.empty()) {
+        if (!it->classifier) {
             count_empty_classifier++;
             LOGD << "Find empty classifier: " << al::ufs::to_string(*it) << "(" << count_empty_classifier << ")" << LOGE;
         }

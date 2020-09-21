@@ -79,7 +79,7 @@ bool UploadCommand::check_empty_classifiers_count(const art::lib::ufs::UFSVector
     int count_empty_classifier = 0;
     for (art::lib::ufs::UFSVector::const_iterator it = c.begin(), end = c.end(); it != end && ret_val; ++it)
     {
-        if (it->classifier.empty()) {
+        if (!it->classifier) {
             count_empty_classifier++;
             LOGD << "Find empty classifier: " << art::lib::ufs::to_string(*it) << "(" << count_empty_classifier << ")" << LOGE;
         }

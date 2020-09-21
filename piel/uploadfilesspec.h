@@ -34,16 +34,14 @@
 #include <string>
 #include <optional>
 
+#include <parsers/uploadfilesspec.h>
+
 namespace art { namespace lib {
 
 namespace ufs {
-struct files_spec_data {
-    std::string classifier;     // empty by default
-    std::string extension;      // empty by default
-    std::string file_name;
-};
 
-typedef std::vector<ufs::files_spec_data> UFSVector;
+using files_spec_data   = parsers::upload::UploadSpec;
+using UFSVector         = parsers::upload::UFSVector;
 
 std::string to_string(const files_spec_data&);
 std::string to_string(const UFSVector&);

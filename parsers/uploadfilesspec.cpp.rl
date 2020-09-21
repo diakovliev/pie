@@ -12,20 +12,10 @@ namespace parsers::upload {
         int cs;
 
         UFSVector result;
-        bool has_classifier = false;
 
         %%{
             action on_elem {
                 result.push_back(UploadSpec());
-            }
-            action on_sepa {
-                has_classifier = true;
-            }
-            action on_vsepa {
-                if (!has_classifier) {
-                    result.back().classifier = std::nullopt;
-                }
-                has_classifier = false;
             }
             action on_classifier {
                 if (!result.back().classifier) {
@@ -39,23 +29,20 @@ namespace parsers::upload {
                 }
                 *result.back().extension += fc;
             }
-            action on_file_name_enter {
-                result.back().file_name = std::string();
-            }
             action on_file_name {
                 result.back().file_name += fc;
             }
 
-            vsepa       = ',' @on_vsepa;
-            sepa        = ':' @on_sepa;
+            vsepa       = ',';
+            sepa        = ':';
             ext         = '.';
             datach      = ascii - ':' - '.' - ',';
-            file_name   = ( ( datach @on_file_name )+ ) >on_file_name_enter;
+            fdatach     = ascii - ',';
+            file_name   = ( ( fdatach @on_file_name )+ );
 
-            elem    =
+            elem =
                 (
-                    ( ( datach @on_classifier )+ sepa )? file_name
-                    ( ext ( datach @on_ext )+ )?
+                    ( ( datach @on_classifier )+ )? ( ext ( datach @on_ext )+ )? sepa file_name
                 ) >on_elem;
 
             main :=
@@ -63,7 +50,6 @@ namespace parsers::upload {
 
             write init;
             write exec;
-
         }%%
 
         if (cs < ufs_first_final)
