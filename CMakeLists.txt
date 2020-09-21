@@ -10,11 +10,13 @@ set(CMAKE_CXX_COMPILER /usr/bin/g++-8)
 cmake_minimum_required(VERSION 2.6)
 project(pie)
 
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR})
+
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -fPIC")
 # set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_BUILD_TYPE Release)
 
-include_directories("logger" "piel", "commands", "pie")
+include_directories("include" "logger" "piel", "commands", "pie")
 
 message ("CMAKE_BUILD_DIRECTORY: ${CMAKE_BUILD_DIRECTORY}")
 message ("CMAKE_BINARY_DIR : ${CMAKE_BINARY_DIR}")
@@ -29,6 +31,7 @@ add_definitions(-DBOOST_NO_CXX11_SCOPED_ENUMS)
 
 set(Boost_libraries_list program_options)
 
+add_subdirectory(parsers)
 add_subdirectory(logger)
 add_subdirectory(piel)
 add_subdirectory(commands)
