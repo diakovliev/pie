@@ -29,56 +29,15 @@
 #ifndef GAVCQUERY_H
 #define GAVCQUERY_H
 
-#include <vector>
-#include <map>
-#include <string>
+#if 0
 #include <memory>
-#include <optional>
+#endif
+
+#include <parsers/gavc_query.h>
+#include <parsers/gavc_query_version.h>
+#include <parsers/gavc_query_versions_range.h>
 
 namespace art { namespace lib {
-
-namespace gavc {
-
-    enum Ops {
-        Op_const,
-        Op_all,
-        Op_latest,
-        Op_oldest,
-    };
-
-    struct OpType: public std::pair<Ops,std::string>
-    {
-        OpType()                                : std::pair<Ops,std::string>(Op_const, "")      {}
-        OpType(const std::string& val)          : std::pair<Ops,std::string>(Op_const, val)     {}
-        OpType(Ops op, const std::string& val)  : std::pair<Ops,std::string>(op, val)           {}
-        OpType(Ops op, char val)                : std::pair<Ops,std::string>()
-        {
-            first = op;
-            second.push_back(val);
-        }
-    };
-
-    struct gavc_data {
-        std::string group;
-        std::string name;
-        std::string version;        // empty == all by default
-        std::string classifier;     // empty by default
-        std::string extension;      // empty by default
-    };
-
-    enum RangeFlags {
-        RangeFlags_exclude_all      = 0x0,
-        RangeFlags_include_left     = 0x01,
-        RangeFlags_include_right    = 0x02,
-    };
-
-    struct gavc_versions_range_data {
-        std::string left;
-        std::string right;
-        unsigned char flags;
-    };
-
-} // namespace gavc
 
 class GavcQuery
 {

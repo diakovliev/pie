@@ -4,7 +4,7 @@
 #include <vector>
 #include <string>
 
-namespace parsers::gavc {
+namespace art::lib::gavc {
 
     enum Ops {
         Op_const,
@@ -26,7 +26,10 @@ namespace parsers::gavc {
     };
 
     using VersionOps = std::vector<OpType>;
+}
 
-    std::optional<VersionOps> parse_version(const std::string& input);
+namespace parsers::gavc {
+
+    std::optional<art::lib::gavc::VersionOps> parse_version(const std::string& input);
 
 }//namespace parsers::gavc

@@ -3,16 +3,20 @@
 #include <optional>
 #include <string>
 
-namespace parsers::gavc {
+namespace art::lib::gavc {
 
-    struct GavcQuery {
+    struct gavc_data {
         std::string group;
         std::string name;
-        std::optional<std::string> version;
-        std::optional<std::string> classifier;
-        std::optional<std::string> extension;
+        std::string version;
+        std::string classifier;
+        std::string extension;
     };
 
-    std::optional<GavcQuery> parse_query(const std::string& input);
+}
+
+namespace parsers::gavc {
+
+    std::optional<art::lib::gavc::gavc_data> parse_query(const std::string& input);
 
 }//namespace parsers::gavc

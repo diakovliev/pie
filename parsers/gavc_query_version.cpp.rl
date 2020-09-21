@@ -2,6 +2,8 @@
 
 namespace parsers::gavc {
 
+    using namespace art::lib::gavc;
+
     %%{
         machine version;
         write data;

@@ -2,18 +2,20 @@
 
 namespace parsers::gavc {
 
+    using namespace art::lib::gavc;
+
     %%{
         machine range;
         write data;
     }%%
 
-    std::optional<Range> parse_range(const std::string& input) {
+    std::optional<gavc_versions_range_data> parse_range(const std::string& input) {
 
         const char *p = input.c_str(), *pe = input.c_str() + input.size();
         int cs;
 
-        Range result;
-        result.flags = 0;
+        gavc_versions_range_data result;
+        result.flags = RangeFlags_exclude_all;
 
         %%{
 

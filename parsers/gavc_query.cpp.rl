@@ -2,16 +2,18 @@
 
 namespace parsers::gavc {
 
+    using namespace art::lib::gavc;
+
     %%{
         machine query;
         write data;
     }%%
 
-    std::optional<GavcQuery> parse_query(const std::string& input) {
+    std::optional<gavc_data> parse_query(const std::string& input) {
         const char *p = input.c_str(), *pe = input.c_str() + input.size();
         int cs;
 
-        GavcQuery result;
+        gavc_data result;
 
         %%{
             action on_group {
@@ -21,19 +23,13 @@ namespace parsers::gavc {
                 result.name += fc;
             }
             action on_version {
-                if (!result.version)
-                    result.version = std::string();
-                *result.version += fc;
+                result.version += fc;
             }
             action on_classifier {
-                if (!result.classifier)
-                    result.classifier = std::string();
-                *result.classifier += fc;
+                result.classifier += fc;
             }
             action on_extension {
-                if (!result.extension)
-                    result.extension = std::string();
-                *result.extension += fc;
+                result.extension += fc;
             }
 
             sepa        = ':';
