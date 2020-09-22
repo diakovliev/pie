@@ -10,23 +10,6 @@
 
 namespace al = art::lib;
 
-const int empty_classifiers_count_allowed = 1;
-
-bool check_empty_classifiers_count(const al::ufs::UFSVector& c)
-{
-    bool ret_val = true;
-    int count_empty_classifier = 0;
-    for (auto it = c.begin(), end = c.end(); it != end && ret_val; ++it)
-    {
-        if (!it->classifier) {
-            count_empty_classifier++;
-            LOGD << "Find empty classifier: " << al::ufs::to_string(*it) << "(" << count_empty_classifier << ")" << LOGE;
-        }
-        ret_val &= count_empty_classifier <= empty_classifiers_count_allowed;
-    }
-    return ret_val;
-}
-
 Upload::Upload()
     : BaseExtension()
 {
@@ -77,11 +60,6 @@ int Upload::perform(std::string query_str) {
         return result;
     }
 
-    auto classifier_vector = result_parse->get_data();
-    if (!check_empty_classifiers_count(classifier_vector)) {
-        return result;
-    }
-
     try
     {
         piel::cmd::Upload upload;
@@ -90,7 +68,7 @@ int Upload::perform(std::string query_str) {
         upload.set_server_api_access_token(server_api_access_token);
         upload.set_server_repository(server_repository);
         upload.set_query(query);
-        upload.set_classifiers(classifier_vector);
+        upload.set_classifiers(result_parse->get_data());
 
         upload();
 

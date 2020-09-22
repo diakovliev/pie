@@ -65,12 +65,12 @@ namespace ufs {
         return  result.str();
     }
 
-    std::string to_string(const UFSVector& data_)
+    std::string to_string(const UFSVector& data)
     {
         std::ostringstream result;
 
-        for (ufs::UFSVector::const_iterator it = data_.begin(), end=data_.end(); it != end; ++it) {
-            if (it != data_.begin()) result << ufs::UFSConstants::vector_delimiter;
+        for (ufs::UFSVector::const_iterator it = data.begin(), end=data.end(); it != end; ++it) {
+            if (it != data.begin()) result << ufs::UFSConstants::vector_delimiter;
             result << to_string(*it);
         }
 
@@ -105,6 +105,11 @@ UploadFileSpec::~UploadFileSpec()
 {
 }
 
+/*static*/ bool UploadFileSpec::check_empty_classifiers_count(const ufs::UFSVector& data)
+{
+    return std::count_if(data.begin(), data.end(), [](const auto& it)->bool { return !it.classifier.has_value(); } ) <= 1;
+}
+
 std::optional<UploadFileSpec> UploadFileSpec::parse(const std::string& files_spec_str)
 {
     if (files_spec_str.empty())
@@ -115,6 +120,11 @@ std::optional<UploadFileSpec> UploadFileSpec::parse(const std::string& files_spe
     auto data = parsers::upload::parse_upload_spec(files_spec_str);
     if (!data) {
         LOGE << "Can't parse input: '" << files_spec_str << "'!" << ELOG;
+        return std::nullopt;
+    }
+
+    if (!check_empty_classifiers_count(*data)) {
+        LOGE << "Upload spec: '" << files_spec_str << "' contains more than one element with empty classifier!" << ELOG;
         return std::nullopt;
     }
 

@@ -77,11 +77,11 @@ bool check_UploadFileSpec(UploadFileSpec& s, CheckStringArray check_data)
     return ret_val;
 }
 
-static const std::string parse2_1 = "class2_1_1.ext2_1_1:file2_1_1,class2_1_2:file2_1_2,.ext2_1_3:file2_1_3,:file2_1_4";
+static const std::string parse2_1 = "class2_1_1.ext2_1_1:file2_1_1,class2_1_2:file2_1_2,class2_1_3.ext2_1_3:file2_1_3,:file2_1_4";
 static CheckStringArray check_result2_1 = {
     {"class2_1_1", "ext2_1_1", "file2_1_1"},
     {"class2_1_2", "", "file2_1_2"},
-    {"", "ext2_1_3", "file2_1_3"},
+    {"class2_1_3", "ext2_1_3", "file2_1_3"},
     {"", "", "file2_1_4"}
 };
 

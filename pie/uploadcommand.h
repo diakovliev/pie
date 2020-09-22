@@ -51,7 +51,6 @@ public:
 protected:
     bool parse_arguments();
     void show_command_help_message(const boost::program_options::options_description& desc);
-    bool check_empty_classifiers_count(const art::lib::ufs::UFSVector&);
 
 private:
     int argc_;

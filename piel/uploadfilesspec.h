@@ -57,9 +57,11 @@ public:
     static std::optional<UploadFileSpec> parse(const std::string& files_spec_str);
     std::string to_string() const;
 
-    ufs::UFSVector get_data() { return  data_; }
+    ufs::UFSVector get_data() { return data_; }
 
 private:
+    static bool check_empty_classifiers_count(const ufs::UFSVector& data);
+
     ufs::UFSVector data_;
 
 };

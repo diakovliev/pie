@@ -49,8 +49,6 @@ namespace pt = boost::property_tree;
 namespace po = boost::program_options;
 namespace al = art::lib;
 
-const int empty_classifiers_count_allowed = 1;
-
 UploadCommand::UploadCommand(Application *app, int argc, char **argv)
     : ICommand(app)
     , argc_(argc)
@@ -71,21 +69,6 @@ void UploadCommand::show_command_help_message(const po::options_description& des
 {
     std::cerr << "Usage: upload <gavc target> [options]" << std::endl;
     std::cout << desc;
-}
-
-bool UploadCommand::check_empty_classifiers_count(const art::lib::ufs::UFSVector& c)
-{
-    bool ret_val = true;
-    int count_empty_classifier = 0;
-    for (art::lib::ufs::UFSVector::const_iterator it = c.begin(), end = c.end(); it != end && ret_val; ++it)
-    {
-        if (!it->classifier) {
-            count_empty_classifier++;
-            LOGD << "Find empty classifier: " << art::lib::ufs::to_string(*it) << "(" << count_empty_classifier << ")" << LOGE;
-        }
-        ret_val &= count_empty_classifier <= empty_classifiers_count_allowed;
-    }
-    return ret_val;
 }
 
 bool UploadCommand::parse_arguments()
@@ -158,19 +141,13 @@ bool UploadCommand::parse_arguments()
     al::UploadFileSpec spec;
 
     std::optional<al::UploadFileSpec> result_parse = spec.parse(classifiers_str);
-    if (result_parse)
-    {
-        classifier_vector_ = result_parse->get_data();
-        if (!check_empty_classifiers_count(classifier_vector_)) {
-            std::cerr << "Wrong <filelist> option format. Only one empty classifier is allowed!" << std::endl;
-            show_command_help_message(desc);
-            return false;
-        }
-    } else {
+    if (!result_parse) {
         std::cerr << "Unknown <filelist> option format!" << std::endl;
         show_command_help_message(desc);
         return false;
     }
+
+    classifier_vector_ = result_parse->get_data();
 
     return true;
 }
