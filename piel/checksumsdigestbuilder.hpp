@@ -36,7 +36,8 @@
 #include <iostream>
 #include <vector>
 #include <memory>
-#include <boost/format.hpp>
+#include <iomanip>
+#include <sstream>
 
 namespace piel { namespace lib {
 
@@ -94,7 +95,11 @@ public:
     //! \param v checksum data byte.
     void operator()(const value_type& v)
     {
-        str_.append((boost::format("%1$02x") % (int)v).str());
+        std::ostringstream oss;
+        oss << std::setfill('0');
+        oss << std::setw(2);
+        oss << std::hex << int(v & 0xFF);
+        str_.append(oss.str());
     }
 
 private:

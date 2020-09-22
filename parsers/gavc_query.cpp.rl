@@ -1,5 +1,27 @@
 #include <parsers/gavc_query.h>
 
+//! Versions based queries
+//
+//  '*' - all
+//  '+' - latest
+//  '-' - oldest
+//
+// prefix(+|-|*\.)+suffix
+//  - calculation from left to right
+//    (+|-|*\.)(+|-) == (+|-) (single element)
+//    (+|-|*\.)* == * (set)
+//
+// Pairs conversion matrix:
+//     -------------
+//     | + | - | * |
+// -----------------
+// | + | + | - | + |
+// -----------------
+// | - | - | - | - |
+// -----------------
+// | * | + | - | * |
+// -----------------
+
 namespace parsers::gavc {
 
     using namespace art::lib::gavc;

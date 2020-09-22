@@ -30,6 +30,8 @@
 #include <commonconstants.h>
 #include <logging.h>
 
+#include <algorithm>
+
 namespace piel { namespace lib {
 
 const size_t DigestConstants::buf_size = piel::lib::CommonConstants::io_buffer_size;       //!< Size of the internal IO buffers.
