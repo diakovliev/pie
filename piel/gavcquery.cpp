@@ -270,6 +270,7 @@ std::string GavcQuery::to_aql_path() const
     oss << GavcConstants::path_delimiter;
     oss << name();
     oss << GavcConstants::path_delimiter;
+    oss << "*";
     return oss.str();
 }
 
