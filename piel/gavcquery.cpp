@@ -303,30 +303,86 @@ std::string GavcQuery::to_aql_name(bool pom) const
     return oss.str();
 }
 
+namespace json_format {
+
+    template<class Oss>
+    struct block {
+        block(Oss& oss, const std::string& begin, const std::string& end)
+            : oss_(oss), begin_(begin), end_(end)
+        {
+            oss_ << begin_;
+        }
+
+        ~block()
+        {
+            oss_ << end_;
+        }
+
+        template<typename Arg>
+        block& operator<<(const Arg& arg)
+        {
+            oss_ << arg;
+            return *this;
+        }
+
+    private:
+        Oss& oss_;
+        const std::string& begin_;
+        const std::string& end_;
+
+    };
+
+    template<typename Arg>
+    std::string string(const Arg& value) {
+        std::ostringstream oss;
+        oss << "\"";
+        oss << value;
+        oss << "\"";
+        return oss.str();
+    }
+
+
+} // namespace json_format
+
 std::string GavcQuery::to_aql_cond(const std::string& repo, bool pom) const
 {
     std::ostringstream oss;
 
-    oss << "{ \"$and\": [ ";
+    {
+        json_format::block jand(oss, "{", "}");
+        jand << json_format::string("$and") << ":";
+        {
+            json_format::block jlist(oss, "[", "]");
 
-    oss << " {  \"repo\" :";
-        oss << " \"";
-        oss << repo;
-        oss << "\" ";
+            {
+                json_format::block jrepo(oss, "{", "}");
+                jrepo << json_format::string("repo") << ":";
+                jrepo << json_format::string(repo);
+            }
+            jlist << ",";
+            {
+                json_format::block path(oss, "{", "}");
+                path << json_format::string("path") << ":";
 
-    oss << " } , { ";
-    oss << " \"path\" :";
-        oss << " { \"$match\": \"";
-        oss << to_aql_path();
-        oss << "\" } ";
+                {
+                    json_format::block match(oss, "{", "}");
+                    match << json_format::string("$match") << ":";
+                    match << json_format::string(to_aql_path());
+                }
+            }
+            jlist << ",";
+            {
+                json_format::block jname(oss, "{", "}");
+                jname << json_format::string("name") << ":";
 
-    oss << " } , { ";
-    oss << " \"name\" :";
-        oss << " { \"$match\": \"";
-        oss << to_aql_name(pom);
-        oss << "\" } ";
-
-    oss << "} ] }";
+                {
+                    json_format::block match(oss, "{", "}");
+                    match << json_format::string("$match") << ":";
+                    match << json_format::string(to_aql_name(pom));
+                }
+            }
+        }
+    }
 
     std::string aql_cond = oss.str();
     LOGT << "aql cond: " << aql_cond << ELOG;
@@ -338,34 +394,17 @@ std::string GavcQuery::to_aql(const std::string& repo) const
 {
     std::ostringstream oss;
 
-//#if 0
-    oss << "items.find({";
-        oss << "\"$or\": [ ";
-            oss << to_aql_cond(repo, false);
-        oss << " , ";
-            oss << to_aql_cond(repo, true);
-        oss << "]";
-    oss << "}).include(\"*\")";
-//#endif
+    {
+        json_format::block find(oss, "items.find({", "})");
+        find << json_format::string("$or") << ":";
 
-#if 0
-    std::ostringstream qoss;
-    pt::ptree query, path_match, name_match;
+        {
+            json_format::block list(oss, "[", "]");
+            list << to_aql_cond(repo, false) << "," << to_aql_cond(repo, true);
+        }
+    }
 
-    path_match.put("$match", to_aql_path());
-    name_match.put("$match", to_aql_name());
-
-    query.put("repo", repo);
-    query.add_child("path", path_match);
-    query.add_child("name", name_match);
-
-    pt::write_json(qoss, query, false);
-
-    std::string aql_json_query = qoss.str();
-    LOGT << "aql json query: " << aql_json_query << ELOG;
-
-    oss << "items.find(" << aql_json_query << ").include(\"*\")";
-#endif
+    oss << ".include(" << json_format::string("*") << ")";
 
     std::string aql_query = oss.str();
     LOGT << "aql query: " << aql_query << ELOG;
