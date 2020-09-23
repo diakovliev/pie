@@ -17,11 +17,12 @@ RAGEL_TARGET(
     uploadfilesspec.cpp.rl
     ${CMAKE_CURRENT_BINARY_DIR}/uploadfilesspec.cpp
 )
+RAGEL_TARGET(
+    properties
+    properties.cpp.rl
+    ${CMAKE_CURRENT_BINARY_DIR}/properties.cpp
+)
 
 set(Module_name parsers)
 
-# file(GLOB SOURCES ${RAGEL_gavc_query_OUTPUTS} ${RAGEL_gavc_query_version_OUTPUTS} ${RAGEL_uploadfilesspec_OUTPUTS})
-# message("SOURCES: ${SOURCES}")
-
-# add_library(${Module_name} STATIC ${SOURCES})
-add_library(${Module_name} STATIC ${RAGEL_gavc_query_OUTPUTS} ${RAGEL_gavc_query_version_OUTPUTS} ${RAGEL_uploadfilesspec_OUTPUTS})
+add_library(${Module_name} STATIC ${RAGEL_gavc_query_OUTPUTS} ${RAGEL_gavc_query_version_OUTPUTS} ${RAGEL_uploadfilesspec_OUTPUTS} ${RAGEL_properties_OUTPUTS})

@@ -57,3 +57,8 @@ target_link_libraries(gavc_cache ${Piel_LIBRARIES})
 add_executable(gavc_versions_range_filter gavc_versions_range_filter.cpp)
 target_link_libraries(gavc_versions_range_filter ${Piel_LIBRARIES})
 add_test (NAME GavcVersionsRangeFilterTest COMMAND gavc_versions_range_filter)
+
+#############################################################
+add_executable(properties properties_test.cpp)
+target_link_libraries(properties ${Piel_LIBRARIES})
+add_test (NAME properties COMMAND properties)
