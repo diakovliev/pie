@@ -211,7 +211,6 @@ std::string GavcQuery::format_maven_metadata_url(const std::string& server_url, 
 
     std::ostringstream result;
     result << server_url;
-    result << GavcConstants::path_delimiter;
     result << format_maven_metadata_path(repository);
     result << GavcConstants::path_delimiter;
     result << GavcConstants::maven_metadata_filename;
@@ -226,6 +225,7 @@ std::string GavcQuery::format_maven_metadata_path(const std::string& repository)
     LOGT << "Build path for maven metadata. repository: " << repository << ELOG;
 
     std::ostringstream result;
+    result << GavcConstants::path_delimiter;
     result << repository;
     result << GavcConstants::path_delimiter;
     result << group_path();
