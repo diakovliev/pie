@@ -37,8 +37,10 @@ using namespace art::lib;
 
 void init_versions(std::vector<std::string>& versions)
 {
+    versions.push_back("16.3.11");
     versions.push_back("16.3.123");
     versions.push_back("16.3.532");
+    versions.push_back("16.6.11");
     versions.push_back("16.6.123");
     versions.push_back("16.6.124");
     versions.push_back("16.6.125");
@@ -93,11 +95,12 @@ BOOST_AUTO_TEST_CASE(IncludeBorders)
 
     std::vector<std::string> filtered = filter_according_to_query("test:test:16.6.*[16.6.-,16.6.+]", versions);
 
-    BOOST_CHECK_EQUAL(4,            filtered.size());
-    BOOST_CHECK_EQUAL("16.6.123",   filtered[0]);
-    BOOST_CHECK_EQUAL("16.6.124",   filtered[1]);
-    BOOST_CHECK_EQUAL("16.6.125",   filtered[2]);
-    BOOST_CHECK_EQUAL("16.6.533",   filtered[3]);
+    BOOST_CHECK_EQUAL(5,            filtered.size());
+    BOOST_CHECK_EQUAL("16.6.11",    filtered[0]);
+    BOOST_CHECK_EQUAL("16.6.123",   filtered[1]);
+    BOOST_CHECK_EQUAL("16.6.124",   filtered[2]);
+    BOOST_CHECK_EQUAL("16.6.125",   filtered[3]);
+    BOOST_CHECK_EQUAL("16.6.533",   filtered[4]);
 
     filtered = filter_according_to_query("test:test:16.6.*[16.6.123,16.6.533]", versions);
 
@@ -123,10 +126,11 @@ BOOST_AUTO_TEST_CASE(ExcludeLeftBorder)
 
     std::vector<std::string> filtered = filter_according_to_query("test:test:16.6.*(16.6.-,16.6.+]", versions);
 
-    BOOST_CHECK_EQUAL(3,            filtered.size());
-    BOOST_CHECK_EQUAL("16.6.124",   filtered[0]);
-    BOOST_CHECK_EQUAL("16.6.125",   filtered[1]);
-    BOOST_CHECK_EQUAL("16.6.533",   filtered[2]);
+    BOOST_CHECK_EQUAL(4,            filtered.size());
+    BOOST_CHECK_EQUAL("16.6.123",   filtered[0]);
+    BOOST_CHECK_EQUAL("16.6.124",   filtered[1]);
+    BOOST_CHECK_EQUAL("16.6.125",   filtered[2]);
+    BOOST_CHECK_EQUAL("16.6.533",   filtered[3]);
 
     filtered = filter_according_to_query("test:test:16.6.*(16.6.123,16.6.533]", versions);
 
@@ -143,10 +147,11 @@ BOOST_AUTO_TEST_CASE(ExcludeRightBorder)
 
     std::vector<std::string> filtered = filter_according_to_query("test:test:16.6.*[16.6.-,16.6.+)", versions);
 
-    BOOST_CHECK_EQUAL(3,            filtered.size());
-    BOOST_CHECK_EQUAL("16.6.123",   filtered[0]);
-    BOOST_CHECK_EQUAL("16.6.124",   filtered[1]);
-    BOOST_CHECK_EQUAL("16.6.125",   filtered[2]);
+    BOOST_CHECK_EQUAL(4,            filtered.size());
+    BOOST_CHECK_EQUAL("16.6.11",    filtered[0]);
+    BOOST_CHECK_EQUAL("16.6.123",   filtered[1]);
+    BOOST_CHECK_EQUAL("16.6.124",   filtered[2]);
+    BOOST_CHECK_EQUAL("16.6.125",   filtered[3]);
 
     filtered = filter_according_to_query("test:test:16.6.*[16.6.123,16.6.533)", versions);
 

@@ -58,9 +58,9 @@ struct Part {
             boost::lexical_cast<long long>(presentation_);
             return Type_number;
         }
-        catch (const boost::bad_lexical_cast&) {
-            return Type_lexeme;
-        }
+        catch (const boost::bad_lexical_cast&) {}
+
+        return Type_lexeme;
     }
 
     template<typename T> T value() const
@@ -69,9 +69,9 @@ struct Part {
         {
             return boost::lexical_cast<T>(presentation_);
         }
-        catch (const boost::bad_lexical_cast&) {
-            return (T)0;
-        }
+        catch (const boost::bad_lexical_cast&) {}
+
+        return (T)0;
     }
 
     const std::string& presentation() const
@@ -113,7 +113,7 @@ CompareNumericType GavcVersionsComparator::compare_part(const std::string& lhs, 
     int part_result = 0;
     Part lhs_part(lhs), rhs_part(rhs);
 
-    if (lhs_part.type() == Part::Type_number && rhs_part.type() == Part::Type_number )
+    if (lhs_part.type() == Part::Type_number && rhs_part.type() == Part::Type_number)
     {
         // numeric compare
         if (lhs_part.value<CompareNumericType>() != rhs_part.value<CompareNumericType>()) {
