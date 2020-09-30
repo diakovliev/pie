@@ -13,6 +13,7 @@ class Gavc: public BaseExtension {
 public:
     static constexpr auto PARAM_DOWNLOAD         = "download";
     static constexpr auto PARAM_DELETE           = "delete";
+    static constexpr auto PARAM_DELETE_VERSIONS  = "delete-versions";
     static constexpr auto PARAM_OUTPUT           = "output";
     static constexpr auto PARAM_DISABLE_CACHE    = "disable-cache";
     static constexpr auto PARAM_MAX_ATTEMPTS     = "max-attempts";

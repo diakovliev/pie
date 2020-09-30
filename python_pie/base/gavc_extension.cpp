@@ -30,6 +30,7 @@ Gavc::Gavc(const Gavc& src)
         PARAM_CACHE_PATH,
         PARAM_DOWNLOAD,
         PARAM_DELETE,
+        PARAM_DELETE_VERSIONS,
         PARAM_OUTPUT,
         PARAM_DISABLE_CACHE,
         PARAM_MAX_ATTEMPTS,
@@ -76,6 +77,7 @@ int Gavc::perform(std::string query_str) {
     auto have_to_download_results   = Utils::string2bool(get_param(PARAM_DOWNLOAD, ""));
     auto force_offline              = Utils::string2bool(get_param(PARAM_FORCE_OFFLINE, ""));
     auto have_to_delete_results     = Utils::string2bool(get_param(PARAM_DELETE, ""));
+    auto have_to_delete_versions    = Utils::string2bool(get_param(PARAM_DELETE_VERSIONS, ""));
     auto disable_cache              = Utils::string2bool(get_param(PARAM_DISABLE_CACHE, ""));
 
     auto notifications_file         = "";
@@ -97,7 +99,8 @@ int Gavc::perform(std::string query_str) {
                 max_attempts,
                 retry_timeout_s,
                 force_offline,
-                have_to_delete_results
+                have_to_delete_results,
+                have_to_delete_versions
             );
 
             // Suppress output
@@ -125,7 +128,8 @@ int Gavc::perform(std::string query_str) {
                 max_attempts,
                 retry_timeout_s,
                 force_offline,
-                have_to_delete_results
+                have_to_delete_results,
+                have_to_delete_versions
             );
 
             // Suppress output

@@ -56,6 +56,7 @@ class Base:
 class Gavc(Base):
     __PARAM_DOWNLOAD         = "download"
     __PARAM_DELETE           = "delete"
+    __PARAM_DELETE_VERSIONS  = "delete-versions"
     __PARAM_OUTPUT           = "output"
     __PARAM_DISABLE_CACHE    = "disable-cache"
     __PARAM_MAX_ATTEMPTS     = "max-attempts"
@@ -99,6 +100,13 @@ class Gavc(Base):
 
     def get_delete(self):
         return self._get_param(self.__PARAM_DELETE)
+
+
+    def set_delete_versions(self, delete):
+        return self._set_param(self.__PARAM_DELETE_VERSIONS, delete)
+
+    def get_delete_versions(self):
+        return self._get_param(self.__PARAM_DELETE_VERSIONS)
 
 
     def set_output(self, output):
