@@ -73,8 +73,9 @@ public:
         std::optional<gavc::gavc_versions_range_data>
     > query_version_data(const std::string& version);
 
-    std::string format_maven_metadata_url(const std::string& server_url, const std::string& repository) const;
     std::string format_maven_metadata_path(const std::string& repository) const;
+    std::string format_maven_metadata_url(const std::string& server_url, const std::string& repository) const;
+    std::string format_version_url(const std::string& server_url, const std::string& repository, const std::string& version) const;
 
     GavcQuery& operator= (const GavcQuery& g) {
         data_ = g.data_;

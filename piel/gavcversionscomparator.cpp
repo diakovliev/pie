@@ -127,7 +127,7 @@ CompareNumericType GavcVersionsComparator::compare_part(const std::string& lhs, 
     }
     else
     {
-        // lexicographic compare
+        // lexicographical compare
         if (lhs_part.presentation() != rhs_part.presentation())
         {
             if (boost::lexicographical_compare(std::make_pair(lhs_part.presentation().begin(), lhs_part.presentation().end()),
@@ -141,7 +141,7 @@ CompareNumericType GavcVersionsComparator::compare_part(const std::string& lhs, 
             }
         }
 
-        LOGT << "Versions corresponding lexicographic parts: "
+        LOGT << "Versions corresponding lexicographical parts: "
                 << lhs_part.presentation() << " "
                 << rhs_part.presentation()
                 << " part_result: " << part_result << ELOG;

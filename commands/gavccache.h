@@ -78,7 +78,8 @@ public:
          , unsigned int max_attempts = 3
          , unsigned int retry_timeout_s = 5
          , bool force_offline = false
-         , bool have_to_delete_resuts = false);
+         , bool have_to_delete_resuts = false
+         , bool have_to_delete_versions = false);
 
     virtual ~GAVCCache();
 
@@ -118,6 +119,7 @@ private:
     std::filesystem::path path_to_download_;
     bool have_to_download_results_;
     bool have_to_delete_results_;
+    bool have_to_delete_versions_;
     std::string output_file_;
     std::string cache_path_;
     unsigned int max_attempts_;

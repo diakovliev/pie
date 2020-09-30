@@ -82,7 +82,8 @@ GAVCCache::GAVCCache(const std::string& server_api_access_token
            , unsigned int max_attempts
            , unsigned int retry_timeout_s
            , bool force_offline
-           , bool have_to_delete_results)
+           , bool have_to_delete_results
+           , bool have_to_delete_versions)
     : pl::IOstreamsHolder()
     , server_url_(server_url)
     , server_api_access_token_(server_api_access_token)
@@ -91,6 +92,7 @@ GAVCCache::GAVCCache(const std::string& server_api_access_token
     , path_to_download_()
     , have_to_download_results_(have_to_download_results)
     , have_to_delete_results_(have_to_delete_results)
+    , have_to_delete_versions_(have_to_delete_versions)
     , output_file_(output_file)
     , cache_path_(cache_path)
     , max_attempts_(max_attempts)
@@ -382,7 +384,8 @@ void GAVCCache::perform()
          max_attempts_,
          retry_timeout_s_,
          false,
-         have_to_delete_results_);
+         have_to_delete_results_,
+         have_to_delete_versions_);
 
     gavc.setup_iostreams(&cout(), &cerr(), &cin());
     gavc.set_cache_mode(true);
@@ -402,7 +405,7 @@ void GAVCCache::perform()
     bool offline            = force_offline;
     bool have_cached_files  = false;
 
-    GAVC::paths_list cashed_files_list;
+    GAVC::paths_list cached_files_list;
 
     if (!offline) {
         try {
@@ -421,8 +424,8 @@ void GAVCCache::perform()
         try {
             versions_to_process_cache   = query_.filter(get_cached_versions(mm_path));
             // Initial cache files list
-            cashed_files_list           = get_cached_files_list(versions_to_process_cache, mm_path);
-            have_cached_files           = !cashed_files_list.empty();
+            cached_files_list           = get_cached_files_list(versions_to_process_cache, mm_path);
+            have_cached_files           = !cached_files_list.empty();
 
             LOGT << "have_cached_files: " << have_cached_files << ELOG;
         } catch (errors::cache_folder_does_not_exist& e) {
@@ -440,7 +443,7 @@ void GAVCCache::perform()
             gavc.notify_gavc_version(*ver);
         }
 
-        for (GAVC::paths_list::iterator f = cashed_files_list.begin(), end = cashed_files_list.end(); f != end; ++f) {
+        for (GAVC::paths_list::iterator f = cached_files_list.begin(), end = cached_files_list.end(); f != end; ++f) {
 
             fs::path object_name        = fs::path(*f).filename();
 
@@ -462,10 +465,16 @@ void GAVCCache::perform()
             gavc.process_version(*i);
 
             // Get actial files list
-            cashed_files_list = gavc.get_list_of_actual_files();
+            cached_files_list = gavc.get_list_of_actual_files();
+            have_cached_files = !cached_files_list.empty();
         }
 
         versions_to_process = versions_to_process_remote;
+    }
+
+    if (versions_to_process.empty() && !have_cached_files) {
+        LOGT << "Raise exception!" << ELOG;
+        throw errors::cant_find_version_for_query();
     }
 
     versions_ = gavc.get_versions();
@@ -476,7 +485,7 @@ void GAVCCache::perform()
             throw errors::cache_no_cache_for_query(query_.to_string());
         }
 
-        for (GAVC::paths_list::iterator f = cashed_files_list.begin(), end = cashed_files_list.end(); f != end; ++f) {
+        for (GAVC::paths_list::iterator f = cached_files_list.begin(), end = cached_files_list.end(); f != end; ++f) {
 
             fs::path path        = output_file_.empty()         ?   fs::path(*f).filename().string()    : output_file_                          ;
             fs::path object_path = path_to_download_.empty()    ?   path                                : path_to_download_ / path.filename()   ;
@@ -495,7 +504,16 @@ void GAVCCache::perform()
 
             query_results_.insert(std::make_pair(object_path, std::make_pair(object_classifier, version)));
             list_of_queued_files_.push_back(object_path.string());
+
+            if (have_to_delete_results_) {
+                cout() << "cx " << object_path.filename().string() << std::endl;
+                // TODO:
+            }
         }
+    }
+
+    if (have_to_delete_versions_) {
+        // TODO:
     }
 }
 
@@ -510,8 +528,10 @@ void GAVCCache::operator()()
             perform();
             LOGT << "GAVCCache query attempt: " << attempt << " success." <<  ELOG;
             break;
-        } catch (errors::cache_folder_does_not_exist) {
+        } catch (errors::cache_folder_does_not_exist&) {
             break;
+        } catch (errors::cant_find_version_for_query&) {
+            throw;
         } catch (...) {
             LOGT << "GAVCCache query attempt: " << attempt << " from: " << max_attempts << " failed." <<  ELOG;
             if (attempt++ >= max_attempts) {

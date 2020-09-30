@@ -69,7 +69,8 @@ GAVC::GAVC(const std::string& server_api_access_token
            , unsigned int max_attempts
            , unsigned int retry_timeout_s
            , bool force_offline
-           , bool have_to_delete_results)
+           , bool have_to_delete_results
+           , bool have_to_delete_versions)
     : pl::IOstreamsHolder()
     , server_url_(server_url)
     , server_api_access_token_(server_api_access_token)
@@ -78,6 +79,7 @@ GAVC::GAVC(const std::string& server_api_access_token
     , path_to_download_()
     , have_to_download_results_(have_to_download_results)
     , have_to_delete_results_(have_to_delete_results)
+    , have_to_delete_versions_(have_to_delete_versions)
     , cache_mode_(false)
     , list_of_actual_files_()
     , query_results_()
@@ -463,13 +465,7 @@ std::vector<std::string> GAVC::get_versions_to_process() const
 
     auto metadata = *metadata_op;
 
-    std::vector<std::string> versions_to_process = metadata.versions_for(query_);
-    if (versions_to_process.empty())
-    {
-        throw errors::cant_find_version_for_query();
-    }
-
-    return versions_to_process;
+    return metadata.versions_for(query_);
 }
 
 void GAVC::process_version(const std::string& version)
@@ -506,7 +502,15 @@ void GAVC::process_version(const std::string& version)
         pt::ptree root;
         pt::read_json(aql_handlers.responce_stream(), root);
         pt::each(root.get_child("results"), [&](auto& result){ on_aql_object(result,  version, classifier); });
+
     });
+
+    if (have_to_delete_versions_) {
+        LOGT << "Delete version: " << version << ELOG;
+        cout() << "X " << version << std::endl;
+
+        delete_file(query_.format_version_url(server_url_, server_repository_, version));
+    }
 }
 
 void GAVC::process_versions(const std::vector<std::string>& versions_to_process)
@@ -522,11 +526,16 @@ void GAVC::operator()()
     unsigned int        attempt = 0;
     const unsigned int  max_attempts = std::max(1u, max_attempts_);
     const unsigned int  retry_timeout = std::max(5u, retry_timeout_s_);
+
+    std::vector<std::string> versions_to_process;
+
     while(true) {
         try {
             LOGT << "GAVC query attempt: " << attempt << " from: " << max_attempts << " start." << ELOG;
-            std::vector<std::string> versions_to_process = get_versions_to_process();
+
+            versions_to_process = get_versions_to_process();
             process_versions(versions_to_process);
+
             LOGT << "GAVC query attempt: " << attempt << " success." <<  ELOG;
             break;
         } catch (...) {
@@ -539,6 +548,12 @@ void GAVC::operator()()
                 sleep(retry_timeout);
             }
         }
+    }
+
+    LOGT << "Post check..." << ELOG;
+    if (versions_to_process.empty()) {
+        LOGT << "Raise exception!" << ELOG;
+        throw errors::cant_find_version_for_query();
     }
 }
 

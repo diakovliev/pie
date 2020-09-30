@@ -113,7 +113,7 @@ std::vector<std::string> GavcVersionsRangeFilter::filtered(const std::vector<std
     LOGT << "right version: " << right_version.first << ELOG;
 
     if (comparator_.compare(left_version.first, right_version.first) <= 0) {
-        LOGE << "Left border version must be less than right!" << ELOG;
+        LOGT << "Left border version must be less than right! Return empty result." << ELOG;
         return result;
     }
 

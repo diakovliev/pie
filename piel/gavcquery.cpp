@@ -220,6 +220,21 @@ std::string GavcQuery::format_maven_metadata_url(const std::string& server_url, 
 }
 
 
+std::string GavcQuery::format_version_url(const std::string& server_url, const std::string& repository, const std::string& version) const
+{
+    LOGT << "Build url for version. server_url: " << server_url << " repository: " << repository << " version: " << version << ELOG;
+
+    std::ostringstream result;
+    result << server_url;
+    result << format_maven_metadata_path(repository);
+    result << GavcConstants::path_delimiter;
+    result << version;
+
+    LOGT << "Version url: " << result.str() << ELOG;
+    return result.str();
+}
+
+
 std::string GavcQuery::format_maven_metadata_path(const std::string& repository) const
 {
     LOGT << "Build path for maven metadata. repository: " << repository << ELOG;

@@ -66,6 +66,7 @@ private:
 
     bool have_to_download_results_;
     bool have_to_delete_results_;
+    bool have_to_delete_versions_;
 
     std::string output_file_;
     std::string cache_path_;
