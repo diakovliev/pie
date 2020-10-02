@@ -7,5 +7,5 @@ gen_parser() {
 
 gen_parser gavc_query.cpp
 gen_parser gavc_query_version.cpp
-gen_parser gavc_query_versions_range.cpp
+gen_parser properties.cpp
 gen_parser uploadfilesspec.cpp
