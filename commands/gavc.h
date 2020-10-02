@@ -72,8 +72,9 @@ namespace errors {
 class GAVC: public piel::lib::IOstreamsHolder
 {
 public:
-    typedef std::list<std::filesystem::path> paths_list;
-    typedef std::map<std::filesystem::path,std::pair<std::string,std::string> > query_results;
+    using paths_list = std::list<std::filesystem::path>;
+    using query_results = std::map<std::filesystem::path,std::pair<std::string,std::string> >;
+    using PropertiesHandler = std::function<void (const std::filesystem::path&, const piel::lib::Properties&)>;
 
     GAVC(  const std::string& server_api_access_token
          , const std::string& server_url
@@ -106,10 +107,7 @@ public:
 
     static bool validate_local_file(const std::filesystem::path& object_path, const piel::lib::Properties& server_checksums);
 
-    static piel::lib::Properties load_object_properties(const std::filesystem::path& object_path);
-    static void store_object_properties(const std::filesystem::path& object_path, const piel::lib::Properties& properties);
-
-    void set_cache_mode(bool value);
+    void set_cache_mode(bool value, PropertiesHandler object_properties_handler);
     static std::string get_classifier_file_name(const std::string& query_name, const std::string& ver, const std::string& classifier);
 
     void notify_gavc_version(const std::string& version);
@@ -131,7 +129,9 @@ private:
     bool have_to_download_results_;
     bool have_to_delete_results_;
     bool have_to_delete_versions_;
+
     bool cache_mode_;
+    PropertiesHandler object_properties_handler_;
 
     paths_list list_of_actual_files_;
     query_results query_results_;

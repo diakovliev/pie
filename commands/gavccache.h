@@ -111,6 +111,10 @@ protected:
     bool is_force_offline() const;
     static std::string cache_properties_file(const std::string& cache_path);
 
+    static piel::lib::Properties load_object_properties(const std::filesystem::path& object_path);
+    static void store_object_properties(const std::filesystem::path& object_path, const piel::lib::Properties& properties);
+    static void remove_object_properties(const std::filesystem::path& object_path);
+
 private:
     std::string server_url_;
     std::string server_api_access_token_;

@@ -81,6 +81,7 @@ GAVC::GAVC(const std::string& server_api_access_token
     , have_to_delete_results_(have_to_delete_results)
     , have_to_delete_versions_(have_to_delete_versions)
     , cache_mode_(false)
+    , object_properties_handler_()
     , list_of_actual_files_()
     , query_results_()
     , list_of_queued_files_()
@@ -242,18 +243,6 @@ void GAVC::delete_file(const std::string& download_uri) const
     }
 }
 
-/*static*/ piel::lib::Properties GAVC::load_object_properties(const std::filesystem::path& object_path)
-{
-    std::ifstream is(object_path.generic_string() + GAVCConstants::properties_ext);
-    return pl::Properties::load(is);
-}
-
-/*static*/ void GAVC::store_object_properties(const std::filesystem::path& object_path, const piel::lib::Properties& properties)
-{
-    std::ofstream os(object_path.generic_string() + GAVCConstants::properties_ext);
-    properties.store(os);
-}
-
 void GAVC::on_object(const pt::ptree::value_type& obj, const std::string& version, const std::string& query_classifier)
 {
     LOGT << "on_object version: " << version << " query classifier: " << query_classifier << ELOG;
@@ -334,12 +323,14 @@ void GAVC::on_object(const pt::ptree::value_type& obj, const std::string& versio
         list_of_actual_files_.push_back(object_path);
 
         if (cache_mode_) {
-            pl::Properties props = pl::Properties::from_map(server_checksums);
+            auto props = pl::Properties::from_map(server_checksums);
 
             props.set(GAVCConstants::object_id_property, object_id);
             props.set(GAVCConstants::object_classifier_property, object_classifier);
 
-            store_object_properties(object_path, props);
+            if (object_properties_handler_) {
+                object_properties_handler_(object_path, props);
+            }
 
             cout() << "c " << object_id << std::endl;
         } else {
@@ -582,9 +573,10 @@ GAVC::paths_list GAVC::get_list_of_queued_files() const
     return list_of_queued_files_;
 }
 
-void GAVC::set_cache_mode(bool value)
+void GAVC::set_cache_mode(bool value, PropertiesHandler object_properties_handler)
 {
-    cache_mode_ = value;
+    cache_mode_                 = value;
+    object_properties_handler_  = object_properties_handler;
 }
 
 void GAVC::notify_gavc_version(const std::string& version)

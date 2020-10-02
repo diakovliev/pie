@@ -25,9 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-
-#ifndef STD_FILESYSTEM_EXT_HPP
-#define STD_FILESYSTEM_EXT_HPP
+#pragma once
 
 #include <iostream>
 #include <fstream>
@@ -38,58 +36,56 @@
 
 namespace std { namespace filesystem {
 
-// Return path when appended to a_From will resolve to same as a_To
-inline path make_relative( const path& from_arg, const path& to_arg )
-{
-    path result;
-
-    path from    = absolute( from_arg );
-    path to      = absolute( to_arg );
-
-    path::const_iterator from_iter( from.begin() );
-    path::const_iterator to_iter( to.begin() );
-
-    // Find common base
-    for( path::const_iterator to_end( to.end() ), from_end( from.end() ) ; from_iter != from_end && to_iter != to_end && *from_iter == *to_iter; ++from_iter, ++to_iter );
-
-    // Navigate backwards in directory to reach previously found base
-    for( path::const_iterator from_end( from.end() ); from_iter != from_end; ++from_iter )
+    // Return path when appended to a_From will resolve to same as a_To
+    inline path make_relative( const path& from_arg, const path& to_arg )
     {
-        if( (*from_iter) != "." )
-            result /= "..";
+        path result;
+
+        path from    = absolute( from_arg );
+        path to      = absolute( to_arg );
+
+        path::const_iterator from_iter( from.begin() );
+        path::const_iterator to_iter( to.begin() );
+
+        // Find common base
+        for( path::const_iterator to_end( to.end() ), from_end( from.end() ) ; from_iter != from_end && to_iter != to_end && *from_iter == *to_iter; ++from_iter, ++to_iter );
+
+        // Navigate backwards in directory to reach previously found base
+        for( path::const_iterator from_end( from.end() ); from_iter != from_end; ++from_iter )
+        {
+            if( (*from_iter) != "." )
+                result /= "..";
+        }
+
+        // Now navigate down the directory branch
+        for( ; to_iter != to.end() ; ++to_iter )
+            result /= *to_iter;
+
+        return result;
     }
 
-    // Now navigate down the directory branch
-    for( ; to_iter != to.end() ; ++to_iter )
-        result /= *to_iter;
-
-    return result;
-}
-
-inline std::shared_ptr<std::istream> istream( const path& from )
-{
-    return std::make_shared<std::ifstream>(from.string().c_str(), std::ifstream::in|std::ifstream::binary);
-}
-
-inline std::shared_ptr<std::ostream> ostream( const path& from )
-{
-    return std::make_shared<std::ofstream>(from.string().c_str(), std::ofstream::out|std::ifstream::binary);
-}
-
-inline void remove_directory_content(const path& dir, const path& exclude)
-{
-    if (!is_directory(dir)) return;
-
-    for (directory_iterator i = directory_iterator(dir), end = directory_iterator(); i != end; i++)
+    inline std::shared_ptr<std::istream> istream( const path& from )
     {
-        directory_entry e           = *i;
-        if (exclude.empty() || e.path() != exclude)
+        return std::make_shared<std::ifstream>(from.string().c_str(), std::ifstream::in|std::ifstream::binary);
+    }
+
+    inline std::shared_ptr<std::ostream> ostream( const path& from )
+    {
+        return std::make_shared<std::ofstream>(from.string().c_str(), std::ofstream::out|std::ifstream::binary);
+    }
+
+    inline void remove_directory_content(const path& dir, const path& exclude = path())
+    {
+        if (!is_directory(dir)) return;
+
+        for (directory_iterator i = directory_iterator(dir), end = directory_iterator(); i != end; i++)
         {
-            remove_all(e.path());
+            directory_entry e           = *i;
+            if (exclude.empty() || e.path() != exclude)
+            {
+                remove_all(e.path());
+            }
         }
     }
-}
 
 } } // namespace std::filesystem
-
-#endif // STD_FILESYSTEM_EXT_HPP

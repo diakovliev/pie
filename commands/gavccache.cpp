@@ -49,6 +49,7 @@
 #include <artbaseapihandlers.h>
 #include <properties.h>
 
+#include <std_filesystem_ext.hpp>
 #include <boost_property_tree_ext.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
@@ -109,6 +110,24 @@ GAVCCache::~GAVCCache()
 {
 }
 
+/*static*/ piel::lib::Properties GAVCCache::load_object_properties(const std::filesystem::path& object_path)
+{
+    std::ifstream is(object_path.generic_string() + GAVCConstants::properties_ext);
+    return pl::Properties::load(is);
+}
+
+/*static*/ void GAVCCache::store_object_properties(const std::filesystem::path& object_path, const piel::lib::Properties& properties)
+{
+    std::ofstream os(object_path.generic_string() + GAVCConstants::properties_ext);
+    properties.store(os);
+}
+
+/*static*/ void GAVCCache::remove_object_properties(const std::filesystem::path& object_path)
+{
+    fs::path props_path = object_path.generic_string() + GAVCConstants::properties_ext;
+    fs::remove(props_path);
+}
+
 std::vector<std::string> GAVCCache::get_cached_versions(const std::string& path) const
 {
     std::vector<std::string> result;
@@ -164,7 +183,9 @@ std::string GAVCCache::find_file_for_classifier(const std::string& artifacts_cac
     std::string result;
 
     for(auto entry : boost::make_iterator_range(fs::directory_iterator(artifacts_cache), {})){
+
         LOGT << entry.path().filename().c_str() << ELOG;
+
         if(!fs::is_regular_file(entry.path())) {
             continue;
         }
@@ -174,7 +195,7 @@ std::string GAVCCache::find_file_for_classifier(const std::string& artifacts_cac
         }
 
         std::ifstream is(entry.path().string());
-        pl::Properties props = pl::Properties::load(is);
+        auto props = pl::Properties::load(is);
 
         if(props.get(GAVCConstants::object_classifier_property, "") == classifier) {
             result = artifacts_cache + fs::path::preferred_separator + props.get(GAVCConstants::object_id_property, "");
@@ -195,17 +216,16 @@ std::string GAVCCache::find_file_for_classifier(const std::string& artifacts_cac
 
 /*static*/ void GAVCCache::update_last_access_time(const fs::path& cache_object_path)
 {
-    pl::Properties props = GAVC::load_object_properties(cache_object_path);
-    std::ostringstream buffer;
-    buffer << now_string();
-    props.set(GAVCConstants::last_access_time_property, buffer.str());
-    GAVC::store_object_properties(cache_object_path, props);
+    auto props = load_object_properties(cache_object_path);
+    props.set(GAVCConstants::last_access_time_property, now_string());
+    store_object_properties(cache_object_path, props);
 }
 
 /*static*/ std::tm GAVCCache::get_last_access_time(const fs::path& cache_object_path)
 {
-    pl::Properties props = GAVC::load_object_properties(cache_object_path);
+    pl::Properties props = load_object_properties(cache_object_path);
     std::tm t = {};
+
     std::istringstream ss(props.get(GAVCConstants::last_access_time_property, now_string()));
     ss >> std::get_time(&t, GAVCConstants::last_access_time_format.c_str());
 
@@ -262,7 +282,7 @@ GAVC::paths_list GAVCCache::get_cached_files_list(const std::vector<std::string>
                 break;
             }
 
-            pl::Properties props    = GAVC::load_object_properties(file_path);
+            pl::Properties props    = load_object_properties(file_path);
             bool is_valid           = GAVC::validate_local_file(file_path, props);
 
             if (!is_valid) {
@@ -388,7 +408,10 @@ void GAVCCache::perform()
          have_to_delete_versions_);
 
     gavc.setup_iostreams(&cout(), &cerr(), &cin());
-    gavc.set_cache_mode(true);
+
+    gavc.set_cache_mode(true, [](const auto& object_path, const auto& props){
+        store_object_properties(object_path, props);
+    });
 
     LOGT << " gavc.get_maven_metadata_path:"    << gavc.get_maven_metadata_path()   << ELOG;
 
@@ -497,7 +520,7 @@ void GAVCCache::perform()
 
             cout() << "+ " << object_path.filename().string() << std::endl;
 
-            pl::Properties props = GAVC::load_object_properties(*f);
+            auto props = load_object_properties(*f);
 
             std::string object_classifier = props.get(GAVCConstants::object_classifier_property, "");
             std::string version = fs::path(*f).parent_path().filename().string();
@@ -507,13 +530,24 @@ void GAVCCache::perform()
 
             if (have_to_delete_results_) {
                 cout() << "cx " << object_path.filename().string() << std::endl;
-                // TODO:
+
+                fs::remove(*f);
+                remove_object_properties(*f);
             }
         }
     }
 
     if (have_to_delete_versions_) {
-        // TODO:
+        for (auto version_to_remove: versions_to_process) {
+            LOGT << "Remove cached version: " << version_to_remove << ELOG;
+
+            fs::path artifact_cache_path = mm_path + fs::path::preferred_separator + version_to_remove;
+
+            fs::remove_directory_content(artifact_cache_path);
+            fs::remove(artifact_cache_path);
+
+            cout() << "cX " << version_to_remove << std::endl;
+        }
     }
 }
 
