@@ -27,6 +27,7 @@
  */
 
 #include <gavcquery.h>
+#include <json_format.hpp>
 
 #include <logging.h>
 #include <gavcconstants.h>
@@ -280,120 +281,79 @@ std::vector<std::string> GavcQuery::filter(const std::vector<std::string>& versi
 
 std::string GavcQuery::to_aql_path() const
 {
-    std::ostringstream oss;
-    oss << group_path();
-    oss << GavcConstants::path_delimiter;
-    oss << name();
-    oss << GavcConstants::path_delimiter;
-    oss << "*";
-    return oss.str();
+    std::string os;
+    os.append(group_path());
+    os.append(1, GavcConstants::path_delimiter);
+    os.append(name());
+    os.append(1, GavcConstants::path_delimiter);
+    os.append("*");
+    return os;
 }
 
 std::string GavcQuery::to_aql_name(bool pom) const
 {
     bool append_star = classifier().empty() | extension().empty();
-    std::ostringstream oss;
-    oss << name();
-    oss << "-";
-    oss << version();
+    std::string os;
+    os.append(name());
+    os.append("-");
+    os.append(version());
     if (!classifier().empty())
     {
-        oss << "-";
-        oss << classifier();
+        os.append("-");
+        os.append(classifier());
     }
     if (!extension().empty())
     {
-        oss << ".";
-        oss << extension();
+        os.append(".");
+        os.append(extension());
     }
     if (append_star && pom)
     {
-        oss << ".*";
+        os.append(".*");
     }
     else if (append_star && !pom)
     {
-        oss << "-*";
+        os.append("-*");
     }
-
-    return oss.str();
+    return os;
 }
-
-namespace json_format {
-
-    template<class Oss>
-    struct block {
-        block(Oss& oss, const std::string& begin, const std::string& end)
-            : oss_(oss), begin_(begin), end_(end)
-        {
-            oss_ << begin_;
-        }
-
-        ~block()
-        {
-            oss_ << end_;
-        }
-
-        template<typename Arg>
-        block& operator<<(const Arg& arg)
-        {
-            oss_ << arg;
-            return *this;
-        }
-
-    private:
-        Oss& oss_;
-        const std::string& begin_;
-        const std::string& end_;
-
-    };
-
-    template<typename Arg>
-    std::string string(const Arg& value) {
-        std::ostringstream oss;
-        oss << "\"";
-        oss << value;
-        oss << "\"";
-        return oss.str();
-    }
-
-
-} // namespace json_format
 
 std::string GavcQuery::to_aql_cond(const std::string& repo, bool pom) const
 {
     std::ostringstream oss;
 
     {
-        json_format::block jand(oss, "{", "}");
+        json_format::scope jand(oss);
         jand << json_format::string("$and") << ":";
         {
-            json_format::block jlist(oss, "[", "]");
+            json_format::list jlist(oss);
 
             {
-                json_format::block jrepo(oss, "{", "}");
-                jrepo << json_format::string("repo") << ":";
-                jrepo << json_format::string(repo);
+                json_format::scope jrepo(oss);
+                jrepo.sets("repo", repo);
             }
+
             jlist << ",";
+
             {
-                json_format::block path(oss, "{", "}");
+                json_format::scope path(oss);
                 path << json_format::string("path") << ":";
 
                 {
-                    json_format::block match(oss, "{", "}");
-                    match << json_format::string("$match") << ":";
-                    match << json_format::string(to_aql_path());
+                    json_format::scope match(oss);
+                    match.sets("$match", to_aql_path());
                 }
             }
+
             jlist << ",";
+
             {
-                json_format::block jname(oss, "{", "}");
+                json_format::scope jname(oss);
                 jname << json_format::string("name") << ":";
 
                 {
-                    json_format::block match(oss, "{", "}");
-                    match << json_format::string("$match") << ":";
-                    match << json_format::string(to_aql_name(pom));
+                    json_format::scope match(oss);
+                    match.sets("$match", to_aql_name(pom));
                 }
             }
         }
@@ -414,7 +374,7 @@ std::string GavcQuery::to_aql(const std::string& repo) const
         find << json_format::string("$or") << ":";
 
         {
-            json_format::block list(oss, "[", "]");
+            json_format::list list(oss);
             list << to_aql_cond(repo, false) << "," << to_aql_cond(repo, true);
         }
     }
