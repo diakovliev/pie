@@ -318,45 +318,34 @@ std::string GavcQuery::to_aql_name(bool pom) const
     return os;
 }
 
+using json_list  = json_format::list<std::ostringstream>;
+using json_scope = json_format::scope<std::ostringstream>;
+
 std::string GavcQuery::to_aql_cond(const std::string& repo, bool pom) const
 {
     std::ostringstream oss;
 
     {
-        json_format::scope jand(oss);
-        jand << json_format::string("$and") << ":";
-        {
-            json_format::list jlist(oss);
+        json_scope jand(oss);
+        jand.setb<json_list>("$and", [&](json_list& list) {
 
-            {
-                json_format::scope jrepo(oss);
+            list.addb<json_scope>([&](json_scope& jrepo) {
                 jrepo.sets("repo", repo);
-            }
+            });
 
-            jlist << ",";
-
-            {
-                json_format::scope path(oss);
-                path << json_format::string("path") << ":";
-
-                {
-                    json_format::scope match(oss);
+            list.addb<json_scope>([&](json_scope& path) {
+                path.setb<json_scope>("path", [&](auto& match) {
                     match.sets("$match", to_aql_path());
-                }
-            }
+                });
+            });
 
-            jlist << ",";
-
-            {
-                json_format::scope jname(oss);
-                jname << json_format::string("name") << ":";
-
-                {
-                    json_format::scope match(oss);
+            list.addb<json_scope>([&](json_scope& name) {
+                name.setb<json_scope>("name", [&](auto& match) {
                     match.sets("$match", to_aql_name(pom));
-                }
-            }
-        }
+                });
+            });
+
+        });
     }
 
     std::string aql_cond = oss.str();
@@ -365,18 +354,25 @@ std::string GavcQuery::to_aql_cond(const std::string& repo, bool pom) const
     return aql_cond;
 }
 
+class aql_find: public json_scope {
+public:
+    aql_find(std::ostringstream& oss)
+        : json_scope(oss, "items.find({", "})") {}
+};
+
 std::string GavcQuery::to_aql(const std::string& repo) const
 {
     std::ostringstream oss;
 
     {
-        json_format::block find(oss, "items.find({", "})");
-        find << json_format::string("$or") << ":";
+        aql_find find(oss);
 
-        {
-            json_format::list list(oss);
-            list << to_aql_cond(repo, false) << "," << to_aql_cond(repo, true);
-        }
+        find.setb<json_list>("$or", [&](auto& list) {
+            // Raw output
+            list << to_aql_cond(repo, false);
+            list << json_format::symbols::next;
+            list << to_aql_cond(repo, true);
+        });
     }
 
     oss << ".include(" << json_format::string("*") << ")";

@@ -28,10 +28,21 @@
 #pragma once
 
 #include <string>
+#include <string_view>
+#include <functional>
 
 namespace json_format {
 
-    std::string escape(const std::string &s) {
+    namespace symbols {
+        static constexpr const char* next = ",";
+        static constexpr const char* assign = ":";
+        static constexpr const char* scope_bra = "{";
+        static constexpr const char* scope_ket = "}";
+        static constexpr const char* list_bra = "[";
+        static constexpr const char* list_ket = "]";
+    };
+
+    std::string escape(std::string_view s) {
         std::string o;
         for (auto c = s.cbegin(); c != s.cend(); c++) {
             switch (*c) {
@@ -54,7 +65,7 @@ namespace json_format {
         return o;
     }
 
-    std::string string(const std::string& value) {
+    std::string string(std::string_view value) {
         std::string o;
         o.append("\"");
         o.append(escape(value));
@@ -65,7 +76,7 @@ namespace json_format {
     template<class Oss>
     struct block {
         block(Oss& oss, std::string begin, std::string end)
-            : oss_(oss), begin_(std::move(begin)), end_(std::move(end))
+            : oss_(oss), begin_(std::move(begin)), end_(std::move(end)), first_(true)
         {
             oss_ << begin_;
         }
@@ -82,39 +93,89 @@ namespace json_format {
             return *this;
         }
 
-        template<typename Arg>
-        block& set(const std::string& key, const Arg& arg)
-        {
-            oss_ << string(key) << ":";
-            (*this) << arg;
+        block& next() {
+            if (first_) {
+                first_ = false;
+            } else {
+                oss_ << symbols::next;
+            }
             return *this;
         }
 
-        block& sets(const std::string& key, const std::string& arg)
-        {
-            oss_ << string(key) << ":" << string(arg);
-            return *this;
-        }
+        Oss& oss() { return oss_; }
 
     private:
         Oss& oss_;
         std::string begin_;
         std::string end_;
+        bool first_;
 
-    };
-
-    template<class Oss>
-    class scope: public block<Oss> {
-    public:
-        scope(Oss& oss): block<Oss>(oss, "{", "}") {}
-        virtual ~scope() = default;
     };
 
     template<class Oss>
     class list: public block<Oss> {
     public:
-        list(Oss& oss): block<Oss>(oss, "[", "]") {}
+        list(Oss& oss): block<Oss>(oss, symbols::list_bra, symbols::list_ket) {}
         virtual ~list() = default;
+
+        template<typename Arg>
+        list& add(Arg arg) {
+            block<Oss>::next();
+            block<Oss>::oss() << arg;
+            return *this;
+        }
+
+        list& adds(const std::string& str) {
+            block<Oss>::next();
+            block<Oss>::oss() << string(str);
+            return *this;
+        }
+
+        template<class Block>
+        list& addb(std::function<void(Block& b)> bf, bool call_next = true) {
+            if (call_next) block<Oss>::next();
+            Block b(block<Oss>::oss());
+            bf(b);
+            return *this;
+        }
+
+    protected:
+        list(Oss& oss, std::string begin, std::string end): block<Oss>(oss, begin, end) {}
+    };
+
+    template<class Oss>
+    class scope: public list<Oss> {
+    public:
+        scope(Oss& oss): list<Oss>(oss, symbols::scope_bra, symbols::scope_ket) {}
+        virtual ~scope() = default;
+
+        template<typename Arg>
+        scope& set(const std::string& key, const Arg& arg)
+        {
+            list<Oss>::next();
+            list<Oss>::oss() << string(key) << symbols::assign;
+            (*this) << arg;
+            return *this;
+        }
+
+        scope& sets(const std::string& key, const std::string& arg)
+        {
+            list<Oss>::next();
+            list<Oss>::oss() << string(key) << symbols::assign << string(arg);
+            return *this;
+        }
+
+        template<class Block>
+        scope& setb(const std::string& key, std::function<void(Block& b)> bf) {
+            list<Oss>::next();
+            list<Oss>::oss() << string(key) << symbols::assign;
+            list<Oss>::template addb<Block>(bf, false);
+            return *this;
+        }
+
+    protected:
+        scope(Oss& oss, std::string begin, std::string end): list<Oss>(oss, begin, end) {}
+
     };
 
 } // namespace json_format
