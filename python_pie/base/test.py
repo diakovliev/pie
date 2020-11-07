@@ -92,6 +92,16 @@ class TestLib(unittest.TestCase):
         for v in gavc.versions():
             print(" -- version: %s" % v)
 
+    def test_versions_queryU(self):
+
+        gavc = lib.Gavc()
+
+        self.assertEqual(0, gavc.set_param(GavcParams.PARAM_CACHE_PATH, self.CACHE_PATH))
+        self.assertEqual(0, gavc.perform(u"zodiac.aosp.oemsdk.release:aosp:*"))
+
+        for v in gavc.versions():
+            print(" -- version: %s" % v)
+
     def test_cache_clean(self):
 
         cache = lib.Cache()

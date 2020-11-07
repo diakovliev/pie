@@ -36,22 +36,22 @@ BOOST_PYTHON_MODULE(MODULE_NAME)
     def("version", version);
 
     class_<Gavc>("Gavc")
-        .def("set_param",   &Gavc::set_param, ( arg("param"), arg("value") ))
-        .def("get_param",   &Gavc::get_param, ( arg("param"), arg("default_value") ), return_value_policy<copy_const_reference>())
-        .def("perform",     &Gavc::perform,   ( arg("gavc") ))
+        .def("set_param",   &Gavc::set_paramW, ( arg("param"), arg("value") ))
+        .def("get_param",   &Gavc::get_paramW, ( arg("param"), arg("default_value") ), return_value_policy<copy_const_reference>())
+        .def("perform",     &Gavc::performW,   ( arg("gavc") ))
         .def("versions",    &Gavc::versions)
         ;
 
     class_<Cache>("Cache")
-        .def("set_param",   &Cache::set_param, ( arg("param"), arg("value") ))
-        .def("get_param",   &Cache::get_param, ( arg("param"), arg("default_value") ), return_value_policy<copy_const_reference>())
+        .def("set_param",   &Cache::set_paramW, ( arg("param"), arg("value") ))
+        .def("get_param",   &Cache::get_paramW, ( arg("param"), arg("default_value") ), return_value_policy<copy_const_reference>())
         .def("init",        &Cache::init)
         .def("clean",       &Cache::clean,     ( arg("max_age") ))
         ;
 
     class_<Upload>("Upload")
-        .def("set_param",   &Upload::set_param, ( arg("param"), arg("value") ))
-        .def("get_param",   &Upload::get_param, ( arg("param"), arg("default_value") ), return_value_policy<copy_const_reference>())
-        .def("perform",     &Upload::perform,   ( arg("gavc") ))
+        .def("set_param",   &Upload::set_paramW, ( arg("param"), arg("value") ))
+        .def("get_param",   &Upload::get_paramW, ( arg("param"), arg("default_value") ), return_value_policy<copy_const_reference>())
+        .def("perform",     &Upload::performW,   ( arg("gavc") ))
         ;
 }

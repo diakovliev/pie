@@ -1,6 +1,7 @@
 #include "libpython_pie.h"
 #include "base_extension.h"
 #include "pyutils.h"
+#include "conversions.hpp"
 
 #include <gavccache.h>
 
@@ -48,4 +49,12 @@ std::string const& BaseExtension::get_param(std::string param, std::string defau
         return std::move(default_value);
 
     return it->second;
+}
+
+int BaseExtension::set_paramW(std::wstring param, std::wstring value) {
+    return set_param(conversions::w2s(param), conversions::w2s(value));
+}
+
+std::string const& BaseExtension::get_paramW(std::wstring param, std::wstring default_value) {
+    return get_param(conversions::w2s(param), conversions::w2s(default_value));
 }

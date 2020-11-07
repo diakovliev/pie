@@ -1,6 +1,7 @@
 #include "libpython_pie.h"
 #include "upload_extension.h"
 #include "pyutils.h"
+#include "conversions.hpp"
 
 #include <logging.h>
 #include <upload.h>
@@ -88,4 +89,8 @@ int Upload::perform(std::string query_str) {
     }
 
     return result;
+}
+
+int Upload::performW(std::wstring query_str) {
+    return perform(conversions::w2s(query_str));
 }

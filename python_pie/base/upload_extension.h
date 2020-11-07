@@ -15,6 +15,7 @@ public:
     ~Upload() = default;
 
     int perform(std::string query_str);
+    int performW(std::wstring query_str);
 
 protected:
     virtual bool is_known_param(std::string param);

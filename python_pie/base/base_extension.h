@@ -24,6 +24,9 @@ public:
     int set_param(std::string param, std::string value);
     std::string const& get_param(std::string param, std::string default_value);
 
+    int set_paramW(std::wstring param, std::wstring value);
+    std::string const& get_paramW(std::wstring param, std::wstring default_value);
+
 protected:
     void fill_param_from_env(std::string param, std::string env, std::optional<std::string> default_value = std::nullopt);
     void fill_default_params();

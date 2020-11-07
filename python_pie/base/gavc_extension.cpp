@@ -1,6 +1,7 @@
 #include "libpython_pie.h"
 #include "gavc_extension.h"
 #include "pyutils.h"
+#include "conversions.hpp"
 
 #include <logging.h>
 
@@ -183,4 +184,8 @@ int Gavc::perform(std::string query_str) {
 
 std::vector<std::string> Gavc::versions() const {
     return versions_;
+}
+
+int Gavc::performW(std::wstring query_str) {
+    return perform(conversions::w2s(query_str));
 }

@@ -27,6 +27,7 @@ public:
 
     std::vector<std::string> versions() const;
     int perform(std::string query_str);
+    int performW(std::wstring query_str);
 
 protected:
     virtual bool is_known_param(std::string param);
