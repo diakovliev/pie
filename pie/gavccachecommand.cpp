@@ -134,8 +134,8 @@ bool GavcCacheCommand::parse_arguments()
 
             std::cout << " DONE" << std::endl;
         }
-        catch (piel::cmd::errors::cache_folder_does_not_exist& e) {
-            std::cerr << "cache_folder_does_not_exist: " << e.folder << "!" << std::endl;
+        catch (const std::exception& e) {
+            std::cerr << piel::cmd::errors::format_exceptions_stack(e) << std::endl;
             return result;
         }
     }

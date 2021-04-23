@@ -171,29 +171,14 @@ bool UploadCommand::parse_arguments()
         upload.set_classifiers(classifier_vector_);
 
         upload();
-    }
-    catch (const piel::cmd::errors::nothing_to_upload&)
-    {
-        std::cerr << "Nohing to upload!" << std::endl;
-        return -1;
-    }
-    catch (const piel::cmd::errors::file_upload_error&)
-    {
-        std::cerr << "File upload error!" << std::endl;
-        return -1;
-    }
-    catch (const piel::cmd::errors::pom_upload_error&)
-    {
-        std::cerr << "POM upload error!" << std::endl;
-        return -1;
-    }
-    catch (const piel::cmd::errors::uploading_checksum_error& e)
-    {
-        std::cerr << "Uploading checksum error: " << e.error << std::endl;
-        return -1;
-    }
 
-    result = 0;
+        result = 0;
+    }
+    catch (const std::exception& e)
+    {
+        std::cerr << piel::cmd::errors::format_exceptions_stack(e) << std::endl;
+        return result;
+    }
 
     return result;
 }

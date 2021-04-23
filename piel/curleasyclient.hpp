@@ -25,9 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-
-#ifndef CURLEASYCLIENT_H
-#define CURLEASYCLIENT_H
+#pragma once
 
 #include <curl/curl.h>
 #include <cstdlib>
@@ -145,12 +143,10 @@ struct CurlError {
     std::string presentation() const
     {
         std::ostringstream oss;
-        oss << "libcurl error code: ";
-        oss << code_;
-        oss << " http code: ";
-        oss << http_code_;
-        oss << " message: ";
-        oss << message_;
+        oss << "libcurl code: " << code_
+            << " http code: "   << http_code_
+            << " message: \""   << message_     << "\""
+            ;
         return oss.str();
     }
 
@@ -193,7 +189,7 @@ public:
     //! Perform request.
     //! \return true if no errors, false otherwise.
     //! \sa curl_easy_perform, curl_error
-    bool perform();
+    bool perform(bool throw_exception = false);
 
     //! Get CurlError structure.
     //! Can be used to determine error reason if false was resurned by perform.
@@ -258,7 +254,7 @@ size_t CurlEasyClient<Handlers>::handle_read(char *ptr, size_t size, size_t coun
 }
 
 template<class Handlers>
-bool CurlEasyClient<Handlers>::perform()
+bool CurlEasyClient<Handlers>::perform(bool throw_exception)
 {
     const char* debug_verbose_curl = ::getenv(DEBUG_VERBOSE_CURL);
     if (debug_verbose_curl && 0 == ::strncmp(debug_verbose_curl, "1", 1)) {
@@ -303,6 +299,9 @@ bool CurlEasyClient<Handlers>::perform()
     if (!result)
     {
         curl_error_ = CurlError(code, http_code, errbuf_);
+        if (throw_exception) {
+            throw std::runtime_error(curl_error_.presentation());
+        }
     }
     else
     {
@@ -318,5 +317,3 @@ bool CurlEasyClient<Handlers>::perform()
 }
 
 } } // namespace piel::lib
-
-#endif // CURLEASYCLIENT_H

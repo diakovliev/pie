@@ -37,6 +37,8 @@
 
 #include <boost_property_tree_ext.hpp>
 
+#include <commands/base_errors.h>
+
 namespace pie { namespace app {
 
 namespace pt = boost::property_tree;
@@ -216,51 +218,12 @@ void GavcCommand::write_files_list(const piel::cmd::GAVC::paths_list& files_list
             write_files_list(gavccache.get_list_of_queued_files());
         }
 
+        result = 0;
     }
-    catch (piel::cmd::errors::unable_to_parse_maven_metadata&) {
-        std::cerr << "Error on parsing maven metadata. Server response has non expected format." << std::endl;
-        return -1;
+    catch (const std::exception& e) {
+        std::cerr << piel::cmd::errors::format_exceptions_stack(e) << std::endl;
+        return result;
     }
-    catch (piel::cmd::errors::no_server_maven_metadata& e) {
-        std::cerr << "Error on requesting maven metadata." << std::endl;
-        std::cerr << e.error << std::endl;
-        return -1;
-    }
-    catch (piel::cmd::errors::error_processing_version& e) {
-        std::cerr << "Error on processing version: " << e.ver << "!"    << std::endl;
-        std::cerr <<  e.error << std::endl;
-        return -1;
-    }
-    catch (piel::cmd::errors::cant_get_maven_metadata& ) {
-        std::cerr << "Can't retrieve maven metadata!" << std::endl;
-        return -1;
-    }
-    catch (piel::cmd::errors::cant_find_version_for_query& ) {
-        std::cerr << "Can't find any version for query!" << std::endl;
-        return -1;
-    }
-    catch (piel::cmd::errors::gavc_download_file_error& ) {
-        std::cerr << "Can't download file!" << std::endl;
-        return -1;
-    }
-    catch (piel::cmd::errors::gavc_delete_remote_file_error& e) {
-        std::cerr << "Can't delete remote file: " << e.uri << "!" << std::endl;
-        return -1;
-    }
-    catch (piel::cmd::errors::cache_no_cache_for_query& e) {
-        std::cerr << "Can't find anything for query: " << e.query << " in cache!" << std::endl;
-        return -1;
-    }
-    catch (piel::cmd::errors::cache_no_file_for_classifier& e) {
-        std::cerr << "Can't find any file in cache for classifier: " << e.classifier << "!" << std::endl;
-        return -1;
-    }
-    catch (piel::cmd::errors::cache_not_valid_file& e) {
-        std::cerr << "Can't not valid or broken file in cache for classifier: " << e.classifier << "!" << std::endl;
-        return -1;
-    }
-
-    result = 0;
 
     return result;
 }

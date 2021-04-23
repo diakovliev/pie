@@ -54,8 +54,8 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 
-#include "SleepFor.hpp"
-#include "Retrier.hpp"
+#include <commands/SleepFor.hpp>
+#include <commands/Retrier.hpp>
 
 namespace al = art::lib;
 namespace pl = piel::lib;
@@ -136,7 +136,7 @@ std::vector<std::string> GAVCCache::get_cached_versions(const std::string& path)
     std::vector<std::string> result;
 
     if(!fs::is_directory(path)) {
-        throw piel::cmd::errors::cache_folder_does_not_exist(path);
+        throw std::runtime_error("Cache directory: " + path + " is not exist!");
     }
 
     for(auto entry : boost::make_iterator_range(fs::directory_iterator(path), {})){
@@ -319,8 +319,7 @@ GAVC::paths_list GAVCCache::get_cached_files_list(const std::vector<std::string>
         try {
             fs::remove_all(cache_path);
         } catch (...) {
-            LOGE << "Unable to remove existing file which name is conflict with cache path! cache path: " << cache_path << ELOG;
-            throw errors::cache_folder_does_not_exist(cache_path);
+            throw std::runtime_error("Unable to delete existing file whose name conflicts with cache path! Cache path: " + cache_path);
         }
     }
 
@@ -329,8 +328,7 @@ GAVC::paths_list GAVCCache::get_cached_files_list(const std::vector<std::string>
         try {
             fs::create_directories(cache_path);
         } catch (...) {
-            LOGE << "Unable to create cache directory at cache path: " << cache_path << ELOG;
-            throw errors::cache_folder_does_not_exist(cache_path);
+            throw std::runtime_error("Unable to create cache directory at cache path: " + cache_path);
         }
     }
 
@@ -433,13 +431,16 @@ void GAVCCache::perform()
 
     GAVC::paths_list cached_files_list;
 
+    std::optional<std::string> remote_exception;
+
     if (!offline) {
         try {
             versions_to_process_remote  = gavc.get_versions_to_process();
         }
-        catch (piel::cmd::errors::no_server_maven_metadata& e) {
+        catch (std::exception& e) {
             // No server metadata. Force use cache.
             offline                     = true;
+            remote_exception            = errors::format_exceptions_stack(e);
         }
     }
 
@@ -454,7 +455,7 @@ void GAVCCache::perform()
             have_cached_files           = !cached_files_list.empty();
 
             LOGT << "have_cached_files: " << have_cached_files << ELOG;
-        } catch (errors::cache_folder_does_not_exist& e) {
+        } catch (...) {
             // Don't see anything in cache.
         }
 
@@ -499,8 +500,14 @@ void GAVCCache::perform()
     }
 
     if (versions_to_process.empty() && !have_cached_files) {
-        LOGT << "Raise exception!" << ELOG;
-        throw errors::cant_find_version_for_query();
+        LOGT << "No versions to process!" << ELOG;
+        if(remote_exception) {
+            LOGT << "Raise exception remote exception." << ELOG;
+            throw std::runtime_error(*remote_exception);
+        } else {
+            LOGT << "Raise exception." << ELOG;
+            throw std::runtime_error("No versions to process!");
+        }
     }
 
     versions_ = gavc.get_versions();
@@ -508,7 +515,7 @@ void GAVCCache::perform()
     if (have_to_download_results_) {
 
         if (offline && !have_cached_files) {
-            throw errors::cache_no_cache_for_query(query_.to_string());
+            throw std::runtime_error("No cached items for query: " + query_.to_string() + "!");
         }
 
         for (GAVC::paths_list::iterator f = cached_files_list.begin(), end = cached_files_list.end(); f != end; ++f) {
@@ -556,7 +563,7 @@ void GAVCCache::perform()
 
 void GAVCCache::operator()()
 {
-    pl::Retrier<pl::SleepFor<> >(
+    Retrier<SleepFor<> >(
         [this] (auto attempt, auto max) -> bool {
             LOGT << "GAVCCache query attempt: " << attempt << " from: " << max << ELOG;
             perform();
@@ -564,7 +571,11 @@ void GAVCCache::operator()()
         },
         std::max(1u, max_attempts_),
         std::max(5u, retry_timeout_s_)
-    )();
+    )(
+        [](auto attempt, auto max, const auto& e) {
+            LOGT << "GAVCCacche query attempt: " << attempt << " from: " << max << " error: " << errors::format_exceptions_stack(e) << ELOG;
+        }
+    );
 }
 
 void GAVCCache::set_path_to_download(const std::filesystem::path& path)

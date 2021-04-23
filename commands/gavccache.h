@@ -31,34 +31,9 @@
 
 #include <gavc.h>
 
-namespace piel { namespace cmd {
+#include <commands/base_errors.h>
 
-namespace errors {
-    struct cache_folder_does_not_exist {
-        cache_folder_does_not_exist(const std::string& folder)
-            : folder(folder)
-        {}
-        std::string folder;
-    };
-    struct cache_no_cache_for_query {
-        cache_no_cache_for_query(const std::string& query)
-            : query(query)
-        {}
-        std::string query;
-    };
-    struct cache_no_file_for_classifier {
-        cache_no_file_for_classifier(const std::string& classifier)
-            : classifier(classifier)
-        {}
-        std::string classifier;
-    };
-    struct cache_not_valid_file {
-        cache_not_valid_file(const std::string& classifier)
-            : classifier(classifier)
-        {}
-        std::string classifier;
-    };
-}
+namespace piel { namespace cmd {
 
 namespace utils {
 std::string get_default_cache_path();

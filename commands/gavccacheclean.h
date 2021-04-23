@@ -44,7 +44,7 @@ public:
     void operator()();
 
 private:
-    bool clean(std::filesystem::path path);
+    bool clean(const std::filesystem::path& path);
 
 private:
     std::string cache_path_;

@@ -48,8 +48,8 @@
 #include <mavenmetadata.h>
 #include <artbaseapihandlers.h>
 
-#include <SleepFor.hpp>
-#include <Retrier.hpp>
+#include <commands/SleepFor.hpp>
+#include <commands/Retrier.hpp>
 
 #include <boost_property_tree_ext.hpp>
 #include <boost/algorithm/string.hpp>
@@ -224,25 +224,25 @@ void GAVC::download_file(const fs::path& object_path, const std::string& object_
     OnBufferCallback on_buffer(this);
     download_handlers.connect(on_buffer);
 
-    if (!download_client.perform())
-    {
-        LOGE << "Error on download file: " << object_path << " id: " << object_id << " uri: " << download_uri << ELOG;
-        throw errors::gavc_download_file_error();
+    try {
+        download_client.perform(true);
+    } catch (...) {
+        std::throw_with_nested(std::runtime_error("Error on download file: " + object_path.generic_string() + " id: " + object_id + " uri: " + download_uri));
     }
 }
 
-void GAVC::delete_file(const std::string& download_uri) const
+void GAVC::delete_file(const std::string& delete_uri) const
 {
-    LOGT << "Delete remote file uri: " << download_uri << ELOG;
+    LOGT << "Delete remote file uri: " << delete_uri << ELOG;
 
     al::ArtGavcHandlers delete_handlers(server_api_access_token_);
 
-    pl::CurlEasyClient<al::ArtGavcHandlers> delete_client(download_uri, &delete_handlers, al::ArtBaseConstants::rest_api__delete_request);
+    pl::CurlEasyClient<al::ArtGavcHandlers> delete_client(delete_uri, &delete_handlers, al::ArtBaseConstants::rest_api__delete_request);
 
-    if (!delete_client.perform())
-    {
-        LOGE << "Error on delete remote file uri: " << download_uri << ELOG;
-        throw errors::gavc_delete_remote_file_error(download_uri);
+    try {
+        delete_client.perform(true);
+    } catch (...) {
+        std::throw_with_nested(std::runtime_error("Error on delete remote file uri: " + delete_uri));
     }
 }
 
@@ -436,9 +436,10 @@ std::vector<std::string> GAVC::get_versions_to_process() const
     pl::CurlEasyClient<al::ArtGavcHandlers> get_metadata_client(
         query_.format_maven_metadata_url(server_url_, server_repository_), &download_metadata_handlers);
 
-    if (!get_metadata_client.perform())
-    {
-        throw errors::no_server_maven_metadata(get_metadata_client.curl_error().presentation());
+    try {
+    get_metadata_client.perform(true);
+    } catch (...) {
+        std::throw_with_nested(std::runtime_error("Error on getting maven metadata!"));
     }
 
     // Try to parse server response.
@@ -449,12 +450,12 @@ std::vector<std::string> GAVC::get_versions_to_process() const
     }
     catch (...)
     {
-        throw errors::unable_to_parse_maven_metadata();
+        std::throw_with_nested(std::runtime_error("Parsing maven metadata error!"));
     }
 
     if (!metadata_op)
     {
-        throw errors::cant_get_maven_metadata();
+        throw std::runtime_error("No maven metadata to process!");
     }
 
     auto metadata = *metadata_op;
@@ -472,6 +473,9 @@ void GAVC::process_version(const std::string& version)
     cout() << "Mode: online"                << std::endl;
 
     std::string classifier_spec = query_.classifier();
+
+    LOGT << "Classifiers spec: " << classifier_spec << ELOG;
+
     std::vector<std::string> classifiers;
 
     boost::split(classifiers, classifier_spec, boost::is_any_of(","));
@@ -487,15 +491,26 @@ void GAVC::process_version(const std::string& version)
         aql_handlers.set_url(server_url_);
 
         pl::CurlEasyClient<art::lib::ArtAqlHandlers> client(aql_handlers.gen_uri(), &aql_handlers, aql_handlers.method());
-
-        if (!client.perform())
-        {
-            throw errors::error_processing_version(client.curl_error().presentation(), version);
+        try {
+            client.perform(true);
+        } catch (...) {
+            std::throw_with_nested(std::runtime_error("Unable to get info associated with version: " + version + "!"));
         }
 
         pt::ptree root;
         pt::read_json(aql_handlers.responce_stream(), root);
-        pt::each(root.get_child("results"), [&](auto& result){ on_aql_object(result,  version, classifier); });
+
+        pt::each(root.get_child("results"),
+            [&](auto& result) {
+                on_aql_object(result, version, classifier);
+            },
+            [&]() {
+                if (!classifier.empty())
+                {
+                    throw std::runtime_error("No requested classifier: " + classifier + " in artifact with version: " + version + "!");
+                }
+            }
+        );
 
     });
 
@@ -518,24 +533,27 @@ void GAVC::process_versions(const std::vector<std::string>& versions_to_process)
 
 void GAVC::operator()()
 {
-    std::vector<std::string> versions_to_process;
+    Retrier<SleepFor<> >(
+        [this] (auto attempt, auto max) -> bool {
+            std::vector<std::string> versions_to_process;
 
-    pl::Retrier<pl::SleepFor<> >(
-        [this, &versions_to_process] (auto attempt, auto max) -> bool {
             LOGT << "GAVC query attempt: " << attempt << " from: " << max << ELOG;
             versions_to_process = get_versions_to_process();
+
+            if (versions_to_process.empty()) {
+                throw std::runtime_error("No any version to process!");
+            }
+
             process_versions(versions_to_process);
             return true;
         },
         std::max(1u, max_attempts_),
         std::max(5u, retry_timeout_s_)
-    )();
-
-    LOGT << "Post check..." << ELOG;
-    if (versions_to_process.empty()) {
-        LOGT << "Raise exception!" << ELOG;
-        throw errors::cant_find_version_for_query();
-    }
+    )(
+        [](auto attempt, auto max, const auto& e) {
+            LOGT << "GAVC query attempt: " << attempt << " from: " << max << " error: " << errors::format_exceptions_stack(e) << ELOG;
+        }
+    );
 }
 
 void GAVC::set_path_to_download(const std::filesystem::path& path)

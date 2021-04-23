@@ -63,11 +63,10 @@ Upload::~Upload()
 
     LOGD << "Upload checksum: " << checksum_name << " to: " << deploy_checksum_handlers.gen_uri() << ELOG;
 
-    if (!(upload_checksum_client.perform()))
-    {
-        LOGE << "Error on upload file " << checksum_name << " checksum!"    << ELOG;
-        LOGE << upload_checksum_client.curl_error().presentation()          << ELOG;
-        throw errors::uploading_checksum_error(upload_checksum_client.curl_error().presentation());
+    try {
+        upload_checksum_client.perform(true);
+    } catch (...) {
+        std::throw_with_nested(std::runtime_error("Error on upload file " + checksum_name + " checksum!"));
     }
 }
 
@@ -103,17 +102,14 @@ const Upload* Upload::set_classifiers(const art::lib::ufs::UFSVector& classifier
 
 void Upload::operator()()
 {
-    bool no_errors = true;
-
     LOGT << "Classifiers vector:" << al::ufs::to_string(classifier_vector_) << ELOG;
 
     if (classifier_vector_.empty())
     {
-        LOGE << "Nothing to upload!"                     << ELOG;
-        throw errors::nothing_to_upload();
+        throw std::runtime_error("Nothing to upload!");
     }
 
-    for (al::ufs::UFSVector::const_iterator it = classifier_vector_.begin(), end = classifier_vector_.end(); it != end && no_errors; ++it)
+    for (al::ufs::UFSVector::const_iterator it = classifier_vector_.begin(), end = classifier_vector_.end(); it != end; ++it)
     {
         art::lib::ArtDeployArtifactHandlers deploy_handlers(server_api_access_token_);
 
@@ -129,11 +125,10 @@ void Upload::operator()()
 
         LOGD << "Upload: " << al::ufs::to_string(*it) << " to: " << deploy_handlers.gen_uri() << ELOG;
 
-        if (!(no_errors &= upload_client.perform()))
-        {
-            LOGE << "Error on upload file!"                     << ELOG;
-            LOGE << upload_client.curl_error().presentation()   << ELOG;
-            throw errors::file_upload_error();
+        try {
+            upload_client.perform(true);
+        } catch (...) {
+            std::throw_with_nested(std::runtime_error("Error on upload file: " + it->file_name + "!"));
         }
 
         upload_checksums_for(&deploy_handlers, art::lib::ArtBaseConstants::checksums_md5);
@@ -141,10 +136,7 @@ void Upload::operator()()
         upload_checksums_for(&deploy_handlers, art::lib::ArtBaseConstants::checksums_sha256);
     }
 
-    if (no_errors)
-    {
-        deploy_pom();
-    }
+    deploy_pom();
 }
 
 void Upload::deploy_pom()
@@ -171,11 +163,10 @@ void Upload::deploy_pom()
 
     LOGD << "Upload POM to: " << deploy_handlers.gen_uri() << ELOG;
 
-    if (!upload_client.perform())
-    {
-        LOGE << "Error on upload POM!"                      << ELOG;
-        LOGE << upload_client.curl_error().presentation()   << ELOG;
-        throw errors::pom_upload_error();
+    try {
+        upload_client.perform(true);
+    } catch (...) {
+        std::throw_with_nested(std::runtime_error("Error on upload POM to: " + deploy_handlers.gen_uri() + "!"));
     }
 
     upload_checksums_for(&deploy_handlers, art::lib::ArtBaseConstants::checksums_md5);

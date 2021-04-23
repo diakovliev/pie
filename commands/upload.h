@@ -34,18 +34,9 @@
 #include <uploadfilesspec.h>
 #include <artdeployartifacthandlers.h>
 
-namespace piel { namespace cmd {
+#include <commands/base_errors.h>
 
-namespace errors {
-    struct nothing_to_upload {};
-    struct file_upload_error {};
-    struct pom_upload_error {};
-    struct uploading_checksum_error
-    {
-        uploading_checksum_error(const std::string& e) : error(e) {}
-        std::string error;
-    };
-};
+namespace piel { namespace cmd {
 
 class Upload: public Command
 {

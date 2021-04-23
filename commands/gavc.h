@@ -40,34 +40,9 @@
 #include <filesystem>
 #include <list>
 
-namespace piel { namespace cmd {
+#include <commands/base_errors.h>
 
-namespace errors {
-    struct unable_to_parse_maven_metadata {};
-    struct no_server_maven_metadata {
-        no_server_maven_metadata(const std::string& e)
-            : error(e)
-        {}
-        std::string error;
-    };
-    struct error_processing_version {
-        error_processing_version(const std::string& e, const std::string& v)
-            : error(e)
-            , ver(v)
-        {}
-        std::string error;
-        std::string ver;
-    };
-    struct cant_get_maven_metadata {};
-    struct cant_find_version_for_query {};
-    struct gavc_download_file_error {};
-    struct gavc_delete_remote_file_error {
-        gavc_delete_remote_file_error(const std::string& e)
-            : uri(e)
-        {}
-        std::string uri;
-    };
-};
+namespace piel { namespace cmd {
 
 class GAVC: public piel::lib::IOstreamsHolder
 {

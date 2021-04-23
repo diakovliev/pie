@@ -57,8 +57,13 @@ namespace boost { namespace property_tree {
 
     // Emumerate sub objects.
     // void callback(const ptree::value_type& obj)
-    template<class Callback>
-    void each(const ptree& obj, Callback callback) {
+    template<class Callback, class EmptyCallback>
+    void each(const ptree& obj, Callback callback, EmptyCallback empty_callback = [](){}) {
+        if (obj.begin() == obj.end()) {
+            empty_callback();
+            return;
+        }
+
         for(ptree::const_iterator i = obj.begin(), end = obj.end(); i != end; ++i) {
             callback(*i);
         }

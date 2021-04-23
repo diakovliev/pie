@@ -12,6 +12,8 @@
 #include <cache_extension.h>
 #include <upload_extension.h>
 
+#include <commands/base_errors.h>
+
 ////////////////////////////////////////////////////////////////////////////////
 int version() {
     return MODULE_VERSION;
@@ -20,7 +22,8 @@ int version() {
 ////////////////////////////////////////////////////////////////////////////////
 void translate_exception(std::exception const& e)
 {
-    PyErr_SetString(PyExc_RuntimeError, e.what());
+    auto msg = piel::cmd::errors::format_exceptions_stack(e);
+    PyErr_SetString(PyExc_RuntimeError, msg.c_str());
 }
 
 ////////////////////////////////////////////////////////////////////////////////

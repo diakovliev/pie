@@ -70,12 +70,12 @@ GAVCCacheClean::~GAVCCacheClean()
 {
 }
 
-bool GAVCCacheClean::clean(fs::path path)
+bool GAVCCacheClean::clean(const fs::path& path)
 {
     bool do_remove = true;
 
     if(!fs::is_directory(path)) {
-        throw piel::cmd::errors::cache_folder_does_not_exist(path.generic_string());
+        throw std::runtime_error("Cache directory: " + path.generic_string() + " is not exist!");
     }
 
     for(auto entry : boost::make_iterator_range(fs::directory_iterator(path), {})){

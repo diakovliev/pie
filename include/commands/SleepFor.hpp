@@ -3,7 +3,7 @@
 #include <thread>
 #include <chrono>
 
-namespace piel::lib {
+namespace piel::cmd {
 
     template<class chrono_units = std::chrono::seconds>
     class SleepFor {

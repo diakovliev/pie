@@ -47,18 +47,13 @@ int Cache::clean(int max_age) {
 
     auto cache_path = get_param(PARAM_CACHE_PATH, "");
 
-    try {
-        piel::cmd::GAVCCacheClean gavccacheclean(
-                         cache_path,
-                         max_age);
+    piel::cmd::GAVCCacheClean gavccacheclean(
+                     cache_path,
+                     max_age);
 
-        gavccacheclean();
+    gavccacheclean();
 
-        result = OK;
-    }
-    catch (piel::cmd::errors::cache_folder_does_not_exist& e) {
-        throw Error("Cache folder not exists!");
-    }
+    result = OK;
 
     return result;
 }

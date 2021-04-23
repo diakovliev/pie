@@ -87,97 +87,65 @@ int Gavc::perform(std::string query_str) {
     auto cerr_stub  = std::make_unique<std::ostringstream>();
     auto cin_stub   = std::make_unique<std::istringstream>();
 
-    try {
-        if (disable_cache) {
-            piel::cmd::GAVC gavc(
-                server_api_access_token,
-                server_url,
-                server_repository,
-                query,
-                have_to_download_results,
-                output_file,
-                notifications_file,
-                max_attempts,
-                retry_timeout_s,
-                force_offline,
-                have_to_delete_results,
-                have_to_delete_versions
-            );
+    if (disable_cache) {
+        piel::cmd::GAVC gavc(
+            server_api_access_token,
+            server_url,
+            server_repository,
+            query,
+            have_to_download_results,
+            output_file,
+            notifications_file,
+            max_attempts,
+            retry_timeout_s,
+            force_offline,
+            have_to_delete_results,
+            have_to_delete_versions
+        );
 
-            // Suppress output
-            gavc.setup_iostreams(cout_stub.get(), cerr_stub.get(), cin_stub.get());
+        // Suppress output
+        gavc.setup_iostreams(cout_stub.get(), cerr_stub.get(), cin_stub.get());
 
-            if (output_file.empty()) {
-                gavc.set_path_to_download(std::filesystem::current_path());
-            }
-
-            gavc();
-
-            versions_      = gavc.get_versions();
-            query_results_ = gavc.get_query_results();
-        }
-        else {
-            piel::cmd::GAVCCache gavccache(
-                server_api_access_token,
-                server_url,
-                server_repository,
-                query,
-                have_to_download_results,
-                cache_path,
-                output_file,
-                notifications_file,
-                max_attempts,
-                retry_timeout_s,
-                force_offline,
-                have_to_delete_results,
-                have_to_delete_versions
-            );
-
-            // Suppress output
-            gavccache.setup_iostreams(cout_stub.get(), cerr_stub.get(), cin_stub.get());
-
-            if (output_file.empty()) {
-                gavccache.set_path_to_download(std::filesystem::current_path());
-            }
-
-            gavccache();
-
-            versions_       = gavccache.get_versions();
-            query_results_  = gavccache.get_query_results();
+        if (output_file.empty()) {
+            gavc.set_path_to_download(std::filesystem::current_path());
         }
 
-        result = OK;
+        gavc();
+
+        versions_      = gavc.get_versions();
+        query_results_ = gavc.get_query_results();
     }
-    catch (piel::cmd::errors::unable_to_parse_maven_metadata&) {
-        throw Error("Unable to parse maven metadata!");
+    else {
+        piel::cmd::GAVCCache gavccache(
+            server_api_access_token,
+            server_url,
+            server_repository,
+            query,
+            have_to_download_results,
+            cache_path,
+            output_file,
+            notifications_file,
+            max_attempts,
+            retry_timeout_s,
+            force_offline,
+            have_to_delete_results,
+            have_to_delete_versions
+        );
+
+        // Suppress output
+        gavccache.setup_iostreams(cout_stub.get(), cerr_stub.get(), cin_stub.get());
+
+        if (output_file.empty()) {
+            gavccache.set_path_to_download(std::filesystem::current_path());
+        }
+
+        gavccache();
+
+        versions_       = gavccache.get_versions();
+        query_results_  = gavccache.get_query_results();
     }
-    catch (piel::cmd::errors::no_server_maven_metadata& e) {
-        throw Error("No server maven metadata!");
-    }
-    catch (piel::cmd::errors::error_processing_version& e) {
-        throw Error("Error on processing version!");
-    }
-    catch (piel::cmd::errors::cant_get_maven_metadata& ) {
-        throw Error("Can't get maven metadata!");
-    }
-    catch (piel::cmd::errors::cant_find_version_for_query& ) {
-        throw Error("No version for query!");
-    }
-    catch (piel::cmd::errors::gavc_download_file_error& ) {
-        throw Error("File download error!");
-    }
-    catch (piel::cmd::errors::gavc_delete_remote_file_error& e) {
-        throw Error("Error on delete remote file!");
-    }
-    catch (piel::cmd::errors::cache_no_cache_for_query& e) {
-        throw Error("No cached data for query!");
-    }
-    catch (piel::cmd::errors::cache_no_file_for_classifier& e) {
-        throw Error("No cached data for classifier!");
-    }
-    catch (piel::cmd::errors::cache_not_valid_file& e) {
-        throw Error("Not valid file in cache!");
-    }
+
+    result = OK;
 
     return result;
 }

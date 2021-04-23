@@ -61,32 +61,17 @@ int Upload::perform(std::string query_str) {
         return result;
     }
 
-    try
-    {
-        piel::cmd::Upload upload;
+    piel::cmd::Upload upload;
 
-        upload.set_server_url(server_url);
-        upload.set_server_api_access_token(server_api_access_token);
-        upload.set_server_repository(server_repository);
-        upload.set_query(query);
-        upload.set_classifiers(result_parse->get_data());
+    upload.set_server_url(server_url);
+    upload.set_server_api_access_token(server_api_access_token);
+    upload.set_server_repository(server_repository);
+    upload.set_query(query);
+    upload.set_classifiers(result_parse->get_data());
 
-        upload();
+    upload();
 
-        result = OK;
-    }
-    catch (const piel::cmd::errors::nothing_to_upload&) {
-        throw Error("Nothing to upload!");
-    }
-    catch (const piel::cmd::errors::file_upload_error&) {
-        throw Error("File upload error!");
-    }
-    catch (const piel::cmd::errors::pom_upload_error&) {
-        throw Error("POM upload error!");
-    }
-    catch (const piel::cmd::errors::uploading_checksum_error& e) {
-        throw Error("Checksum upload error!");
-    }
+    result = OK;
 
     return result;
 }
