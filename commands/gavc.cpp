@@ -48,6 +48,9 @@
 #include <mavenmetadata.h>
 #include <artbaseapihandlers.h>
 
+#include <SleepFor.hpp>
+#include <Retrier.hpp>
+
 #include <boost_property_tree_ext.hpp>
 #include <boost/algorithm/string.hpp>
 
@@ -512,34 +515,21 @@ void GAVC::process_versions(const std::vector<std::string>& versions_to_process)
     });
 }
 
+
 void GAVC::operator()()
 {
-    unsigned int        attempt = 0;
-    const unsigned int  max_attempts = std::max(1u, max_attempts_);
-    const unsigned int  retry_timeout = std::max(5u, retry_timeout_s_);
-
     std::vector<std::string> versions_to_process;
 
-    while(true) {
-        try {
-            LOGT << "GAVC query attempt: " << attempt << " from: " << max_attempts << " start." << ELOG;
-
+    pl::Retrier<pl::SleepFor<> >(
+        [this, &versions_to_process] (auto attempt, auto max) -> bool {
+            LOGT << "GAVC query attempt: " << attempt << " from: " << max << ELOG;
             versions_to_process = get_versions_to_process();
             process_versions(versions_to_process);
-
-            LOGT << "GAVC query attempt: " << attempt << " success." <<  ELOG;
-            break;
-        } catch (...) {
-            LOGT << "GAVCCache query attempt: " << attempt << " from: " << max_attempts << " failed." <<  ELOG;
-            if (attempt++ >= max_attempts) {
-                LOGT << "GAVCCache rethrow." << ELOG;
-                throw;
-            } else {
-                LOGT << "GAVCCache sleep: " << retry_timeout << "s." <<  ELOG;
-                sleep(retry_timeout);
-            }
-        }
-    }
+            return true;
+        },
+        std::max(1u, max_attempts_),
+        std::max(5u, retry_timeout_s_)
+    )();
 
     LOGT << "Post check..." << ELOG;
     if (versions_to_process.empty()) {

@@ -54,6 +54,9 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 
+#include "SleepFor.hpp"
+#include "Retrier.hpp"
+
 namespace al = art::lib;
 namespace pl = piel::lib;
 namespace fs = std::filesystem;
@@ -553,30 +556,15 @@ void GAVCCache::perform()
 
 void GAVCCache::operator()()
 {
-    unsigned int        attempt = 0;
-    const unsigned int  max_attempts  = std::max(1u, max_attempts_);
-    const unsigned int  retry_timeout = std::max(5u, retry_timeout_s_);
-    while(true) {
-        try {
-            LOGT << "GAVCCache query attempt: " << attempt << " from: " << max_attempts << " start." << ELOG;
+    pl::Retrier<pl::SleepFor<> >(
+        [this] (auto attempt, auto max) -> bool {
+            LOGT << "GAVCCache query attempt: " << attempt << " from: " << max << ELOG;
             perform();
-            LOGT << "GAVCCache query attempt: " << attempt << " success." <<  ELOG;
-            break;
-        } catch (errors::cache_folder_does_not_exist&) {
-            break;
-        } catch (errors::cant_find_version_for_query&) {
-            throw;
-        } catch (...) {
-            LOGT << "GAVCCache query attempt: " << attempt << " from: " << max_attempts << " failed." <<  ELOG;
-            if (attempt++ >= max_attempts) {
-                LOGT << "GAVCCache rethrow." << ELOG;
-                throw;
-            } else {
-                LOGT << "GAVCCache sleep: " << retry_timeout << "s." <<  ELOG;
-                sleep(retry_timeout);
-            }
-        }
-    }
+            return true;
+        },
+        std::max(1u, max_attempts_),
+        std::max(5u, retry_timeout_s_)
+    )();
 }
 
 void GAVCCache::set_path_to_download(const std::filesystem::path& path)
