@@ -246,6 +246,79 @@ void GAVC::delete_file(const std::string& delete_uri) const
     }
 }
 
+std::string GAVC::extract_classifier_from_object_id(const std::string& server_object_id) const {
+
+    std::string object_classifier = GAVCConstants::empty_classifier;
+    LOGD << "Extract classifier from the object id." << ELOG;
+
+    std::vector<std::string> server_object_id_parts;
+    boost::split(server_object_id_parts, server_object_id, boost::is_any_of("-"));
+
+    if (server_object_id_parts.size() > 2)
+    {
+        object_classifier = server_object_id_parts[server_object_id_parts.size()-1];
+        if (object_classifier.find('.') != std::string::npos)
+        {
+            object_classifier = object_classifier.substr(0, object_classifier.find('.'));
+        }
+    }
+
+    return object_classifier;
+}
+
+std::string GAVC::classifier_significant_part(const std::string& query_classifier) const {
+
+    std::vector<std::string> query_classifier_parts;
+    boost::split(query_classifier_parts, query_classifier, boost::is_any_of("."));
+
+    return query_classifier_parts[0];
+}
+
+
+std::optional<std::string> GAVC::object_classifier_if_needed_object_id(const std::string& input_query_classifier, const std::string& server_object_id) const {
+
+    auto query_classifier   = classifier_significant_part(input_query_classifier);
+    auto object_classifier  = extract_classifier_from_object_id(server_object_id);
+
+    LOGT << "query classifier: "    << query_classifier     << ELOG;
+    LOGT << "object classifier: "   << object_classifier    << ELOG;
+
+    if (object_classifier != GAVCConstants::empty_classifier &&
+        query_classifier  != GAVCConstants::empty_classifier &&
+        !query_classifier.empty() &&
+        object_classifier != query_classifier) {
+        LOGD << "Skip the object because the query classifier: '"   << query_classifier << "'"
+             << " is not matches recieved object classifier: '"     << object_classifier << "'" << ELOG;
+        return std::nullopt;
+    }
+
+    return object_classifier;
+}
+
+void GAVC::handle_actual_object(const std::string& object_id, const std::string& object_path) {
+
+    list_of_actual_files_.push_back(object_path);
+
+    if (cache_mode_) {
+        cout() << "c " << object_id << std::endl;
+    } else {
+        cout() << "+ " << object_id << std::endl;
+    }
+}
+
+pl::Properties GAVC::create_object_properties(const pt::ptree::value_type& obj, const std::string& server_object_id, const std::string& object_classifier) {
+
+    auto server_checksums       = get_server_checksums(obj.second, "checksums");
+    //auto original_checksums    = get_server_checksums(obj.second, "originalChecksums");
+
+    auto object_properties      = pl::Properties::from_map(server_checksums);
+
+    object_properties.set(GAVCConstants::object_id_property, server_object_id);
+    object_properties.set(GAVCConstants::object_classifier_property, object_classifier);
+
+    return object_properties;
+}
+
 void GAVC::on_object(const pt::ptree::value_type& obj, const std::string& version, const std::string& query_classifier)
 {
     LOGT << "on_object version: " << version << " query classifier: " << query_classifier << ELOG;
@@ -253,65 +326,40 @@ void GAVC::on_object(const pt::ptree::value_type& obj, const std::string& versio
     auto op_download_uri = pt::find_value(obj.second, pt::FindPropertyHelper("downloadUri"));
     if (!op_download_uri)
     {
-        LOGF << "Can't find downloadUri property!" << ELOG;
-        return;
+        throw std::runtime_error("GAVC query result format error! Can't find 'downloadUri' property!");
     }
 
     auto op_path = pt::find_value(obj.second, pt::FindPropertyHelper("path"));
     if (!op_path)
     {
-        LOGF << "Can't find path property!" << ELOG;
-        return;
+        throw std::runtime_error("GAVC query result format error! Can't find 'path' property!");
     }
 
-    fs::path server_object_path = *op_path;
+    fs::path    server_object_path  = *op_path;
+    std::string server_object_id    = server_object_path.filename().string();
+
+    LOGT << "server object path: "  << server_object_path << ELOG;
+    LOGT << "server object id: "    << server_object_id << ELOG;
+
+    auto object_classifier = object_classifier_if_needed_object_id(query_classifier, server_object_id);
+    if (!object_classifier) {
+        return;
+    }
 
     fs::path path        = output_file_.empty()         ?   *op_path     : output_file_;
     fs::path object_path = path_to_download_.empty()    ?   path         : path_to_download_ / path.filename()   ;
 
-    LOGT << "object path: "     << object_path                  << ELOG;
+    std::string object_id     = object_path.filename().string();
 
-    std::string object_id       = server_object_path.filename().string();
-
-    LOGT << "object id: "       << object_id                    << ELOG;
-
-    std::string object_classifier = GAVCConstants::empty_classifier;
-    LOGD << "Extract classifier from the object id." << ELOG;
-
-    std::vector<std::string> query_classifier_parts;
-    boost::split(query_classifier_parts, query_classifier, boost::is_any_of("."));
-
-    std::vector<std::string> object_id_parts;
-    boost::split(object_id_parts, object_id, boost::is_any_of("-"));
-
-    if (object_id_parts.size() > 2)
-    {
-        object_classifier = object_id_parts[object_id_parts.size()-1];
-        if (object_classifier.find('.') != std::string::npos)
-        {
-            object_classifier = object_classifier.substr(0, object_classifier.find('.'));
-        }
-    }
-
-    LOGT << "object classifier: " << object_classifier << ELOG;
-    LOGT << "query classifier: " << query_classifier_parts[0] << ELOG;
-
-    if (object_classifier != GAVCConstants::empty_classifier &&
-        query_classifier  != GAVCConstants::empty_classifier &&
-        !query_classifier_parts[0].empty() &&
-        object_classifier != query_classifier_parts[0]) {
-        LOGD << "Skip object because query classifier: "    << query_classifier_parts[0]
-             << " is not equal to object classifier: "      << object_classifier << ELOG;
-        return;
-    }
-
-    auto server_checksums      = get_server_checksums(obj.second, "checksums");
-    //auto original_checksums    = get_server_checksums(obj.second, "originalChecksums");
+    LOGT << "object path: "   << object_path << ELOG;
+    LOGT << "object id: "     << object_id   << ELOG;
 
     cout() << "? " << object_id << "\r";
     cout().flush();
 
-    bool local_file_is_actual   = (cache_mode_) ? validate_local_file(object_path, pl::Properties::from_map(server_checksums)) : false;
+    auto object_properties      = create_object_properties(obj, server_object_id, *object_classifier);
+
+    bool local_file_is_actual   = (cache_mode_) ? validate_local_file(object_path, object_properties) : false;
     bool do_download            = !local_file_is_actual;
 
     if (have_to_download_results_ && do_download)
@@ -325,32 +373,15 @@ void GAVC::on_object(const pt::ptree::value_type& obj, const std::string& versio
 
         download_file(object_path, object_id, *op_download_uri);
 
-        list_of_actual_files_.push_back(object_path);
-
-        if (cache_mode_) {
-            auto props = pl::Properties::from_map(server_checksums);
-
-            props.set(GAVCConstants::object_id_property, object_id);
-            props.set(GAVCConstants::object_classifier_property, object_classifier);
-
-            if (object_properties_handler_) {
-                object_properties_handler_(object_path, props);
-            }
-
-            cout() << "c " << object_id << std::endl;
-        } else {
-            cout() << "+ " << object_id << std::endl;
+        if (cache_mode_ && object_properties_handler_) {
+            object_properties_handler_(object_path, object_properties);
         }
+
+        handle_actual_object(object_id, object_path);
     }
     else if (local_file_is_actual)
     {
-        list_of_actual_files_.push_back(object_path);
-
-        if (cache_mode_) {
-            cout() << "c " << object_id << std::endl;
-        } else {
-            cout() << "+ " << object_id << std::endl;
-        }
+        handle_actual_object(object_id, object_path);
     }
     else
     {
@@ -365,10 +396,10 @@ void GAVC::on_object(const pt::ptree::value_type& obj, const std::string& versio
     }
 
     LOGT << "Add query result. { object path: " << object_path
-            << " classifier: " << object_classifier
+            << " classifier: " << *object_classifier
             << " version: " << version << " }" << ELOG;
 
-    query_results_.insert(std::make_pair(object_path, std::make_pair(object_classifier, version)));
+    query_results_.insert(std::make_pair(object_path, std::make_pair(*object_classifier, version)));
     list_of_queued_files_.push_back(object_path.string());
 }
 
@@ -381,7 +412,7 @@ void GAVC::on_aql_object(const pt::ptree::value_type& obj, const std::string& ve
     auto get_req_value = [&](auto name) {
         auto value = pt::find_value(obj.second, pt::FindPropertyHelper(name));
         if (!value) {
-            LOGF << "Can't find " << name << " property in aql results!" << ELOG;
+            throw std::runtime_error("AQL query result format error! Can't find required'" + name + "' property!");
         }
 
         return value;
@@ -439,7 +470,7 @@ std::vector<std::string> GAVC::get_versions_to_process() const
         query_.format_maven_metadata_url(server_url_, server_repository_), &download_metadata_handlers);
 
     try {
-    get_metadata_client.perform(true);
+        get_metadata_client.perform(true);
     } catch (...) {
         std::throw_with_nested(std::runtime_error("Error on getting maven metadata!"));
     }

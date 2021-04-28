@@ -91,9 +91,19 @@ protected:
     void on_object     (const boost::property_tree::ptree::value_type& obj, const std::string& version, const std::string& classifier);
     void on_aql_object (const boost::property_tree::ptree::value_type& obj, const std::string& version, const std::string& classifier);
 
+    piel::lib::Properties create_object_properties(
+            const boost::property_tree::ptree::value_type& obj,
+            const std::string& server_object_id, const std::string& object_classifier);
+
     std::map<std::string,std::string> get_server_checksums(const boost::property_tree::ptree& obj_tree, const std::string& section) const;
     void download_file(const std::filesystem::path& object_path, const std::string& object_id, const std::string& download_uri) const;
     void delete_file(const std::string& download_uri) const;
+
+    std::string extract_classifier_from_object_id(const std::string& server_object_id) const;
+    std::string classifier_significant_part(const std::string& query_classifier) const;
+    std::optional<std::string> object_classifier_if_needed_object_id(const std::string& query_classifier, const std::string& server_object_id) const;
+
+    void handle_actual_object(const std::string& object_id, const std::string& object_path);
 
 private:
     std::string server_url_;
