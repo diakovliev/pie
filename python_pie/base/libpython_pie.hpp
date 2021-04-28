@@ -31,7 +31,7 @@ BOOST_PYTHON_MODULE(MODULE_NAME)
 {
     using namespace boost::python;
 
-    register_exception_translator<Error>(&translate_exception);
+    register_exception_translator<std::exception>(&translate_exception);
 
     class_<std::vector<std::string> >("StringVec")
         .def(vector_indexing_suite<std::vector<std::string> >());
