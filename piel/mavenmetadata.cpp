@@ -199,7 +199,7 @@ std::optional<MavenMetadata> MavenMetadata::parse(std::istream& is)
 
 std::vector<std::string> MavenMetadata::versions_for(const GavcQuery& query) const
 {
-    return query.filter(versioning_.versions_);
+    return query.filtered(versioning_.versions_);
 }
 
 } } // namespace art::lib

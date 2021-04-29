@@ -31,6 +31,7 @@
 #include <gavccommand.h>
 #include <gavccachecommand.h>
 #include <gavccache.h>
+#include <GavcUtils.h>
 #include <gavccacheinit.h>
 #include <gavccacheclean.h>
 #include <logging.h>
@@ -52,7 +53,7 @@ GavcCacheCommand::GavcCacheCommand(Application *app, int argc, char **argv)
     , argv_(argv)
     , do_init_(false)
     , do_clean_(false)
-    , cache_path_(piel::cmd::utils::get_default_cache_path())
+    , cache_path_(utils::gavc::get_default_cache_path())
     , max_age_(default_age)
 {
 }
@@ -71,7 +72,7 @@ bool GavcCacheCommand::parse_arguments()
 {
     po::options_description desc("Query options");
     desc.add_options()
-        ("cache-path",      po::value<std::string>(&cache_path_),   (std::string("Cache location. Can be set using GAVC_CACHE environment variable. Default: ") + piel::cmd::utils::get_default_cache_path()).c_str())
+        ("cache-path",      po::value<std::string>(&cache_path_),   (std::string("Cache location. Can be set using GAVC_CACHE environment variable. Default: ") + utils::gavc::get_default_cache_path()).c_str())
         ("init",                                                    (std::string("Perform cache initialization.")).c_str())
         ("clean",                                                   (std::string("Perform cache clean.")).c_str())
         ("max-age-days",    po::value<int>(&max_age_),              (std::string("(clean) Max age of elements in days. Default: ") + std::to_string(default_age)).c_str())

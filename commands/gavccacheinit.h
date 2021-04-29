@@ -26,25 +26,23 @@
  *
  */
 
-#ifndef GAVCCACHEINIT_H_
-#define GAVCCACHEINIT_H_
+#pragma once
 
 #include <iostreamsholder.h>
 
-namespace piel { namespace cmd {
+namespace piel::cmd {
 
-class GAVCCacheInit: public piel::lib::IOstreamsHolder
-{
-public:
-    GAVCCacheInit(const std::string& cache_path);
+    class GAVCCacheInit: public piel::lib::IOstreamsHolder
+    {
+    public:
+        GAVCCacheInit(const std::string& cache_path);
+        virtual ~GAVCCacheInit() = default;
 
-    virtual ~GAVCCacheInit();
-    void operator()();
+        void operator()();
 
-private:
-    std::string cache_path_;
-};
+    private:
+        std::string cache_path_;
 
-} } // namespace piel::cmd
+    };
 
-#endif /* GAVCCACHEINIT_H_ */
+} // namespace piel::cmd

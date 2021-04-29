@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, diakovliev
+ * Copyright (c) 2018, 2021, diakovliev
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,37 +28,57 @@
 
 #pragma once
 
-#include <gavcquery.h>
-#include <uploadfilesspec.h>
-#include <artdeployartifacthandlers.h>
+#include <filesystem>
+#include <functional>
 
-#include <commands/base_errors.h>
-
-#include "QueryContext.h"
-#include "QueryOperation.h"
+#include <properties.h>
 
 namespace piel::cmd {
 
-    class Upload: public QueryOperation
-    {
+    namespace fs = std::filesystem;
+    namespace pl = piel::lib;
+
+    class CacheVersion;
+
+    class CacheObject {
     public:
-        Upload(const QueryContext *context);
-        virtual ~Upload();
+        using Filter = std::function<bool(const CacheObject&)>;
 
-        void operator()();
+        CacheObject(const CacheVersion* parent, fs::path object);
 
-        void set_classifiers(const al::ufs::UFSVector& classifiers);
+        fs::path object() const;
+        fs::path properties_file() const;
+
+        static fs::path properties_file(const fs::path& object_path);
+        static bool is_object_properties(const fs::path& file_path);
+        static bool is_object(const fs::path& object_path);
+        static void write_object_properties(const fs::path& object_path, const pl::Properties& props);
+
+        pl::Properties properties() const;
+        std::string classifier() const;
+
+        bool is_valid() const;
+
+        const CacheVersion* parent() const;
+
+        void update_last_access_time() const;
+        std::tm load_last_access_time() const;
+
+        std::string load_classifier() const;
+
+        void store_properties(const pl::Properties& props) const;
+        void delete_object() const;
+
+        void uncache_object_to(const fs::path& destination) const;
 
     protected:
-
-        static void upload_checksum_for(al::ArtDeployArtifactHandlers *deploy_handlers, const std::string& checksum_name);
-        static void upload_checksums_for(al::ArtDeployArtifactHandlers *deploy_handlers);
-        void setup_deploy_handlers_by_context(al::ArtDeployArtifactHandlers *deploy_handlers);
-        void upload_object(std::string op_name, std::function<void(al::ArtDeployArtifactHandlers*)> setup_handlers);
-        void deploy_pom();
+        static std::string now_string();
 
     private:
-        art::lib::ufs::UFSVector classifiers_vector_;
+        const CacheVersion* parent_;
+
+        fs::path object_;
+
     };
 
 } // namespace piel::cmd

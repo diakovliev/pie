@@ -81,27 +81,28 @@ int Gavc::perform(std::string query_str) {
     auto have_to_delete_versions    = Utils::string2bool(get_param(PARAM_DELETE_VERSIONS, ""));
     auto disable_cache              = Utils::string2bool(get_param(PARAM_DISABLE_CACHE, ""));
 
-    auto notifications_file         = "";
+    auto notifications_file         = std::string();
 
     auto cout_stub  = std::make_unique<std::ostringstream>();
     auto cerr_stub  = std::make_unique<std::ostringstream>();
     auto cin_stub   = std::make_unique<std::istringstream>();
 
+    piel::cmd::QueryContext context(server_api_access_token,
+        server_url,
+        server_repository,
+        query);
+
+    piel::cmd::DownloadOperationParameters params(have_to_download_results,
+        have_to_delete_results,
+        have_to_delete_versions,
+        max_attempts,
+        retry_timeout_s);
+
     if (disable_cache) {
-        piel::cmd::GAVC gavc(
-            server_api_access_token,
-            server_url,
-            server_repository,
-            query,
-            have_to_download_results,
-            output_file,
-            notifications_file,
-            max_attempts,
-            retry_timeout_s,
-            force_offline,
-            have_to_delete_results,
-            have_to_delete_versions
-        );
+        piel::cmd::GAVC gavc(&context,
+                         &params,
+                         output_file,
+                         notifications_file);
 
         // Suppress output
         gavc.setup_iostreams(cout_stub.get(), cerr_stub.get(), cin_stub.get());
@@ -116,21 +117,12 @@ int Gavc::perform(std::string query_str) {
         query_results_ = gavc.get_query_results();
     }
     else {
-        piel::cmd::GAVCCache gavccache(
-            server_api_access_token,
-            server_url,
-            server_repository,
-            query,
-            have_to_download_results,
-            cache_path,
-            output_file,
-            notifications_file,
-            max_attempts,
-            retry_timeout_s,
-            force_offline,
-            have_to_delete_results,
-            have_to_delete_versions
-        );
+        piel::cmd::GAVCCache gavccache(&context,
+                         &params,
+                         cache_path,
+                         output_file,
+                         notifications_file,
+                         force_offline);
 
         // Suppress output
         gavccache.setup_iostreams(cout_stub.get(), cerr_stub.get(), cin_stub.get());

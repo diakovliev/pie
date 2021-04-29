@@ -30,51 +30,22 @@
  *
  */
 
-#include <ctime>
-#include <iostream>
-#include <iomanip>
-#include <cstdlib>
-#include <vector>
-#include <filesystem>
-
-#include <gavccache.h>
 #include <gavccacheinit.h>
-#include "gavcconstants.h"
 
-#include <logging.h>
+#include "CacheDirectory.h"
 
-#include <properties.h>
+namespace piel::cmd {
 
-#include <boost_property_tree_ext.hpp>
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/predicate.hpp>
-
-#include <ctime>
-
-namespace al = art::lib;
-namespace pl = piel::lib;
-namespace fs = std::filesystem;
-namespace pt = boost::property_tree;
-namespace po = boost::program_options;
-
-namespace piel { namespace cmd {
-
-GAVCCacheInit::GAVCCacheInit(const std::string &cache_path)
-    : pl::IOstreamsHolder()
-    , cache_path_(cache_path)
-{
-}
-
-GAVCCacheInit::~GAVCCacheInit()
-{
-}
-
-void GAVCCacheInit::operator()()
-{
-    if (!GAVCCache::validate(cache_path_)) {
-        fs::remove_all(cache_path_);
-        GAVCCache::init(cache_path_);
+    GAVCCacheInit::GAVCCacheInit(const std::string &cache_path)
+        : pl::IOstreamsHolder()
+        , cache_path_(cache_path)
+    {
     }
-}
 
-} } // namespace piel::cmd
+    void GAVCCacheInit::operator()()
+    {
+        CacheDirectory cache_dir(cache_path_);
+        cache_dir.reinit();
+    }
+
+} // namespace piel::cmd

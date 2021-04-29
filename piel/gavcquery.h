@@ -88,7 +88,7 @@ public:
     bool is_single_version_query() const;
     static bool is_single_version_query(const std::string& version);
 
-    std::vector<std::string> filter(const std::vector<std::string>& versions) const;
+    std::vector<std::string> filtered(const std::vector<std::string>& versions) const;
 
     std::string to_aql_path() const;
     std::string to_aql_name(bool pom) const;

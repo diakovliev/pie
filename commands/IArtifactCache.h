@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, diakovliev
+ * Copyright (c) 2021, diakovliev
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,37 +28,42 @@
 
 #pragma once
 
-#include <gavcquery.h>
-#include <uploadfilesspec.h>
-#include <artdeployartifacthandlers.h>
+#include <filesystem>
 
-#include <commands/base_errors.h>
-
-#include "QueryContext.h"
-#include "QueryOperation.h"
+#include "CacheObject.h"
 
 namespace piel::cmd {
 
-    class Upload: public QueryOperation
-    {
+    namespace fs = std::filesystem;
+
+    class IArtifactCache {
     public:
-        Upload(const QueryContext *context);
-        virtual ~Upload();
+        explicit IArtifactCache(fs::path cache_root);
+        IArtifactCache(const IArtifactCache&) = default;
 
-        void operator()();
+        virtual ~IArtifactCache() = default;
 
-        void set_classifiers(const al::ufs::UFSVector& classifiers);
+        fs::path cache_root() const;
+
+        virtual std::vector<std::string> versions() const;
+
+        void delete_version(const std::string& version) const;
+
+        CacheVersion load_version(const std::string& version) const;
+
+        std::vector<CacheObject> objects(CacheObject::Filter objects_filter = [](const auto&){return true;}) const;
 
     protected:
+        virtual fs::path metadata_path() const = 0;
 
-        static void upload_checksum_for(al::ArtDeployArtifactHandlers *deploy_handlers, const std::string& checksum_name);
-        static void upload_checksums_for(al::ArtDeployArtifactHandlers *deploy_handlers);
-        void setup_deploy_handlers_by_context(al::ArtDeployArtifactHandlers *deploy_handlers);
-        void upload_object(std::string op_name, std::function<void(al::ArtDeployArtifactHandlers*)> setup_handlers);
-        void deploy_pom();
+        fs::path artifact_path() const;
+
+        std::vector<CacheObject> version_objects(CacheObject::Filter objects_filter, const std::string& version) const;
+        fs::path version_root(const std::string& version) const;
 
     private:
-        art::lib::ufs::UFSVector classifiers_vector_;
+        fs::path cache_root_;
+
     };
 
-} // namespace piel::cmd
+}//namespace piel::cmd

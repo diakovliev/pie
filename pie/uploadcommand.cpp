@@ -160,14 +160,15 @@ bool UploadCommand::parse_arguments()
         return result;
     }
 
+    piel::cmd::QueryContext context(server_api_access_token_,
+        server_url_,
+        server_repository_,
+        query_);
+
     try
     {
-        piel::cmd::Upload upload;
+        piel::cmd::Upload upload(&context);
 
-        upload.set_server_url(server_url_);
-        upload.set_server_api_access_token(server_api_access_token_);
-        upload.set_server_repository(server_repository_);
-        upload.set_query(query_);
         upload.set_classifiers(classifier_vector_);
 
         upload();

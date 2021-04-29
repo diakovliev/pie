@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, diakovliev
+ * Copyright (c) 2018, 2021, diakovliev
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,37 +28,39 @@
 
 #pragma once
 
-#include <gavcquery.h>
-#include <uploadfilesspec.h>
-#include <artdeployartifacthandlers.h>
+#include <filesystem>
+#include <string>
+#include <vector>
 
-#include <commands/base_errors.h>
-
+#include "IArtifactCache.h"
+#include "gavc.h"
 #include "QueryContext.h"
-#include "QueryOperation.h"
+#include "CacheVersion.h"
 
 namespace piel::cmd {
 
-    class Upload: public QueryOperation
-    {
+    namespace fs = std::filesystem;
+    namespace al = art::lib;
+
+    class QueryCache: public IArtifactCache {
     public:
-        Upload(const QueryContext *context);
-        virtual ~Upload();
+        QueryCache(const QueryContext* context, fs::path cache_root, GAVC* gavc);
+        QueryCache(const QueryCache&) = default;
+        virtual ~QueryCache() = default;
 
-        void operator()();
+        const QueryContext *context() const;
 
-        void set_classifiers(const al::ufs::UFSVector& classifiers);
+        virtual std::vector<std::string> versions() const;
+        std::vector<CacheObject> cache_version_objects(const std::string& version) const;
 
-    protected:
+        std::vector<std::string> get_gavc_versions() const;
 
-        static void upload_checksum_for(al::ArtDeployArtifactHandlers *deploy_handlers, const std::string& checksum_name);
-        static void upload_checksums_for(al::ArtDeployArtifactHandlers *deploy_handlers);
-        void setup_deploy_handlers_by_context(al::ArtDeployArtifactHandlers *deploy_handlers);
-        void upload_object(std::string op_name, std::function<void(al::ArtDeployArtifactHandlers*)> setup_handlers);
-        void deploy_pom();
+        virtual fs::path metadata_path() const;
 
     private:
-        art::lib::ufs::UFSVector classifiers_vector_;
+        const QueryContext *context_;
+        GAVC *gavc_;
+
     };
 
 } // namespace piel::cmd

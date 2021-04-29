@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, diakovliev
+ * Copyright (c) 2021, diakovliev
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,18 +26,18 @@
  *
  */
 
-#include <command.h>
+#include "NonQueryCache.h"
 
-namespace piel { namespace cmd {
+namespace piel::cmd {
 
-Command::Command()
-{
+    NonQueryCache::NonQueryCache(fs::path cache_root, fs::path mm_path)
+        : IArtifactCache(cache_root)
+        , mm_path_(mm_path)
+    {
+    }
 
-}
+    /*virtual*/ fs::path NonQueryCache::metadata_path() const {
+        return mm_path_;
+    }
 
-Command::~Command()
-{
-
-}
-
-} } // namespace piel::cmd
+}//namespace piel::cmd

@@ -2,6 +2,7 @@
 
 # From ./gnb --root-shell
 
+apt update
 apt install -y libboost1.67-all-dev libcurl4-gnutls-dev libssl-dev python2-dev python3-dev ragel
 
 cdir=$(pwd)

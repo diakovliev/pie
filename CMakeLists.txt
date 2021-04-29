@@ -1,5 +1,5 @@
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -Wextra -Wno-unused-parameter -Wno-overloaded-virtual")
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Og -Wall -Wextra -Wno-unused-parameter -Wno-overloaded-virtual")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -Og -Wall -Wextra -Wno-unused-parameter -Wno-overloaded-virtual")
 
 # set(CMAKE_C_COMPILER /usr/bin/gcc)
 # set(CMAKE_CXX_COMPILER /usr/bin/g++)

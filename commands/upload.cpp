@@ -37,141 +37,121 @@
 #include <artdeployartifactchecksumhandlers.h>
 #include <artdeployartifacthandlers.h>
 
-namespace al = art::lib;
+namespace piel::cmd {
 
-namespace piel { namespace cmd {
+    namespace pl = piel::lib;
 
-Upload::Upload()
-    : server_url_()
-    , server_api_access_token_()
-    , server_repository_()
-    , query_()
-    , classifier_vector_()
-{
-}
 
-Upload::~Upload()
-{
-}
-
-// Also used by Push
-/*static*/ void Upload::upload_checksums_for(art::lib::ArtDeployArtifactHandlers *deploy_handlers, std::string checksum_name)
-{
-    art::lib::ArtDeployArtifactCheckSumHandlers deploy_checksum_handlers(deploy_handlers, checksum_name);
-    piel::lib::CurlEasyClient<art::lib::ArtDeployArtifactHandlers>
-            upload_checksum_client(deploy_checksum_handlers.gen_uri(), &deploy_checksum_handlers);
-
-    LOGD << "Upload checksum: " << checksum_name << " to: " << deploy_checksum_handlers.gen_uri() << ELOG;
-
-    try {
-        upload_checksum_client.perform(true);
-    } catch (...) {
-        std::throw_with_nested(std::runtime_error("Error on upload file " + checksum_name + " checksum!"));
-    }
-}
-
-const Upload* Upload::set_server_url(const std::string& url)
-{
-    server_url_ = url;
-    return this;
-}
-
-const Upload* Upload::set_server_api_access_token(const std::string& token)
-{
-    server_api_access_token_ = token;
-    return this;
-}
-
-const Upload* Upload::set_server_repository(const std::string& repo)
-{
-    server_repository_ = repo;
-    return this;
-}
-
-const Upload* Upload::set_query(const art::lib::GavcQuery &query)
-{
-    query_ = query;
-    return this;
-}
-
-const Upload* Upload::set_classifiers(const art::lib::ufs::UFSVector& classifiers)
-{
-    classifier_vector_ = classifiers;
-    return this;
-}
-
-void Upload::operator()()
-{
-    LOGT << "Classifiers vector:" << al::ufs::to_string(classifier_vector_) << ELOG;
-
-    if (classifier_vector_.empty())
+    Upload::Upload(const QueryContext *context)
+        : QueryOperation(context, nullptr)
+        , classifiers_vector_()
     {
-        throw std::runtime_error("Nothing to upload!");
     }
 
-    for (al::ufs::UFSVector::const_iterator it = classifier_vector_.begin(), end = classifier_vector_.end(); it != end; ++it)
+
+    Upload::~Upload()
     {
-        art::lib::ArtDeployArtifactHandlers deploy_handlers(server_api_access_token_);
+    }
 
-        deploy_handlers.set_url(server_url_);
-        deploy_handlers.set_repo(server_repository_);
-        deploy_handlers.set_path(query_.group_path());
-        deploy_handlers.set_name(query_.name());
-        deploy_handlers.set_version(query_.version());
-        deploy_handlers.set_classifier(al::ufs::to_classifier(*it));
-        deploy_handlers.file(it->file_name);
 
-        piel::lib::CurlEasyClient<art::lib::ArtDeployArtifactHandlers> upload_client(deploy_handlers.gen_uri(), &deploy_handlers);
+    void Upload::set_classifiers(const al::ufs::UFSVector& classifiers)
+    {
+        classifiers_vector_ = classifiers;
+    }
 
-        LOGD << "Upload: " << al::ufs::to_string(*it) << " to: " << deploy_handlers.gen_uri() << ELOG;
+
+    /*static*/ void Upload::upload_checksum_for(al::ArtDeployArtifactHandlers *deploy_handlers, const std::string& checksum_name)
+    {
+        al::ArtDeployArtifactCheckSumHandlers deploy_checksum_handlers(deploy_handlers, checksum_name);
+
+        pl::CurlEasyClient<al::ArtDeployArtifactHandlers>
+                upload_checksum_client(deploy_checksum_handlers.gen_uri(), &deploy_checksum_handlers);
+
+        LOGD << "Upload checksum: " << checksum_name << " to: " << deploy_checksum_handlers.gen_uri() << ELOG;
+
+        try {
+            upload_checksum_client.perform(true);
+        } catch (...) {
+            std::throw_with_nested(std::runtime_error("Error on upload file " + checksum_name + " checksum!"));
+        }
+    }
+
+
+    /*static*/ void Upload::upload_checksums_for(al::ArtDeployArtifactHandlers *deploy_handlers)
+    {
+        upload_checksum_for(deploy_handlers, al::ArtBaseConstants::checksums_md5);
+        upload_checksum_for(deploy_handlers, al::ArtBaseConstants::checksums_sha1);
+        upload_checksum_for(deploy_handlers, al::ArtBaseConstants::checksums_sha256);
+    }
+
+
+    void Upload::setup_deploy_handlers_by_context(al::ArtDeployArtifactHandlers *deploy_handlers)
+    {
+        deploy_handlers->set_url(context()->server_url());
+        deploy_handlers->set_repo(context()->repository());
+        deploy_handlers->set_path(context()->query().group_path());
+        deploy_handlers->set_name(context()->query().name());
+        deploy_handlers->set_version(context()->query().version());
+    }
+
+
+    void Upload::upload_object(std::string op_name, std::function<void(al::ArtDeployArtifactHandlers*)> setup_handlers) {
+
+        al::ArtDeployArtifactHandlers deploy_handlers(context()->token());
+
+        setup_deploy_handlers_by_context(&deploy_handlers);
+
+        setup_handlers(&deploy_handlers);
+
+        pl::CurlEasyClient<al::ArtDeployArtifactHandlers> upload_client(deploy_handlers.gen_uri(), &deploy_handlers);
+
+        LOGD << op_name << " to: " << deploy_handlers.gen_uri() << ELOG;
 
         try {
             upload_client.perform(true);
         } catch (...) {
-            std::throw_with_nested(std::runtime_error("Error on upload file: " + it->file_name + "!"));
+            std::throw_with_nested(std::runtime_error("Error on '" + op_name + "' to: " + deploy_handlers.gen_uri() + "!"));
         }
 
-        upload_checksums_for(&deploy_handlers, art::lib::ArtBaseConstants::checksums_md5);
-        upload_checksums_for(&deploy_handlers, art::lib::ArtBaseConstants::checksums_sha1);
-        upload_checksums_for(&deploy_handlers, art::lib::ArtBaseConstants::checksums_sha256);
+        upload_checksums_for(&deploy_handlers);
     }
 
-    deploy_pom();
-}
 
-void Upload::deploy_pom()
-{
-    piel::lib::MavenPom pom;
-    pom.set_group(query_.group());
-    pom.set_name(query_.name());
-    pom.set_version(query_.version());
+    void Upload::deploy_pom()
+    {
+        pl::MavenPom pom;
+        pom.set_group(context()->query().group());
+        pom.set_name(context()->query().name());
+        pom.set_version(context()->query().version());
 
-    std::ostringstream os;
-    pom.store(os);
+        std::ostringstream os;
+        pom.store(os);
 
-    art::lib::ArtDeployArtifactHandlers deploy_handlers(server_api_access_token_);
-
-    deploy_handlers.set_url(server_url_);
-    deploy_handlers.set_repo(server_repository_);
-    deploy_handlers.set_path(query_.group_path());
-    deploy_handlers.set_name(query_.name());
-    deploy_handlers.set_version(query_.version());
-    deploy_handlers.set_classifier(art::lib::ArtBaseConstants::pom_classifier);
-    deploy_handlers.push_input_stream(std::make_shared<std::istringstream>(os.str()));
-
-    piel::lib::CurlEasyClient<art::lib::ArtDeployArtifactHandlers> upload_client(deploy_handlers.gen_uri(), &deploy_handlers);
-
-    LOGD << "Upload POM to: " << deploy_handlers.gen_uri() << ELOG;
-
-    try {
-        upload_client.perform(true);
-    } catch (...) {
-        std::throw_with_nested(std::runtime_error("Error on upload POM to: " + deploy_handlers.gen_uri() + "!"));
+        upload_object("Upload POM", [&](auto *deploy_handlers) {
+            deploy_handlers->set_classifier(al::ArtBaseConstants::pom_classifier);
+            deploy_handlers->push_input_stream(std::make_shared<std::istringstream>(os.str()));
+        });
     }
 
-    upload_checksums_for(&deploy_handlers, art::lib::ArtBaseConstants::checksums_md5);
-    upload_checksums_for(&deploy_handlers, art::lib::ArtBaseConstants::checksums_sha1);
-    upload_checksums_for(&deploy_handlers, art::lib::ArtBaseConstants::checksums_sha256);
-}
 
-} } // namespace piel::cmd
+    void Upload::operator()()
+    {
+        LOGT << "Classifiers vector:" << al::ufs::to_string(classifiers_vector_) << ELOG;
+
+        if (classifiers_vector_.empty())
+        {
+            throw std::runtime_error("Nothing to upload!");
+        }
+
+        for (al::ufs::UFSVector::const_iterator it = classifiers_vector_.begin(), end = classifiers_vector_.end(); it != end; ++it)
+        {
+            upload_object("Upload", [&](auto *deploy_handlers) {
+                deploy_handlers->set_classifier(al::ufs::to_classifier(*it));
+                deploy_handlers->file(it->file_name);
+            });
+        }
+
+        deploy_pom();
+    }
+
+} // namespace piel::cmd

@@ -32,6 +32,7 @@
 #include <cstdlib>
 #include <gavccommand.h>
 #include <gavccache.h>
+#include <GavcUtils.h>
 #include <logging.h>
 #include <mavenmetadata.h>
 
@@ -56,7 +57,7 @@ GavcCommand::GavcCommand(Application *app, int argc, char **argv)
     , have_to_delete_results_(false)
     , have_to_delete_versions_(false)
     , output_file_()
-    , cache_path_(piel::cmd::utils::get_default_cache_path())
+    , cache_path_(utils::gavc::get_default_cache_path())
     , disable_cache_(false)
     , notifications_file_()
     , max_attempts_(3)
@@ -87,7 +88,7 @@ bool GavcCommand::parse_arguments()
         ("delete,x",                                                            "Delete query results from the server (delete files). Have sence only in online mode.")
         ("delete-versions,X",                                                   "Delete query results from the server (delete whole versions). Have sence only in online mode.")
         ("output,o",        po::value<std::string>(&output_file_),              "Output file name. Be careful, it will cause unexpected behavoiur if the query result is set.")
-        ("cache-path",      po::value<std::string>(&cache_path_),               (std::string("Cache path. Can be set using GAVC_CACHE environment variable. Default: ") + piel::cmd::utils::get_default_cache_path()).c_str())
+        ("cache-path",      po::value<std::string>(&cache_path_),               (std::string("Cache path. Can be set using GAVC_CACHE environment variable. Default: ") + utils::gavc::get_default_cache_path()).c_str())
         ("disable-cache",                                                       "Do not use local cache (enabled by default).")
         ("notifications,n", po::value<std::string>(&notifications_file_),       "If specified, PIE will generate notifications file with actions details.")
         ("max-attempts",    po::value<unsigned int>(&max_attempts_),            "Max attempts on IO errors.")
@@ -171,20 +172,23 @@ void GavcCommand::write_files_list(const piel::cmd::GAVC::paths_list& files_list
         return result;
     }
 
+    piel::cmd::QueryContext context(server_api_access_token_,
+        server_url_,
+        server_repository_,
+        query_);
+
+    piel::cmd::DownloadOperationParameters params(have_to_download_results_,
+        have_to_delete_results_,
+        have_to_delete_versions_,
+        max_attempts_,
+        retry_timeout_s_);
+
     try {
         if (disable_cache_) {
-            piel::cmd::GAVC gavc(server_api_access_token_,
-                             server_url_,
-                             server_repository_,
-                             query_,
-                             have_to_download_results_,
+            piel::cmd::GAVC gavc(&context,
+                             &params,
                              output_file_,
-                             notifications_file_,
-                             max_attempts_,
-                             retry_timeout_s_,
-                             force_offline_,
-                             have_to_delete_results_,
-                             have_to_delete_versions_);
+                             notifications_file_);
 
             if (output_file_.empty()) {
                 gavc.set_path_to_download(std::filesystem::current_path());
@@ -195,19 +199,12 @@ void GavcCommand::write_files_list(const piel::cmd::GAVC::paths_list& files_list
             write_files_list(gavc.get_list_of_queued_files());
         }
         else {
-            piel::cmd::GAVCCache gavccache(server_api_access_token_,
-                             server_url_,
-                             server_repository_,
-                             query_,
-                             have_to_download_results_,
+            piel::cmd::GAVCCache gavccache(&context,
+                             &params,
                              cache_path_,
                              output_file_,
                              notifications_file_,
-                             max_attempts_,
-                             retry_timeout_s_,
-                             force_offline_,
-                             have_to_delete_results_,
-                             have_to_delete_versions_);
+                             force_offline_);
 
             if (output_file_.empty()) {
                 gavccache.set_path_to_download(std::filesystem::current_path());

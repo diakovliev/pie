@@ -253,7 +253,7 @@ std::string GavcQuery::format_maven_metadata_path(const std::string& repository)
 }
 
 
-std::vector<std::string> GavcQuery::filter(const std::vector<std::string>& versions) const {
+std::vector<std::string> GavcQuery::filtered(const std::vector<std::string>& versions) const {
     std::vector<std::string> result = versions;
 
     auto data = query_version_data();

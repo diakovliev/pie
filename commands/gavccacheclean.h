@@ -26,31 +26,24 @@
  *
  */
 
-#ifndef GAVCCACHECLEAN_H_
-#define GAVCCACHECLEAN_H_
+#pragma once
 
-#include <filesystem>
 #include <iostreamsholder.h>
 
-namespace piel { namespace cmd {
+namespace piel::cmd {
 
-class GAVCCacheClean: public piel::lib::IOstreamsHolder
-{
-public:
-    GAVCCacheClean( const std::string& cache_path
-         , int max_age);
+    class GAVCCacheClean: public piel::lib::IOstreamsHolder
+    {
+    public:
+        GAVCCacheClean( const std::string& cache_path, int max_age);
+        virtual ~GAVCCacheClean() = default;
 
-    virtual ~GAVCCacheClean();
-    void operator()();
+        void operator()();
 
-private:
-    bool clean(const std::filesystem::path& path);
+    private:
+        std::string cache_path_;
+        int         max_age_;
 
-private:
-    std::string cache_path_;
-    int         max_age_;
-};
+    };
 
-} } // namespace piel::cmd
-
-#endif /* GAVCCACHECLEAN_H_ */
+} // namespace piel::cmd

@@ -28,32 +28,27 @@
 
 #pragma once
 
-//#ifndef GAVCCONSTANTS_H_
-//#define GAVCCONSTANTS_H_
-
 #include <string>
 #include <ctime>
 
-namespace piel { namespace cmd {
+namespace piel::cmd {
 
-struct GAVCConstants {
+    struct GAVCConstants {
 
-    static const std::string empty_classifier;
-    static const std::string properties_ext;
-    static const std::string object_id_property;
-    static const std::string object_classifier_property;
+        static const std::string empty_classifier;
+        static const std::string properties_ext;
+        static const std::string object_id_property;
+        static const std::string object_classifier_property;
 
 
-    static const std::string cache_version;
-    static const std::string cache_version_property;
-    static const std::string cache_properties_filename;
+        static const std::string cache_version;
+        static const std::string cache_version_property;
+        static const std::string cache_properties_filename;
 
-    static const std::string last_access_time_property;
-    static const std::string last_access_time_format;
+        static const std::string last_access_time_property;
+        static const std::string last_access_time_format;
 
-    static const int seconds_in_day;
-};
+        static const int seconds_in_day;
+    };
 
-} } // namespace piel::cmd
-
-//#endif /* GAVCCONSTANTS_H_ */
+} // namespace piel::cmd

@@ -61,12 +61,13 @@ int Upload::perform(std::string query_str) {
         return result;
     }
 
-    piel::cmd::Upload upload;
+    piel::cmd::QueryContext context(server_api_access_token,
+        server_url,
+        server_repository,
+        query);
 
-    upload.set_server_url(server_url);
-    upload.set_server_api_access_token(server_api_access_token);
-    upload.set_server_repository(server_repository);
-    upload.set_query(query);
+    piel::cmd::Upload upload(&context);
+
     upload.set_classifiers(result_parse->get_data());
 
     upload();

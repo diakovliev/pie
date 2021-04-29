@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, diakovliev
+ * Copyright (c) 2021, diakovliev
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,37 +28,46 @@
 
 #pragma once
 
-#include <gavcquery.h>
-#include <uploadfilesspec.h>
-#include <artdeployartifacthandlers.h>
+#include <cstring>
+#include <string>
+#include <vector>
 
-#include <commands/base_errors.h>
+namespace utils::string {
 
-#include "QueryContext.h"
-#include "QueryOperation.h"
+    std::string trim(const std::string& s);
 
-namespace piel::cmd {
+    bool startswith(const std::string& s, const char pfx);
+    bool startswith(const std::string& s, const std::string& pfx);
+    bool endswith(const std::string& s, const std::string& sfx);
 
-    class Upload: public QueryOperation
-    {
-    public:
-        Upload(const QueryContext *context);
-        virtual ~Upload();
-
-        void operator()();
-
-        void set_classifiers(const al::ufs::UFSVector& classifiers);
-
-    protected:
-
-        static void upload_checksum_for(al::ArtDeployArtifactHandlers *deploy_handlers, const std::string& checksum_name);
-        static void upload_checksums_for(al::ArtDeployArtifactHandlers *deploy_handlers);
-        void setup_deploy_handlers_by_context(al::ArtDeployArtifactHandlers *deploy_handlers);
-        void upload_object(std::string op_name, std::function<void(al::ArtDeployArtifactHandlers*)> setup_handlers);
-        void deploy_pom();
-
-    private:
-        art::lib::ufs::UFSVector classifiers_vector_;
+    enum SplitDelimiterPolicy {
+        SplitDropDelimiter,
+        SplitKeepDelimiterIn1st,
+        SplitKeepDelimiterIn2nd,
     };
 
-} // namespace piel::cmd
+    std::pair<std::string,std::string> split(
+            const char delimiter,
+            const std::string& s,
+            bool do_trim=true,
+            SplitDelimiterPolicy policy = SplitDropDelimiter);
+
+    std::vector<std::string> split2vec(
+            const char delimiter,
+            const std::string& s,
+            bool do_trim=true,
+            SplitDelimiterPolicy policy = SplitDropDelimiter);
+
+    std::string escaped(const std::string& s);
+
+
+    template <typename ...Args>
+    std::string format(std::string format, Args && ...args)
+    {
+        auto size = std::snprintf(nullptr, 0, format.c_str(), std::forward<Args>(args)...);
+        std::string output(size + 1, '\0');
+        std::sprintf(&output[0], format.c_str(), std::forward<Args>(args)...);
+        return output;
+    }
+
+}//namespace utils::string

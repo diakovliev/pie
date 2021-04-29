@@ -26,92 +26,55 @@
  *
  */
 
-#ifndef GAVCCACHE_H_
-#define GAVCCACHE_H_
+#pragma once
 
 #include <gavc.h>
 
 #include <commands/base_errors.h>
 
-namespace piel { namespace cmd {
+#include "GavcUtils.h"
 
-namespace utils {
-std::string get_default_cache_path();
-}//namespace utils
+namespace piel::cmd {
 
-class GAVCCache: public piel::lib::IOstreamsHolder
-{
-public:
-    GAVCCache(  const std::string& server_api_access_token
-         , const std::string& server_url
-         , const std::string& server_repository
-         , const art::lib::GavcQuery& query
-         , const bool have_to_download_results
-         , const std::string& cache_path = std::string()
-         , const std::string& output_file = std::string()
-         , const std::string& notifications_file = std::string()
-         , unsigned int max_attempts = 3
-         , unsigned int retry_timeout_s = 5
-         , bool force_offline = false
-         , bool have_to_delete_resuts = false
-         , bool have_to_delete_versions = false);
+    class GAVCCache: public QueryOperation, public piel::lib::IOstreamsHolder
+    {
+    public:
+        GAVCCache( const QueryContext *context
+             , const QueryOperationParameters *params
+             , const std::string& cache_path = std::string()
+             , const std::string& output_file = std::string()
+             , const std::string& notifications_file = std::string()
+             , bool force_offline = false);
 
-    virtual ~GAVCCache();
+        virtual ~GAVCCache() = default;
 
-    void operator()();
+        void operator()();
 
-    void set_path_to_download(const std::filesystem::path& path);
-    std::filesystem::path get_path_to_download() const;
+        void set_path_to_download(const std::filesystem::path& path);
+        std::filesystem::path get_path_to_download() const;
 
-    std::vector<std::string> get_cached_versions(const std::string &path) const;
-    GAVC::paths_list get_cached_files_list(const std::vector<std::string> &versions_to_process, const std::string &path);
-    void copy_file_list(GAVC::paths_list &file_list);
-    std::vector<std::string> get_versions() const;
+        void copy_file_list(GAVC::paths_list &file_list);
+        std::vector<std::string> get_versions() const;
 
-    std::vector<std::string> get_cached_classifiers_list(const std::string& artifacts_cache);
-    std::string find_file_for_classifier(const std::string& artifacts_cache, const std::string& classifier);
+        GAVC::query_results get_query_results() const;
+        GAVC::paths_list get_list_of_queued_files() const;
 
-    static void update_last_access_time(const std::filesystem::path& cache_object_path);
-    static std::tm get_last_access_time(const std::filesystem::path& cache_object_path);
+    protected:
+        void perform();
+        static std::string now_string();
+        bool is_force_offline() const;
 
-    static void init(const std::string& cache_path);
-    static bool validate(const std::string& cache_path);
+    private:
+        std::filesystem::path path_to_download_;
+        std::string output_file_;
+        std::string cache_path_;
+        std::string notifications_file_;
+        bool force_offline_;
 
-    GAVC::query_results get_query_results() const;
-    GAVC::paths_list get_list_of_queued_files() const;
+        GAVC::query_results query_results_;
+        GAVC::paths_list list_of_queued_files_;
 
-protected:
-    void perform();
-    static std::string now_string();
-    bool is_force_offline() const;
-    static std::string cache_properties_file(const std::string& cache_path);
+        std::vector<std::string> versions_;
+    };
 
-    static piel::lib::Properties load_object_properties(const std::filesystem::path& object_path);
-    static void store_object_properties(const std::filesystem::path& object_path, const piel::lib::Properties& properties);
-    static void remove_object_properties(const std::filesystem::path& object_path);
-
-private:
-    std::string server_url_;
-    std::string server_api_access_token_;
-    std::string server_repository_;
-    art::lib::GavcQuery query_;
-    std::filesystem::path path_to_download_;
-    bool have_to_download_results_;
-    bool have_to_delete_results_;
-    bool have_to_delete_versions_;
-    std::string output_file_;
-    std::string cache_path_;
-    unsigned int max_attempts_;
-    unsigned int retry_timeout_s_;
-    std::string notifications_file_;
-    bool force_offline_;
-
-    GAVC::query_results query_results_;
-    GAVC::paths_list list_of_queued_files_;
-
-    std::vector<std::string> versions_;
-};
-
-} } // namespace piel::cmd
-
-#endif /* GAVC_H_ */
+} // namespace piel::cmd

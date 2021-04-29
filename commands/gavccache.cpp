@@ -30,9 +30,7 @@
  *
  */
 
-#include <ctime>
 #include <iostream>
-#include <iomanip>
 #include <cstdlib>
 #include <vector>
 #include <gavc.h>
@@ -50,557 +48,228 @@
 #include <properties.h>
 
 #include <std_filesystem_ext.hpp>
-#include <boost_property_tree_ext.hpp>
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/predicate.hpp>
 
 #include <commands/SleepFor.hpp>
 #include <commands/Retrier.hpp>
 
-namespace al = art::lib;
-namespace pl = piel::lib;
-namespace fs = std::filesystem;
-namespace pt = boost::property_tree;
-namespace po = boost::program_options;
+#include "CacheDirectory.h"
+#include "QueryCache.h"
+#include "GavcUtils.h"
 
-namespace piel { namespace cmd {
+namespace piel::cmd {
 
-namespace utils {
-
-std::string get_default_cache_path() {
-    static const std::string default_cache_path = "/.pie/gavc/cache";
-    static const char *home_c_str = ::getenv("HOME");
-    return std::string(home_c_str) + default_cache_path;
-}
-
-}//namespace utils
-
-GAVCCache::GAVCCache(const std::string& server_api_access_token
-           , const std::string& server_url
-           , const std::string& server_repository
-           , const art::lib::GavcQuery& query
-           , const bool have_to_download_results
-           , const std::string &cache_path
-           , const std::string& output_file
-           , const std::string& notifications_file
-           , unsigned int max_attempts
-           , unsigned int retry_timeout_s
-           , bool force_offline
-           , bool have_to_delete_results
-           , bool have_to_delete_versions)
-    : pl::IOstreamsHolder()
-    , server_url_(server_url)
-    , server_api_access_token_(server_api_access_token)
-    , server_repository_(server_repository)
-    , query_(query)
-    , path_to_download_()
-    , have_to_download_results_(have_to_download_results)
-    , have_to_delete_results_(have_to_delete_results)
-    , have_to_delete_versions_(have_to_delete_versions)
-    , output_file_(output_file)
-    , cache_path_(cache_path)
-    , max_attempts_(max_attempts)
-    , retry_timeout_s_(retry_timeout_s)
-    , notifications_file_(notifications_file)
-    , force_offline_(force_offline)
-    , query_results_()
-    , list_of_queued_files_()
-    , versions_()
-{
-}
-
-GAVCCache::~GAVCCache()
-{
-}
-
-/*static*/ piel::lib::Properties GAVCCache::load_object_properties(const std::filesystem::path& object_path)
-{
-    std::ifstream is(object_path.generic_string() + GAVCConstants::properties_ext);
-    return pl::Properties::load(is);
-}
-
-/*static*/ void GAVCCache::store_object_properties(const std::filesystem::path& object_path, const piel::lib::Properties& properties)
-{
-    std::ofstream os(object_path.generic_string() + GAVCConstants::properties_ext);
-    properties.store(os);
-}
-
-/*static*/ void GAVCCache::remove_object_properties(const std::filesystem::path& object_path)
-{
-    fs::path props_path = object_path.generic_string() + GAVCConstants::properties_ext;
-    fs::remove(props_path);
-}
-
-std::vector<std::string> GAVCCache::get_cached_versions(const std::string& path) const
-{
-    std::vector<std::string> result;
-
-    if(!fs::is_directory(path)) {
-        throw std::runtime_error("Cache directory: " + path + " is not exist!");
-    }
-
-    for(auto entry : boost::make_iterator_range(fs::directory_iterator(path), {})){
-        LOGT << entry.path().filename().c_str() << ELOG;
-        if(fs::is_directory(entry)) {
-            result.push_back(entry.path().filename().c_str());
-        }
-    }
-
-    if (result.empty()) {
-        LOGT << "Nothing in cache for query." << ELOG;
-        return result;
-    }
-
-    return query_.filter(result);
-}
-
-std::vector<std::string> GAVCCache::get_cached_classifiers_list(const std::string& artifacts_cache) {
-    std::vector<std::string> result;
-
-    for(auto entry : boost::make_iterator_range(fs::directory_iterator(artifacts_cache), {})){
-        LOGT << entry.path().filename().c_str() << ELOG;
-        if(!fs::is_regular_file(entry.path())) {
-            continue;
-        }
-
-        if (!boost::algorithm::ends_with(entry.path().filename().string(), GAVCConstants::properties_ext)) {
-            continue;
-        }
-
-        std::ifstream is(entry.path().string());
-        pl::Properties props = pl::Properties::load(is);
-
-        std::string classifier = props.get(GAVCConstants::object_classifier_property, "");
-        if (classifier.empty())
-            continue;
-
-        LOGT << "Cached classifier: " << classifier << ELOG;
-        result.push_back(classifier);
-    }
-
-    return result;
-}
-
-std::string GAVCCache::find_file_for_classifier(const std::string& artifacts_cache, const std::string& classifier)
-{
-    std::string result;
-
-    for(auto entry : boost::make_iterator_range(fs::directory_iterator(artifacts_cache), {})){
-
-        LOGT << entry.path().filename().c_str() << ELOG;
-
-        if(!fs::is_regular_file(entry.path())) {
-            continue;
-        }
-
-        if (!boost::algorithm::ends_with(entry.path().filename().string(), GAVCConstants::properties_ext)) {
-            continue;
-        }
-
-        std::ifstream is(entry.path().string());
-        auto props = pl::Properties::load(is);
-
-        if(props.get(GAVCConstants::object_classifier_property, "") == classifier) {
-            result = artifacts_cache + fs::path::preferred_separator + props.get(GAVCConstants::object_id_property, "");
-            break;
-        }
-    }
-
-    return result;
-}
-
-/*static*/ std::string GAVCCache::now_string()
-{
-    std::ostringstream buffer;
-    std::time_t tm = std::time(nullptr);
-    buffer << std::put_time(std::localtime(&tm), GAVCConstants::last_access_time_format.c_str());
-    return buffer.str();
-}
-
-/*static*/ void GAVCCache::update_last_access_time(const fs::path& cache_object_path)
-{
-    auto props = load_object_properties(cache_object_path);
-    props.set(GAVCConstants::last_access_time_property, now_string());
-    store_object_properties(cache_object_path, props);
-}
-
-/*static*/ std::tm GAVCCache::get_last_access_time(const fs::path& cache_object_path)
-{
-    pl::Properties props = load_object_properties(cache_object_path);
-    std::tm t = {};
-
-    std::istringstream ss(props.get(GAVCConstants::last_access_time_property, now_string()));
-    ss >> std::get_time(&t, GAVCConstants::last_access_time_format.c_str());
-
-    t.tm_isdst = 1;
-
-    return t;
-}
-
-GAVC::paths_list GAVCCache::get_cached_files_list(const std::vector<std::string>& versions_to_process, const std::string& path)
-{
-    std::string classifier_spec = query_.classifier();
-    std::string query_name      = query_.name();
-
-    std::vector<std::string> classifiers;
-
-    boost::split(classifiers, classifier_spec, boost::is_any_of(","));
-    bool have_errors = false;
-
-    GAVC::paths_list results;
-
-    for (auto ver = versions_to_process.begin(), end = versions_to_process.end(); ver != end; ++ver)
+    GAVCCache::GAVCCache( const QueryContext *context
+             , const QueryOperationParameters *params
+             , const std::string& cache_path
+             , const std::string& output_file
+             , const std::string& notifications_file
+             , bool force_offline)
+        : QueryOperation(context, params)
+        , pl::IOstreamsHolder()
+        , path_to_download_()
+        , output_file_(output_file)
+        , cache_path_(cache_path)
+        , notifications_file_(notifications_file)
+        , force_offline_(force_offline)
+        , query_results_()
+        , list_of_queued_files_()
+        , versions_()
     {
-        LOGT << "Version: " << *ver << ELOG;
+    }
 
-        std::string artifact_cache_path = path + fs::path::preferred_separator + *ver;
 
-        LOGT << "Version cache: " << artifact_cache_path << ELOG;
-
-        if (classifiers.size() == 1 && classifiers[0].empty()) {
-            classifiers = get_cached_classifiers_list(artifact_cache_path);
-        }
-
-        for (auto it = classifiers.begin(), cend = classifiers.end(); it != cend; ++it)
-        {
-            std::vector<std::string> craw_parts;
-            boost::split(craw_parts, *it, boost::is_any_of("."));
-
-            std::string c = craw_parts[0];
-
-            if (c.empty()) {
-                LOGT << "empty classifier " << ELOG;
-                continue;
-            }
-
-            std::string file_path               = find_file_for_classifier(artifact_cache_path, c);
-            std::string classifier_file_name    = fs::path(file_path).filename().string();
-
-            LOGT << "Classifier: " << c << " path: " << file_path << ELOG;
-
-            if (!fs::is_regular_file(file_path)) {
-                LOGT << "No file: " << file_path << " for classifier: " << c << ELOG;
-
-                have_errors = true;
-                break;
-            }
-
-            pl::Properties props    = load_object_properties(file_path);
-            bool is_valid           = GAVC::validate_local_file(file_path, props);
-
-            if (!is_valid) {
-                LOGT << "File: " << file_path  << " for classifier: " << c << " is not valid!" << ELOG;
-
-                have_errors = true;
-                break;
-            }
-
-            if (std::find(results.begin(), results.end(), file_path) == results.end()) {
-                results.push_back(file_path);
+    bool GAVCCache::is_force_offline() const
+    {
+        bool offline = force_offline_;
+        if (!offline) {
+            const char *offline_str = ::getenv("PIE_GAVC_FORCE_OFFLINE");
+            if (offline_str) {
+                offline = std::string(offline_str) == "1" || std::string(offline_str) == "true";
             }
         }
+        LOGT << "Force offline mode: " << offline << ELOG;
+        return offline;
     }
 
-    if (have_errors)
-        return GAVC::paths_list();
 
-    return results;
-}
+    void GAVCCache::perform() {
 
-/*static*/ std::string GAVCCache::cache_properties_file(const std::string& cache_path)
-{
-    return cache_path + fs::path::preferred_separator + GAVCConstants::cache_properties_filename;
-}
+        CacheDirectory cache_dir(cache_path_);
+        cache_dir.reinit();
 
-/*static*/ void GAVCCache::init(const std::string& cache_path)
-{
-    if (!fs::is_directory(cache_path) || !fs::exists(cache_path)) {
-        LOGT << "Try to remove existing file which name is conflict with cache path! cache path: " << cache_path << ELOG;
-        try {
-            fs::remove_all(cache_path);
-        } catch (...) {
-            throw std::runtime_error("Unable to delete existing file whose name conflicts with cache path! Cache path: " + cache_path);
-        }
-    }
+        GAVC gavc(context(),
+             params(),
+             std::string(),
+             notifications_file_);
 
-    if (!fs::exists(cache_path)) {
-        LOGT << "Try to create cache directory at cache path: " << cache_path << ELOG;
-        try {
-            fs::create_directories(cache_path);
-        } catch (...) {
-            throw std::runtime_error("Unable to create cache directory at cache path: " + cache_path);
-        }
-    }
+        gavc.setup_iostreams(&cout(), &cerr(), &cin());
 
-    LOGT << "Create cache properties..." << ELOG;
-    pl::Properties props = pl::Properties();
+        QueryCache cache(context(), cache_path_, &gavc);
 
-    LOGT << "Set cache version to: " << GAVCConstants::cache_version;
-    props.set(GAVCConstants::cache_version_property, GAVCConstants::cache_version);
+        std::vector<std::string> versions_to_process_remote;
+        std::vector<std::string> versions_to_process_cache;
+        std::vector<std::string> versions_to_process;
 
-    auto cache_properties_filepath = cache_properties_file(cache_path);
+        bool force_offline      = is_force_offline();
+        bool offline            = force_offline;
 
-    LOGT << "Write cache properties file: " << cache_properties_filepath;
-    std::ofstream os(cache_properties_filepath);
-    props.store(os);
-}
+        std::vector<CacheObject> cached_objects;
 
-/*static*/ bool GAVCCache::validate(const std::string& cache_path)
-{
-    LOGT << "Try to read cache properties..." << ELOG;
+        std::optional<std::string> remote_exception;
 
-    std::string properties_file = cache_properties_file(cache_path);
-
-    if (!fs::is_regular_file(properties_file)) {
-        LOGT << "No cache properties file! Cache is invalid!" << ELOG;
-        return false;
-    }
-
-    std::ifstream is(properties_file);
-    pl::Properties props = pl::Properties::load(is);
-
-    std::string properties_version = props.get(GAVCConstants::cache_version_property, "");
-
-    bool ret = GAVCConstants::cache_version == properties_version;
-
-    LOGT
-        << "Validate cache version. Expected version: "     << GAVCConstants::cache_version
-        << " version from properties: "                     << properties_version
-        << " cache version validation result: "             << ret
-        << ELOG;
-
-    return ret;
-}
-
-bool GAVCCache::is_force_offline() const
-{
-    bool offline            = force_offline_;
-    if (!offline) {
-        const char *offline_str = ::getenv("PIE_GAVC_FORCE_OFFLINE");
-        if (offline_str) {
-            offline = std::string(offline_str) == "1" || std::string(offline_str) == "true";
-        }
-    }
-    LOGT << "Force offline mode: " << offline << ELOG;
-    return offline;
-}
-
-void GAVCCache::perform()
-{
-    if (!validate(cache_path_)) {
-        try {
-            fs::remove_all(cache_path_);
-        } catch (...) {}
-        init(cache_path_);
-    }
-
-    piel::cmd::GAVC gavc(
-         server_api_access_token_,
-         server_url_,
-         server_repository_,
-         query_,
-         have_to_download_results_,
-         "",
-         notifications_file_,
-         max_attempts_,
-         retry_timeout_s_,
-         false,
-         have_to_delete_results_,
-         have_to_delete_versions_);
-
-    gavc.setup_iostreams(&cout(), &cerr(), &cin());
-
-    gavc.set_cache_mode(true, [](const auto& object_path, const auto& props){
-        store_object_properties(object_path, props);
-    });
-
-    LOGT << " gavc.get_maven_metadata_path:"    << gavc.get_maven_metadata_path()   << ELOG;
-
-    std::string mm_path = cache_path_ + gavc.get_maven_metadata_path();
-
-    LOGT << " cache_path_:"                     << cache_path_                      << ELOG;
-    LOGT << " mm_path:"                         << mm_path                          << ELOG;
-
-    std::vector<std::string> versions_to_process_remote;
-    std::vector<std::string> versions_to_process_cache;
-    std::vector<std::string> versions_to_process;
-
-    bool force_offline      = is_force_offline();
-    bool offline            = force_offline;
-    bool have_cached_files  = false;
-
-    GAVC::paths_list cached_files_list;
-
-    std::optional<std::string> remote_exception;
-
-    if (!offline) {
-        try {
-            versions_to_process_remote  = gavc.get_versions_to_process();
-        }
-        catch (std::exception& e) {
-            // No server metadata. Force use cache.
-            offline                     = true;
-            remote_exception            = errors::format_exceptions_stack(e);
-        }
-    }
-
-    LOGT << "force_offline: " << force_offline << " offline: " << offline << ELOG;
-
-    if (offline) {
-
-        try {
-            versions_to_process_cache   = query_.filter(get_cached_versions(mm_path));
-            // Initial cache files list
-            cached_files_list           = get_cached_files_list(versions_to_process_cache, mm_path);
-            have_cached_files           = !cached_files_list.empty();
-
-            LOGT << "have_cached_files: " << have_cached_files << ELOG;
-        } catch (...) {
-            // Don't see anything in cache.
+        if (!offline) {
+            try {
+                versions_to_process_remote  = gavc.get_versions_to_process();
+            }
+            catch (const std::exception& e) {
+                // Query error. Force use cache.
+                offline                     = true;
+                remote_exception            = errors::format_exceptions_stack(e);
+            }
         }
 
-        for (auto ver = versions_to_process_cache.begin(), end = versions_to_process_cache.end(); ver != end; ++ver) {
-            cout() << "Version: " << *ver << std::endl;
-            if (force_offline) {
-                cout() << "Mode: force offline"     << std::endl;
-            } else {
-                cout() << "Mode: offline"           << std::endl;
+        LOGT << "force_offline: " << force_offline << " offline: " << offline << ELOG;
+
+        if (offline) {
+
+            try {
+                versions_to_process_cache   = cache.versions();
+                cached_objects              = cache.objects();
+
+            } catch (const std::exception &e) {
+                // Error on retrieving cached data.
             }
 
-            gavc.notify_gavc_version(*ver);
-        }
+            for (auto ver = versions_to_process_cache.begin(), end = versions_to_process_cache.end(); ver != end; ++ver) {
+                cout() << "Version: " << *ver << std::endl;
+                if (force_offline) {
+                    cout() << "Mode: force offline"     << std::endl;
+                } else {
+                    cout() << "Mode: offline"           << std::endl;
+                }
+            }
 
-        for (GAVC::paths_list::iterator f = cached_files_list.begin(), end = cached_files_list.end(); f != end; ++f) {
+            for (auto cached_object: cached_objects) {
 
-            fs::path object_name        = fs::path(*f).filename();
+                fs::path object_name = cached_object.object().filename();
 
-            LOGT << *f << "->" << object_name << ELOG;
+                LOGT << cached_object.object() << "->" << object_name << ELOG;
 
-            cout() << "c " << object_name.string() << std::endl;
-        }
+                cout() << "c " << object_name.string() << std::endl;
+            }
 
-        versions_to_process = versions_to_process_cache;
+            versions_to_process = versions_to_process_cache;
 
-    } else {
-
-        for (auto i = versions_to_process_remote.begin(), end = versions_to_process_remote.end(); i != end; ++i) {
-            LOGT << "Version: " << *i << ELOG;
-
-            std::string path = mm_path + "/" + *i;
-
-            gavc.set_path_to_download(path);
-            gavc.process_version(*i);
-
-            // Get actial files list
-            cached_files_list = gavc.get_list_of_actual_files();
-            have_cached_files = !cached_files_list.empty();
-        }
-
-        versions_to_process = versions_to_process_remote;
-    }
-
-    if (versions_to_process.empty() && !have_cached_files) {
-        LOGT << "No versions to process!" << ELOG;
-        if(remote_exception) {
-            LOGT << "Raise exception remote exception." << ELOG;
-            throw std::runtime_error(*remote_exception);
         } else {
-            LOGT << "Raise exception." << ELOG;
-            throw std::runtime_error("No versions to process!");
-        }
-    }
 
-    versions_ = gavc.get_versions();
+            for (auto i = versions_to_process_remote.begin(), end = versions_to_process_remote.end(); i != end; ++i) {
+                LOGT << "Cache version: " << *i  << " objects." << ELOG;
 
-    if (have_to_download_results_) {
+                cached_objects = cache.cache_version_objects(*i);
+            }
 
-        if (offline && !have_cached_files) {
-            throw std::runtime_error("No cached items for query: " + query_.to_string() + "!");
+            versions_to_process = versions_to_process_remote;
         }
 
-        for (GAVC::paths_list::iterator f = cached_files_list.begin(), end = cached_files_list.end(); f != end; ++f) {
+        if (versions_to_process.empty() && cached_objects.empty()) {
+            LOGT << "No versions to process!" << ELOG;
+            if(remote_exception) {
+                LOGT << "Raise exception remote exception." << ELOG;
+                throw std::runtime_error(*remote_exception);
+            } else {
+                LOGT << "Raise exception." << ELOG;
+                throw std::runtime_error("No versions to process!");
+            }
+        }
 
-            fs::path path        = output_file_.empty()         ?   fs::path(*f).filename().string()    : output_file_                          ;
-            fs::path object_path = path_to_download_.empty()    ?   path                                : path_to_download_ / path.filename()   ;
+        versions_ = cache.get_gavc_versions();
 
-            LOGT << *f << "->" << object_path << ELOG;
+        if (params()->have_to_download_results()) {
 
-            fs::copy_file(*f, object_path, fs::copy_options::overwrite_existing);
-            update_last_access_time(*f);
+            if (offline && cached_objects.empty()) {
+                throw std::runtime_error("No cached items for query: " + context()->query().to_string() + "!");
+            }
 
-            cout() << "+ " << object_path.filename().string() << std::endl;
+            for (auto cached_object: cached_objects) {
 
-            auto props = load_object_properties(*f);
+                fs::path path        = output_file_.empty()         ?   cached_object.object().filename().string()  : output_file_                          ;
+                fs::path object_path = path_to_download_.empty()    ?   path                                        : path_to_download_ / path.filename()   ;
 
-            std::string object_classifier = props.get(GAVCConstants::object_classifier_property, "");
-            std::string version = fs::path(*f).parent_path().filename().string();
+                LOGT << cached_object.object() << "->" << object_path << ELOG;
 
-            query_results_.insert(std::make_pair(object_path, std::make_pair(object_classifier, version)));
-            list_of_queued_files_.push_back(object_path.string());
+                cached_object.uncache_object_to(object_path);
 
-            if (have_to_delete_results_) {
-                cout() << "cx " << object_path.filename().string() << std::endl;
+                std::string version             = cached_object.parent()->version();
+                std::string object_classifier   = cached_object.load_classifier();
 
-                fs::remove(*f);
-                remove_object_properties(*f);
+                cout() << "+ " << object_path.filename().string() << std::endl;
+
+                query_results_.insert(std::make_pair(object_path, std::make_pair(object_classifier, version)));
+                list_of_queued_files_.push_back(object_path.string());
+            }
+        }
+
+        if (params()->have_to_delete_results()) {
+
+            for (auto cached_object: cached_objects) {
+                cout() << "cx " << cached_object.object().filename().string() << std::endl;
+
+                cached_object.delete_object();
+            }
+        }
+
+        if (params()->have_to_delete_versions()) {
+
+            for (auto version_to_remove: versions_to_process) {
+                LOGT << "Remove cached version: " << version_to_remove << ELOG;
+
+                cache.delete_version(version_to_remove);
+
+                cout() << "cX " << version_to_remove << std::endl;
             }
         }
     }
 
-    if (have_to_delete_versions_) {
-        for (auto version_to_remove: versions_to_process) {
-            LOGT << "Remove cached version: " << version_to_remove << ELOG;
-
-            fs::path artifact_cache_path = mm_path + fs::path::preferred_separator + version_to_remove;
-
-            fs::remove_directory_content(artifact_cache_path);
-            fs::remove(artifact_cache_path);
-
-            cout() << "cX " << version_to_remove << std::endl;
-        }
+    void GAVCCache::operator()()
+    {
+        Retrier<SleepFor<> >(
+            [this] (auto attempt, auto max) -> bool {
+                LOGT << "GAVCCache query attempt: " << attempt << " from: " << max << ELOG;
+                perform();
+                return true;
+            },
+            std::max(1u, params()->max_attempts()),
+            std::max(5u, params()->retry_timeout_s())
+        )(
+            [](auto attempt, auto max, const auto& e) {
+                LOGT << "GAVCCacche query attempt: " << attempt << " from: " << max << " error: " << errors::format_exceptions_stack(e) << ELOG;
+            }
+        );
     }
-}
 
-void GAVCCache::operator()()
-{
-    Retrier<SleepFor<> >(
-        [this] (auto attempt, auto max) -> bool {
-            LOGT << "GAVCCache query attempt: " << attempt << " from: " << max << ELOG;
-            perform();
-            return true;
-        },
-        std::max(1u, max_attempts_),
-        std::max(5u, retry_timeout_s_)
-    )(
-        [](auto attempt, auto max, const auto& e) {
-            LOGT << "GAVCCacche query attempt: " << attempt << " from: " << max << " error: " << errors::format_exceptions_stack(e) << ELOG;
-        }
-    );
-}
+    void GAVCCache::set_path_to_download(const std::filesystem::path& path)
+    {
+        path_to_download_ = path;
+    }
 
-void GAVCCache::set_path_to_download(const std::filesystem::path& path)
-{
-    path_to_download_ = path;
-}
+    std::filesystem::path GAVCCache::get_path_to_download() const
+    {
+        return path_to_download_;
+    }
 
-std::filesystem::path GAVCCache::get_path_to_download() const
-{
-    return path_to_download_;
-}
+    GAVC::query_results GAVCCache::get_query_results() const
+    {
+        return query_results_;
+    }
 
-GAVC::query_results GAVCCache::get_query_results() const
-{
-    return query_results_;
-}
+    GAVC::paths_list GAVCCache::get_list_of_queued_files() const
+    {
+        return list_of_queued_files_;
+    }
 
-GAVC::paths_list GAVCCache::get_list_of_queued_files() const
-{
-    return list_of_queued_files_;
-}
+    std::vector<std::string> GAVCCache::get_versions() const
+    {
+        return versions_;
+    }
 
-std::vector<std::string> GAVCCache::get_versions() const
-{
-    return versions_;
-}
-
-} } // namespace piel::cmd
+} // namespace piel::cmd

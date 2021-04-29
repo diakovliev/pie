@@ -34,7 +34,7 @@
 #include <iostream>
 #include <sstream>
 
-namespace piel { namespace cmd {
+namespace piel::cmd {
 
 /*static*/ const std::string GAVCConstants::empty_classifier           = "<none>";
 /*static*/ const std::string GAVCConstants::properties_ext             = ".properties";
@@ -50,4 +50,4 @@ namespace piel { namespace cmd {
 
 /*static*/ const int GAVCConstants::seconds_in_day                     = 60*60*24;
 
-} } // namespace piel::cmd
+} // namespace piel::cmd

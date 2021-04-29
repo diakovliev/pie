@@ -26,8 +26,7 @@
  *
  */
 
-#ifndef GAVC_H_
-#define GAVC_H_
+#pragma once
 
 #include <gavcquery.h>
 #include <iostreamsholder.h>
@@ -42,94 +41,80 @@
 
 #include <commands/base_errors.h>
 
-namespace piel { namespace cmd {
+#include "QueryContext.h"
+#include "QueryOperation.h"
 
-class GAVC: public piel::lib::IOstreamsHolder
-{
-public:
-    using paths_list = std::list<std::filesystem::path>;
-    using query_results = std::map<std::filesystem::path,std::pair<std::string,std::string> >;
-    using PropertiesHandler = std::function<void (const std::filesystem::path&, const piel::lib::Properties&)>;
+namespace piel::cmd {
 
-    GAVC(  const std::string& server_api_access_token
-         , const std::string& server_url
-         , const std::string& server_repository
-         , const art::lib::GavcQuery& query
-         , const bool have_to_download_results
-         , const std::string& output_file = std::string()
-         , const std::string& notifications_file = std::string()
-         , unsigned int max_attempts = 3
-         , unsigned int retry_timeout_s = 5
-         , bool force_offline = false
-         , bool have_to_delete_results = false
-         , bool have_to_delete_versions = false);
+    namespace fs = std::filesystem;
+    namespace pl = piel::lib;
 
-    virtual ~GAVC();
+    class GAVC: public QueryOperation, public piel::lib::IOstreamsHolder
+    {
+    public:
+        using paths_list        = std::list<fs::path>;
+        using query_results     = std::map<fs::path,std::pair<std::string,std::string> >;
+        using PropertiesHandler = std::function<void(const std::string&, const fs::path&, const pl::Properties&)>;
 
-    void operator()();
+        using ptree             = boost::property_tree::ptree;
+        using ptree_value       = boost::property_tree::ptree::value_type;
 
-    void set_path_to_download(const std::filesystem::path& path);
-    std::filesystem::path get_path_to_download() const;
-    paths_list get_list_of_actual_files() const;
-    query_results get_query_results() const;
-    paths_list get_list_of_queued_files() const;
-    std::vector<std::string> get_versions() const;
+        GAVC(  const QueryContext *context
+             , const QueryOperationParameters *params
+             , const std::string& output_file = std::string()
+             , const std::string& notifications_file = std::string());
 
-    std::vector<std::string> get_versions_to_process() const;
-    void process_versions(const std::vector<std::string>&);
-    void process_version(const std::string&);
-    std::string get_maven_metadata_path() const;
+        virtual ~GAVC() = default;
 
-    static bool validate_local_file(const std::filesystem::path& object_path, const piel::lib::Properties& server_checksums);
+        void operator()();
 
-    void set_cache_mode(bool value, PropertiesHandler object_properties_handler);
-    static std::string get_classifier_file_name(const std::string& query_name, const std::string& ver, const std::string& classifier);
+        void set_path_to_download(const fs::path& path);
+        fs::path get_path_to_download() const;
+        paths_list get_list_of_actual_files() const;
+        query_results get_query_results() const;
+        paths_list get_list_of_queued_files() const;
+        std::vector<std::string> get_versions() const;
 
-    void notify_gavc_version(const std::string& version);
+        std::vector<std::string> get_versions_to_process() const;
+        void process_versions(const std::vector<std::string>&);
+        void process_version(const std::string&);
 
-protected:
-    void on_object     (const boost::property_tree::ptree::value_type& obj, const std::string& version, const std::string& classifier);
-    void on_aql_object (const boost::property_tree::ptree::value_type& obj, const std::string& version, const std::string& classifier);
+        void set_cache_mode(bool value, PropertiesHandler object_properties_handler);
+        static std::string get_classifier_file_name(const std::string& query_name, const std::string& ver, const std::string& classifier);
 
-    piel::lib::Properties create_object_properties(
-            const boost::property_tree::ptree::value_type& obj,
-            const std::string& server_object_id, const std::string& object_classifier);
+        void notify_gavc_version(const std::string& version);
 
-    std::map<std::string,std::string> get_server_checksums(const boost::property_tree::ptree& obj_tree, const std::string& section) const;
-    void download_file(const std::filesystem::path& object_path, const std::string& object_id, const std::string& download_uri) const;
-    void delete_file(const std::string& download_uri) const;
+    protected:
 
-    std::string extract_classifier_from_object_id(const std::string& server_object_id) const;
-    std::string classifier_significant_part(const std::string& query_classifier) const;
-    std::optional<std::string> object_classifier_if_needed_object_id(const std::string& query_classifier, const std::string& server_object_id) const;
+        void on_object     (const ptree_value& obj, const std::string& version, const std::string& classifier);
+        void on_aql_object (const ptree_value& obj, const std::string& version, const std::string& classifier);
 
-    void handle_actual_object(const std::string& object_id, const std::string& object_path);
+        piel::lib::Properties create_object_properties(
+                const ptree_value& obj,
+                const std::string& server_object_id, const std::string& object_classifier);
 
-private:
-    std::string server_url_;
-    std::string server_api_access_token_;
-    std::string server_repository_;
-    art::lib::GavcQuery query_;
-    std::filesystem::path path_to_download_;
-    bool have_to_download_results_;
-    bool have_to_delete_results_;
-    bool have_to_delete_versions_;
+        std::map<std::string,std::string> get_server_checksums(const ptree& obj_tree, const std::string& section) const;
+        void download_file(const fs::path& object_path, const std::string& object_id, const std::string& download_uri) const;
+        void delete_file(const std::string& download_uri) const;
 
-    bool cache_mode_;
-    PropertiesHandler object_properties_handler_;
+        std::optional<std::string> object_classifier_if_needed_object_id(const std::string& query_classifier, const std::string& server_object_id) const;
 
-    paths_list list_of_actual_files_;
-    query_results query_results_;
-    paths_list list_of_queued_files_;
-    std::vector<std::string> versions_;
+        void handle_actual_object(const std::string& object_id, const std::string& object_path);
 
-    std::string output_file_;
-    unsigned int max_attempts_;
-    unsigned int retry_timeout_s_;
-    piel::lib::NotificationsFile notifications_file_;
-    bool force_offline_;
-};
+    private:
+        fs::path path_to_download_;
 
-} } // namespace piel::cmd
+        bool cache_mode_;
+        PropertiesHandler object_properties_handler_;
 
-#endif /* GAVC_H_ */
+        paths_list list_of_actual_files_;
+        query_results query_results_;
+        paths_list list_of_queued_files_;
+        std::vector<std::string> versions_;
+
+        std::string output_file_;
+        pl::NotificationsFile notifications_file_;
+        bool force_offline_;
+    };
+
+} // namespace piel::cmd

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, diakovliev
+ * Copyright (c) 2021, diakovliev
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,37 +28,34 @@
 
 #pragma once
 
-#include <gavcquery.h>
-#include <uploadfilesspec.h>
-#include <artdeployartifacthandlers.h>
+#include <filesystem>
+#include <memory>
 
-#include <commands/base_errors.h>
-
-#include "QueryContext.h"
-#include "QueryOperation.h"
+#include "NonQueryCache.h"
 
 namespace piel::cmd {
 
-    class Upload: public QueryOperation
-    {
+    namespace fs = std::filesystem;
+
+    class CacheDirectory {
     public:
-        Upload(const QueryContext *context);
-        virtual ~Upload();
+        CacheDirectory(fs::path cache_root);
+        ~CacheDirectory() = default;
 
-        void operator()();
+        std::vector<NonQueryCache> artifacts() const;
 
-        void set_classifiers(const al::ufs::UFSVector& classifiers);
+        void init() const;
+        bool validate() const;
+        void remove() const;
+
+        void reinit() const;
 
     protected:
-
-        static void upload_checksum_for(al::ArtDeployArtifactHandlers *deploy_handlers, const std::string& checksum_name);
-        static void upload_checksums_for(al::ArtDeployArtifactHandlers *deploy_handlers);
-        void setup_deploy_handlers_by_context(al::ArtDeployArtifactHandlers *deploy_handlers);
-        void upload_object(std::string op_name, std::function<void(al::ArtDeployArtifactHandlers*)> setup_handlers);
-        void deploy_pom();
+        std::string cache_properties_file() const;
 
     private:
-        art::lib::ufs::UFSVector classifiers_vector_;
+        fs::path cache_root_;
+
     };
 
-} // namespace piel::cmd
+}//namespace piel::cmd

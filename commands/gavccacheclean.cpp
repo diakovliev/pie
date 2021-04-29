@@ -44,88 +44,58 @@
 
 #include <properties.h>
 
-#include <boost_property_tree_ext.hpp>
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/predicate.hpp>
+#include "CacheDirectory.h"
+#include "CacheVersion.h"
 
 #include <ctime>
 
-namespace al = art::lib;
-namespace pl = piel::lib;
-namespace fs = std::filesystem;
-namespace pt = boost::property_tree;
-namespace po = boost::program_options;
+namespace piel::cmd {
 
-namespace piel { namespace cmd {
-
-GAVCCacheClean::GAVCCacheClean(const std::string &cache_path
-           , int max_age)
-    : pl::IOstreamsHolder()
-    , cache_path_(cache_path)
-    , max_age_(max_age)
-{
-}
-
-GAVCCacheClean::~GAVCCacheClean()
-{
-}
-
-bool GAVCCacheClean::clean(const fs::path& path)
-{
-    bool do_remove = true;
-
-    if(!fs::is_directory(path)) {
-        throw std::runtime_error("Cache directory: " + path.generic_string() + " is not exist!");
+    GAVCCacheClean::GAVCCacheClean(const std::string &cache_path, int max_age)
+        : pl::IOstreamsHolder()
+        , cache_path_(cache_path)
+        , max_age_(max_age)
+    {
     }
 
-    for(auto entry : boost::make_iterator_range(fs::directory_iterator(path), {})){
-        LOGT << entry.path().c_str() << ELOG;
 
-        if(fs::is_directory(entry)) {
-            bool do_remove_entry = clean(entry.path());
-            do_remove           &= do_remove_entry;
+    void GAVCCacheClean::operator()()
+    {
+        CacheDirectory cache_dir(cache_path_);
 
-            LOGT << "->" << entry.path().c_str() << " do_remove:" << do_remove << " do_remove_entry:" << do_remove_entry << ELOG;
+        if (!cache_dir.validate()) {
+            LOGE << "Cache validation failed!" << ELOG;
+            return;
+        }
 
-            if (do_remove_entry) {
-                cout() << "Removing " << entry.path().c_str() << std::endl;
-                cout().flush();
+        for(auto& artifact_cache: cache_dir.artifacts()) {
+            for(auto version: artifact_cache.versions()) {
 
-                LOGT << "Removing " << entry.path().c_str() << ELOG;
+                auto v = artifact_cache.load_version(version);
 
-                fs::remove_all(entry.path());
+                LOGT << "Version: " << version << ELOG;
+
+                for(auto object: v.objects()) {
+
+                    LOGT << "Object: " << object.object() << ELOG;
+
+                    std::tm     last_access_tm   = object.load_last_access_time();
+                    std::time_t last_access_time = std::mktime(&last_access_tm);
+                    std::time_t current_time     = std::time(nullptr);
+
+                    int days = int(std::difftime(current_time, last_access_time)/(GAVCConstants::seconds_in_day));
+
+                    //std::ostringstream last_access_time_buffer;
+                    //last_access_time_buffer << std::put_time(&last_access_tm, GAVCConstants::last_access_time_format.c_str());
+                    //LOGT << "last_access_time:" << last_access_time_buffer.str() << ELOG;
+
+                    LOGT << "age (days)" << ((days >= max_age_)?"(OLD)":"(NEW)") << " :" << days << " for " << object.object().filename().c_str() <<ELOG;
+                    if (days >= max_age_) {
+                        object.delete_object();
+                    }
+                }
             }
-        } else if (fs::is_regular_file(entry)
-                   && (entry.path().extension() != GAVCConstants::properties_ext) ) {
-
-            std::tm     last_access_tm   = GAVCCache::get_last_access_time(entry.path().generic_string());
-            std::time_t last_access_time = std::mktime(&last_access_tm);
-            std::time_t current_time     = std::time(nullptr);
-
-            int days = int(std::difftime(current_time, last_access_time)/(GAVCConstants::seconds_in_day));
-
-            //std::ostringstream last_access_time_buffer;
-            //last_access_time_buffer << std::put_time(&last_access_tm, GAVCConstants::last_access_time_format.c_str());
-            //LOGT << "last_access_time:" << last_access_time_buffer.str() << ELOG;
-
-            LOGT << "age (days)" << ((days >= max_age_)?"(OLD)":"(NEW)") << " :" << days << " for " << entry.path().filename().c_str() <<ELOG;
-
-            do_remove &= days >= max_age_;
         }
     }
 
-    return do_remove;
-}
-
-
-void GAVCCacheClean::operator()()
-{
-    if (!GAVCCache::validate(cache_path_)) {
-        LOGE << "Cache validate failed!!!" << ELOG;
-        return;
-    }
-
-    clean(cache_path_);
-}
-
-} } // namespace piel::cmd
+} // namespace piel::cmd
