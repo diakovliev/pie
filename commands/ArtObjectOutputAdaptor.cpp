@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, diakovliev
+ * Copyright (c) 2021, diakovliev
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,28 +26,28 @@
  *
  */
 
-#pragma once
+#include "ArtObjectOutputAdaptor.h"
 
-#include <string>
+#include <artbasedownloadhandlers.h>
+#include <logging.h>
 
-namespace piel::cmd {
+namespace piel::cmd::utils {
 
-    struct GAVCConstants {
-
-        static const std::string empty_classifier;
-        static const std::string properties_ext;
-        static const std::string object_id_property;
-        static const std::string object_classifier_property;
+    ArtObjectOutputAdaptor::ArtObjectOutputAdaptor(const fs::path& object_path)
+        : dest_()
+        , object_path_(object_path)
+    {}
 
 
-        static const std::string cache_version;
-        static const std::string cache_version_property;
-        static const std::string cache_properties_filename;
+    /*virtual*/ bool ArtObjectOutputAdaptor::callback(al::ArtBaseApiHandlers *handlers) {
 
-        static const std::string last_access_time_property;
-        static const std::string last_access_time_format;
+        LOGT << "Output path: " << object_path_.generic_string() << ELOG;
 
-        static const int seconds_in_day;
-    };
+        dest_ = std::make_shared<std::ofstream>(object_path_.generic_string().c_str());
 
-} // namespace piel::cmd
+        dynamic_cast<al::ArtBaseDownloadHandlers*>(handlers)->set_destination(dest_.get());
+
+        return true;
+    }
+
+} // namespace piel::cmd::utils

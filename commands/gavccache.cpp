@@ -30,24 +30,9 @@
  *
  */
 
-#include <iostream>
-#include <cstdlib>
-#include <vector>
-#include <gavc.h>
-#include <gavccache.h>
-#include "gavcconstants.h"
-#include <gavcversionsfilter.h>
-#include <gavcversionsrangefilter.h>
-#include <gavcversionscomparator.h>
-#include <artbaseconstants.h>
-#include <artbasedownloadhandlers.h>
-#include <artgavchandlers.h>
-#include <logging.h>
-#include <mavenmetadata.h>
-#include <artbaseapihandlers.h>
-#include <properties.h>
+#include "gavccache.h"
 
-#include <std_filesystem_ext.hpp>
+#include <logging.h>
 
 #include <commands/SleepFor.hpp>
 #include <commands/Retrier.hpp>

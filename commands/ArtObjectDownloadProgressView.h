@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, diakovliev
+ * Copyright (c) 2021, diakovliev
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,26 +28,29 @@
 
 #pragma once
 
-#include <string>
+#include <ctime>
 
-namespace piel::cmd {
+#include "gavc.h"
 
-    struct GAVCConstants {
+#include <artbasedownloadhandlers.h>
 
-        static const std::string empty_classifier;
-        static const std::string properties_ext;
-        static const std::string object_id_property;
-        static const std::string object_classifier_property;
+namespace piel::cmd::utils {
 
+    namespace al = ::art::lib;
 
-        static const std::string cache_version;
-        static const std::string cache_version_property;
-        static const std::string cache_properties_filename;
+    struct ArtObjectDownloadProgressView {
+    public:
+        ArtObjectDownloadProgressView(const GAVC *parent);
 
-        static const std::string last_access_time_property;
-        static const std::string last_access_time_format;
+        void operator()(const al::ArtBaseDownloadHandlers::BufferInfo& bi);
 
-        static const int seconds_in_day;
+    private:
+        const GAVC *parent_;
+        unsigned char index_;
+        size_t total_;
+        std::string id_;
+        time_t last_event_time_;
+
     };
 
-} // namespace piel::cmd
+} // namespace piel::cmd::utils

@@ -37,7 +37,7 @@
 
 namespace utils::gavc {
 
-    namespace al = art::lib;
+    namespace al = ::art::lib;
 
 
     std::vector<std::string> parse_classifiers_spec(const std::string& classifiers_spec) {

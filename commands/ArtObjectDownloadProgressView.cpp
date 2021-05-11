@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, diakovliev
+ * Copyright (c) 2021, diakovliev
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,28 +26,33 @@
  *
  */
 
-#pragma once
+#include "ArtObjectDownloadProgressView.h"
 
-#include <string>
+namespace piel::cmd::utils {
 
-namespace piel::cmd {
+    ArtObjectDownloadProgressView::ArtObjectDownloadProgressView(const GAVC *parent)
+        : parent_(parent)
+        , index_(0)
+        , total_(0)
+        , last_event_time_(0)
+    {}
 
-    struct GAVCConstants {
+    void ArtObjectDownloadProgressView::operator()(const al::ArtBaseDownloadHandlers::BufferInfo& bi) {
+        static const char progress_ch[4] = { '-', '\\', '|', '/' };
 
-        static const std::string empty_classifier;
-        static const std::string properties_ext;
-        static const std::string object_id_property;
-        static const std::string object_classifier_property;
+        time_t curr_event_time_ = time(0);
 
+        id_     = bi.id;
+        total_ += bi.size;
 
-        static const std::string cache_version;
-        static const std::string cache_version_property;
-        static const std::string cache_properties_filename;
+        if (curr_event_time_ - last_event_time_ > 1)
+        {
+            parent_->cout() << progress_ch[index_] << " " << id_ << "\r";
+            parent_->cout().flush();
+            index_ = (index_ + 1) % sizeof(progress_ch);
 
-        static const std::string last_access_time_property;
-        static const std::string last_access_time_format;
+            last_event_time_ = curr_event_time_;
+        }
+    }
 
-        static const int seconds_in_day;
-    };
-
-} // namespace piel::cmd
+} // namespace piel::cmd::utils

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2018
+ * Copyright (c) 2017-2018, 2021
  *
  *  Dmytro Iakovliev daemondzk@gmail.com
  *  Oleksii Kogutenko https://github.com/oleksii-kogutenko
@@ -30,23 +30,14 @@
  *
  */
 
-#include <iostream>
-#include <cstdlib>
-#include <ctime>
-#include <vector>
-#include <functional>
-#include <optional>
-#include <algorithm>
+#include "gavc.h"
 
-#include <gavc.h>
 #include "gavcconstants.h"
 #include <artbaseconstants.h>
-#include <artbasedownloadhandlers.h>
 #include <artgavchandlers.h>
 #include <artaqlhandlers.h>
 #include <logging.h>
 #include <mavenmetadata.h>
-#include <artbaseapihandlers.h>
 
 #include <commands/SleepFor.hpp>
 #include <commands/Retrier.hpp>
@@ -54,71 +45,12 @@
 #include <boost_property_tree_ext.hpp>
 
 #include "GavcUtils.h"
+#include "ArtObjectOutputAdaptor.h"
+#include "ArtObjectDownloadProgressView.h"
 
 namespace piel::cmd {
 
     namespace pt = boost::property_tree;
-
-    namespace {
-
-        struct BeforeOutputCallback: public al::ArtBaseApiHandlers::IBeforeCallback
-        {
-            BeforeOutputCallback(const fs::path& object_path): dest_(), object_path_(object_path) {}
-            virtual ~BeforeOutputCallback() {}
-
-            virtual bool callback(al::ArtBaseApiHandlers *handlers)
-            {
-                LOGT << "Output path: " << object_path_.generic_string() << ELOG;
-
-                dest_ = std::make_shared<std::ofstream>(object_path_.generic_string().c_str());
-
-                dynamic_cast<al::ArtBaseDownloadHandlers*>(handlers)->set_destination(dest_.get());
-
-                return true;
-            }
-        private:
-            std::shared_ptr<std::ofstream> dest_;
-            fs::path object_path_;
-        };
-
-        struct OnBufferCallback
-        {
-            OnBufferCallback(const GAVC *parent)
-                : parent_(parent)
-                , index_(0)
-                , total_(0)
-                , last_event_time_(0)
-            {
-            }
-
-            void operator()(const al::ArtBaseDownloadHandlers::BufferInfo& bi)
-            {
-                static const char progress_ch[4] = { '-', '\\', '|', '/' };
-
-                time_t curr_event_time_ = time(0);
-
-                id_     = bi.id;
-                total_ += bi.size;
-
-                if (curr_event_time_ - last_event_time_ > 1)
-                {
-                    parent_->cout() << progress_ch[index_] << " " << id_ << "\r";
-                    parent_->cout().flush();
-                    index_ = (index_ + 1) % sizeof(progress_ch);
-
-                    last_event_time_ = curr_event_time_;
-                }
-            }
-
-        private:
-            const GAVC *parent_;
-            unsigned char index_;
-            size_t total_;
-            std::string id_;
-            time_t last_event_time_;
-        };
-
-    }
 
 
     GAVC::GAVC( const QueryContext *context
@@ -169,13 +101,15 @@ namespace piel::cmd {
 
         al::ArtBaseDownloadHandlers download_handlers(context()->token());
 
-        BeforeOutputCallback before_output(object_path);
+        utils::ArtObjectOutputAdaptor output_adaptor(object_path);
+
         download_handlers.set_id(object_id);
-        download_handlers.set_before_output_callback(&before_output);
+        download_handlers.set_before_output_callback(&output_adaptor);
 
         pl::CurlEasyClient<al::ArtBaseDownloadHandlers> download_client(download_uri, &download_handlers);
 
-        OnBufferCallback on_buffer(this);
+        utils::ArtObjectDownloadProgressView on_buffer(this);
+
         download_handlers.connect(on_buffer);
 
         try {
