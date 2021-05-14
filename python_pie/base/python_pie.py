@@ -67,6 +67,7 @@ class Gavc(Base):
         Base.__init__(self, nlib.Gavc())
 
         self.__no_ops_exceptions    = no_ops_exceptions
+        self.__last_error           = None
 
     def version(self, gavc):
         self.perform(gavc)
@@ -78,11 +79,15 @@ class Gavc(Base):
         else:
             return None
 
+    def last_error(self):
+        return self.__last_error
+
     def perform(self, gavc):
         ret = 1
         try:
             ret = self._obj.perform(gavc)
         except Exception as e:
+            self.__last_error = e
             if not self.__no_ops_exceptions:
                 raise e
         return ret
