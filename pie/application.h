@@ -56,6 +56,10 @@ protected:
                              const std::string& opt_name,
                              const std::string& env_var,
                              std::string& var);
+    static bool get_from_env(boost::program_options::variables_map& vm,
+                             const std::string& opt_name,
+                             const std::string& env_var,
+                             bool& var);
 
 private:
     Application *app_;

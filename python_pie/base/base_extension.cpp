@@ -27,10 +27,11 @@ void BaseExtension::fill_param_from_env(std::string param, std::string env, std:
 }
 
 void BaseExtension::fill_default_params() {
-    if (is_known_param(PARAM_TOKEN))        fill_param_from_env(PARAM_TOKEN,        PARAM_TOKEN_ENV);
-    if (is_known_param(PARAM_SERVER))       fill_param_from_env(PARAM_SERVER,       PARAM_SERVER_ENV);
-    if (is_known_param(PARAM_REPOSITORY))   fill_param_from_env(PARAM_REPOSITORY,   PARAM_REPOSITORY_ENV);
-    if (is_known_param(PARAM_CACHE_PATH))   fill_param_from_env(PARAM_CACHE_PATH,   PARAM_CACHE_PATH_ENV,  utils::gavc::get_default_cache_path());
+    if (is_known_param(PARAM_TOKEN))            fill_param_from_env(PARAM_TOKEN,        PARAM_TOKEN_ENV);
+    if (is_known_param(PARAM_SERVER))           fill_param_from_env(PARAM_SERVER,       PARAM_SERVER_ENV);
+    if (is_known_param(PARAM_REPOSITORY))       fill_param_from_env(PARAM_REPOSITORY,   PARAM_REPOSITORY_ENV);
+    if (is_known_param(PARAM_FORCE_OFFLINE))    fill_param_from_env(PARAM_FORCE_OFFLINE,PARAM_FORCE_OFFLINE_ENV);
+    if (is_known_param(PARAM_CACHE_PATH))       fill_param_from_env(PARAM_CACHE_PATH,   PARAM_CACHE_PATH_ENV,  utils::gavc::get_default_cache_path());
 }
 
 int BaseExtension::set_param(std::string param, std::string value) {

@@ -94,7 +94,7 @@ bool GavcCommand::parse_arguments()
         ("max-attempts",    po::value<unsigned int>(&max_attempts_),            "Max attempts on IO errors.")
         ("retry-timeout",   po::value<unsigned int>(&retry_timeout_s_),         "Retry timeout on IO errors.")
         ("files-list",      po::value<std::string>(&files_list_),               "Generate queued files list.")
-        ("force-offline,f",                                                     "Forcing offline mode.")
+        ("force-offline,f",                                                     "Forcing offline mode. Can be set using GAVC_FORCE_OFFLINE environment variable.")
         ;
 
     if (show_help(desc, argc_, argv_)) {
@@ -133,10 +133,11 @@ bool GavcCommand::parse_arguments()
     }
 
     bool get_env_flag = true;
-    get_env_flag &= get_from_env(vm, "token",       "GAVC_SERVER_API_ACCESS_TOKEN", server_api_access_token_);
-    get_env_flag &= get_from_env(vm, "server",      "GAVC_SERVER_URL",              server_url_);
-    get_env_flag &= get_from_env(vm, "repository",  "GAVC_SERVER_REPOSITORY",       server_repository_);
-                    get_from_env(vm, "cache",       "GAVC_CACHE",                   cache_path_);
+    get_env_flag &= get_from_env(vm, "token",           "GAVC_SERVER_API_ACCESS_TOKEN", server_api_access_token_);
+    get_env_flag &= get_from_env(vm, "server",          "GAVC_SERVER_URL",              server_url_);
+    get_env_flag &= get_from_env(vm, "repository",      "GAVC_SERVER_REPOSITORY",       server_repository_);
+                    get_from_env(vm, "cache",           "GAVC_CACHE",                   cache_path_);
+                    get_from_env(vm, "force-offline",   "GAVC_FORCE_OFFLINE",           force_offline_);
 
     if (!get_env_flag) {
         show_command_help_message(desc);
@@ -147,7 +148,6 @@ bool GavcCommand::parse_arguments()
     have_to_delete_results_     = vm.count("delete");
     have_to_delete_versions_    = vm.count("delete-versions");
     disable_cache_              = vm.count("disable-cache");
-    force_offline_              = vm.count("force-offline");
 
     return true;
 }

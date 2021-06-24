@@ -18,7 +18,6 @@ public:
     static constexpr auto PARAM_DISABLE_CACHE    = "disable-cache";
     static constexpr auto PARAM_MAX_ATTEMPTS     = "max-attempts";
     static constexpr auto PARAM_RETRY_TIMEOUT    = "retry-timeout";
-    static constexpr auto PARAM_FORCE_OFFLINE    = "force-offline";
 
 public:
     Gavc();

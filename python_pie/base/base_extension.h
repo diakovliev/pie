@@ -17,6 +17,9 @@ public:
     static constexpr auto PARAM_CACHE_PATH       = "cache-path";
     static constexpr auto PARAM_CACHE_PATH_ENV   = "GAVC_CACHE";
 
+    static constexpr auto PARAM_FORCE_OFFLINE    = "force-offline";
+    static constexpr auto PARAM_FORCE_OFFLINE_ENV = "GAVC_FORCE_OFFLINE";
+
     BaseExtension();
     BaseExtension(const BaseExtension&);
     ~BaseExtension() = default;

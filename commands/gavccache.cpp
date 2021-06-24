@@ -217,6 +217,11 @@ namespace piel::cmd {
 
     void GAVCCache::operator()()
     {
+        if (is_force_offline()) {
+            perform();
+            return;
+        }
+
         Retrier<SleepFor<> >(
             [this] (auto attempt, auto max) -> bool {
                 LOGT << "GAVCCache query attempt: " << attempt << " from: " << max << ELOG;
