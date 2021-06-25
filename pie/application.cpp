@@ -26,6 +26,7 @@
  *
  */
 
+#include <utils.h>
 #include <application.h>
 #include <iostream>
 
@@ -79,19 +80,6 @@ bool ICommand::show_help(boost::program_options::options_description &desc, int 
     return true;
 }
 
-bool string2bool(std::string value) {
-    static std::set<std::string> negative_values {
-        "",
-        "0",
-        "false",
-        "False",
-    };
-
-    if (value.empty()) return false;
-
-    return negative_values.find(value) == negative_values.end();
-}
-
 /*static*/ bool ICommand::get_from_env(boost::program_options::variables_map& vm,
                                const std::string& opt_name,
                                const std::string& env_var,
@@ -102,7 +90,7 @@ bool string2bool(std::string value) {
         const char *value = ::getenv(env_var.c_str());
         if (value)
         {
-            var = string2bool(value);
+            var = piel::lib::string2bool(value);
             return true;
         }
         else

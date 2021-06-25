@@ -63,20 +63,6 @@ namespace piel::cmd {
     }
 
 
-    bool GAVCCache::is_force_offline() const
-    {
-        bool offline = force_offline_;
-        if (!offline) {
-            const char *offline_str = ::getenv("PIE_GAVC_FORCE_OFFLINE");
-            if (offline_str) {
-                offline = std::string(offline_str) == "1" || std::string(offline_str) == "true";
-            }
-        }
-        LOGT << "Force offline mode: " << offline << ELOG;
-        return offline;
-    }
-
-
     void GAVCCache::perform() {
 
         CacheDirectory cache_dir(cache_path_);
@@ -95,8 +81,7 @@ namespace piel::cmd {
         std::vector<std::string> versions_to_process_cache;
         std::vector<std::string> versions_to_process;
 
-        bool force_offline      = is_force_offline();
-        bool offline            = force_offline;
+        bool offline = force_offline_;
 
         std::vector<CacheObject> cached_objects;
 
@@ -113,7 +98,7 @@ namespace piel::cmd {
             }
         }
 
-        LOGT << "force_offline: " << force_offline << " offline: " << offline << ELOG;
+        LOGT << "force_offline: " << force_offline_ << " offline: " << offline << ELOG;
 
         if (offline) {
 
@@ -127,7 +112,7 @@ namespace piel::cmd {
 
             for (auto ver = versions_to_process_cache.begin(), end = versions_to_process_cache.end(); ver != end; ++ver) {
                 cout() << "Version: " << *ver << std::endl;
-                if (force_offline) {
+                if (force_offline_) {
                     cout() << "Mode: force offline"     << std::endl;
                 } else {
                     cout() << "Mode: offline"           << std::endl;
@@ -217,7 +202,7 @@ namespace piel::cmd {
 
     void GAVCCache::operator()()
     {
-        if (is_force_offline()) {
+        if (force_offline_) {
             perform();
             return;
         }

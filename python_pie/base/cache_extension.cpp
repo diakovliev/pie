@@ -1,6 +1,6 @@
 #include "libpython_pie.h"
 #include "cache_extension.h"
-#include "pyutils.h"
+#include "error.h"
 
 #include <logging.h>
 

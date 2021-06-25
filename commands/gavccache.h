@@ -62,7 +62,6 @@ namespace piel::cmd {
     protected:
         void perform();
         static std::string now_string();
-        bool is_force_offline() const;
 
     private:
         std::filesystem::path path_to_download_;

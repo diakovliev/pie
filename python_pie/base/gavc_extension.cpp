@@ -1,8 +1,9 @@
 #include "libpython_pie.h"
 #include "gavc_extension.h"
-#include "pyutils.h"
+#include "error.h"
 #include "conversions.hpp"
 
+#include <utils.h>
 #include <logging.h>
 
 #include <set>
@@ -75,11 +76,11 @@ int Gavc::perform(std::string query_str) {
     auto max_attempts               = std::stoi(get_param(PARAM_MAX_ATTEMPTS, "3"));
     auto retry_timeout_s            = std::stoi(get_param(PARAM_RETRY_TIMEOUT, "15"));
 
-    auto have_to_download_results   = Utils::string2bool(get_param(PARAM_DOWNLOAD, ""));
-    auto force_offline              = Utils::string2bool(get_param(PARAM_FORCE_OFFLINE, ""));
-    auto have_to_delete_results     = Utils::string2bool(get_param(PARAM_DELETE, ""));
-    auto have_to_delete_versions    = Utils::string2bool(get_param(PARAM_DELETE_VERSIONS, ""));
-    auto disable_cache              = Utils::string2bool(get_param(PARAM_DISABLE_CACHE, ""));
+    auto have_to_download_results   = piel::lib::string2bool(get_param(PARAM_DOWNLOAD, ""));
+    auto force_offline              = piel::lib::string2bool(get_param(PARAM_FORCE_OFFLINE, ""));
+    auto have_to_delete_results     = piel::lib::string2bool(get_param(PARAM_DELETE, ""));
+    auto have_to_delete_versions    = piel::lib::string2bool(get_param(PARAM_DELETE_VERSIONS, ""));
+    auto disable_cache              = piel::lib::string2bool(get_param(PARAM_DISABLE_CACHE, ""));
 
     auto notifications_file         = std::string();
 

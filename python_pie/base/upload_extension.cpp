@@ -1,6 +1,6 @@
 #include "libpython_pie.h"
 #include "upload_extension.h"
-#include "pyutils.h"
+#include "error.h"
 #include "conversions.hpp"
 
 #include <logging.h>
